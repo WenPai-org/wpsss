@@ -1,0 +1,11 @@
+WPSSS
+Copyright 2026 文派
+
+This product is informed by Apache-2.0 WordPress plugins by sy-records:
+  https://github.com/sy-records/aliyun-oss-wordpress
+  https://github.com/sy-records/sync-qcloud-cos
+  https://github.com/sy-records/qiniu-kodo-wordpress
+  https://github.com/sy-records/huaweicloud-obs-wordpress
+
+Those projects remain copyright of their authors. This repository does not
+vendor their source. volcengine-imagex-wordpress is not a storage driver here.
