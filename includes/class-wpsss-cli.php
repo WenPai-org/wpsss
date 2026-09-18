@@ -230,6 +230,48 @@ final class Wpsss_CLI
     }
 
     /**
+     * 把已进桶的附件拉回 uploads。默认不删远端。
+     *
+     * ## OPTIONS
+     *
+     * [--id=<id>]
+     * : 只拉这一个附件。
+     *
+     * [--limit=<n>]
+     * : 一批最多几个。默认 20。
+     *
+     * [--dry-run]
+     * : 只数不写。
+     *
+     * [--delete-remote]
+     * : 拉回后删桶里的副本，并清掉 offloaded 标记。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss pull --dry-run
+     *     wp sss pull --id=12
+     *
+     * @when after_wp_load
+     */
+    public function pull(array $args, array $assoc_args): void
+    {
+        unset($args);
+        $id = isset($assoc_args['id']) ? (int) $assoc_args['id'] : 0;
+        $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
+        $dry = !empty($assoc_args['dry-run']);
+        $delete = !empty($assoc_args['delete-remote']);
+        $result = wpsss()->library()->pull_batch($limit, $dry, $id, $delete);
+        WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip']);
+        foreach ($result['errors'] as $line) {
+            WP_CLI::warning($line);
+        }
+        if ($result['fail'] > 0) {
+            WP_CLI::error('有附件没拉回来。');
+        }
+        WP_CLI::success($dry ? 'dry-run 结束。' : '拉回结束。');
+    }
+
+    /**
      * 看改写后的附件 URL。
      *
      * ## OPTIONS
@@ -425,7 +467,7 @@ final class Wpsss_CLI
         $oks[] = 'site_mode=' . $mode;
         $driver = (string) ($opts['driver'] ?? 'aliyun-oss');
         if (($opts['url_access'] ?? 'public') === 'signed') {
-            if (!in_array($driver, ['aliyun-oss', 's3-compat', 'volc-tos'], true)) {
+            if (!in_array($driver, ['aliyun-oss', 's3-compat', 'volc-tos', 'gcs'], true)) {
                 $warnings[] = '签名访问目前只支持阿里 OSS 与 S3 兼容 / TOS。';
             } else {
                 $oks[] = 'url_access=signed';

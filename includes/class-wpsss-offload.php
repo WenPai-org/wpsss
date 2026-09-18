@@ -317,6 +317,65 @@ class Wpsss_Offload
         return true;
     }
 
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function local_rel_from_object_key(string $key, array $opts = []): string
+    {
+        $key = ltrim(str_replace('\\', '/', $key), '/');
+        $prefix = trim((string) ($opts['object_prefix'] ?? ''), '/');
+        if ($prefix !== '' && strpos($key, $prefix . '/') === 0) {
+            return substr($key, strlen($prefix) + 1);
+        }
+        return $key;
+    }
+
+    /**
+     * @return true|WP_Error
+     */
+    public function pull_attachment(int $post_id, bool $delete_remote = false)
+    {
+        $opts = Wpsss_Options::get();
+        $driver = $this->plugin->active_driver();
+        if (!$driver->is_configured($opts)) {
+            return new WP_Error('wpsss_not_configured', '先保存桶和密钥。');
+        }
+        $keys = $this->attachment_keys($post_id);
+        if ($keys === []) {
+            return new WP_Error('wpsss_no_key', '没有对象键，无法拉回。');
+        }
+        $uploads = wp_upload_dir();
+        $basedir = (string) $uploads['basedir'];
+        foreach ($keys as $key) {
+            $rel = self::local_rel_from_object_key((string) $key, $opts);
+            if ($rel === '' || strpos($rel, '..') !== false) {
+                return new WP_Error('wpsss_bad_key', '对象键不安全。');
+            }
+            $dest = $basedir . '/' . $rel;
+            if (!wp_mkdir_p(dirname($dest))) {
+                return new WP_Error('wpsss_mkdir', '建不了本地目录。');
+            }
+            $body = $driver->get_object($opts, (string) $key);
+            if (is_wp_error($body)) {
+                return $body;
+            }
+            if (file_put_contents($dest, $body) === false) {
+                return new WP_Error('wpsss_write', '写本地失败：' . $rel);
+            }
+        }
+        if ($delete_remote) {
+            $del = $driver->delete_objects($opts, $keys);
+            if (is_wp_error($del)) {
+                return $del;
+            }
+            delete_post_meta($post_id, Wpsss_Library::META_OFFLOADED);
+            delete_post_meta($post_id, Wpsss_Library::META_KEY);
+        }
+        delete_post_meta($post_id, Wpsss_Library::META_ERROR);
+        Wpsss_History::add('pull', 'attachment=' . $post_id . ($delete_remote ? ' delete-remote' : ''));
+        return true;
+    }
+
     public static function key_from_uploads(string $absolute_path, string $basedir): string
     {
         $basedir = str_replace('\\', '/', $basedir);

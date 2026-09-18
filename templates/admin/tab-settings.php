@@ -26,6 +26,7 @@ $driver_help = [
     Wpsss_Options::DRIVER_OBS => '签名走 OBS V2，不粘 SDK',
     Wpsss_Options::DRIVER_TOS => '火山对象存储。S3 兼容域 tos-s3-{region}.volces.com。不是 ImageX',
     Wpsss_Options::DRIVER_S3 => '一张卡盖住 AWS / Spaces / R2 / MinIO / Wasabi',
+    Wpsss_Options::DRIVER_GCS => 'HMAC 互操作密钥。不是 JSON key file，不粘 Google SDK',
 ];
 $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
 ?>
@@ -167,8 +168,8 @@ $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'publi
       </div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('签名有效期（秒）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('默认 3600。最长 7 天。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[signed_ttl]" type="number" min="60" max="604800" value="<?php echo esc_attr((string) ($opts['signed_ttl'] ?? '3600')); ?>" /></div></div>
       <?php if ($s3_family) : ?>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('S3 预设', 'wpsss'); ?></div><div class="field-help"><?php echo $driver === Wpsss_Options::DRIVER_TOS ? esc_html__('火山 TOS 锁定 tos，走 SigV4。', 'wpsss') : esc_html__('改预设会带上默认 endpoint。密钥另填。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <?php if ($driver === Wpsss_Options::DRIVER_TOS) : ?>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('S3 预设', 'wpsss'); ?></div><div class="field-help"><?php echo $driver === Wpsss_Options::DRIVER_GCS ? esc_html__('GCS 锁定 gcs，走 HMAC + SigV4。', 'wpsss') : ($driver === Wpsss_Options::DRIVER_TOS ? esc_html__('火山 TOS 锁定 tos，走 SigV4。', 'wpsss') : esc_html__('改预设会带上默认 endpoint。密钥另填。', 'wpsss')); ?></div></div><div class="field-ctl">
+        <?php if ($driver === Wpsss_Options::DRIVER_TOS || $driver === Wpsss_Options::DRIVER_GCS) : ?>
           <input type="hidden" name="<?php echo esc_attr($key); ?>[s3_preset]" value="tos" />
           <input type="text" value="<?php echo esc_attr(Wpsss_Options::s3_presets()['tos']); ?>" disabled />
         <?php else : ?>

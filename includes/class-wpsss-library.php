@@ -90,6 +90,52 @@ final class Wpsss_Library
     /**
      * @return int[]
      */
+    /**
+     * @return int[]
+     */
+    public function offloaded_ids(int $limit = 20): array
+    {
+        $ids = get_posts([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => $limit > 0 ? $limit : 20,
+            'fields' => 'ids',
+            'meta_key' => self::META_OFFLOADED,
+            'meta_value' => '1',
+        ]);
+        return array_map('intval', $ids);
+    }
+
+    /**
+     * @return array{ok: int, fail: int, skip: int, errors: string[]}
+     */
+    public function pull_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, bool $delete_remote = false): array
+    {
+        $ids = $only_id > 0 ? [$only_id] : $this->offloaded_ids($limit);
+        $ok = 0;
+        $fail = 0;
+        $skip = 0;
+        $errors = [];
+        foreach ($ids as $id) {
+            if (!self::is_offloaded($id) && $only_id === 0) {
+                $skip++;
+                continue;
+            }
+            if ($dry_run) {
+                $ok++;
+                continue;
+            }
+            $result = $this->offload->pull_attachment($id, $delete_remote);
+            if (is_wp_error($result)) {
+                $fail++;
+                $errors[] = $id . ': ' . $result->get_error_message();
+                continue;
+            }
+            $ok++;
+        }
+        return compact('ok', 'fail', 'skip', 'errors');
+    }
+
     public function pending_ids(int $limit = 20): array
     {
         $ids = get_posts([

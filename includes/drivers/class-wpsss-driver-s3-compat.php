@@ -93,6 +93,11 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
         return $this->request($settings, 'HEAD', $object, '', '');
     }
 
+    public function get_object(array $settings, string $object)
+    {
+        return $this->request($settings, 'GET', $object, '', '');
+    }
+
     public function probe(array $settings)
     {
         $object = 'wpsss-probe/' . gmdate('YmdHis') . '.txt';
@@ -184,7 +189,7 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
 
         $code = (int) wp_remote_retrieve_response_code($response);
         if ($code >= 200 && $code < 300) {
-            return true;
+            return $method === 'GET' ? (string) wp_remote_retrieve_body($response) : true;
         }
 
         $raw = (string) wp_remote_retrieve_body($response);

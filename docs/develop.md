@@ -43,7 +43,9 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 
 ## 已拍板
 
-- 一个插件国内四家 + TOS + S3 兼容。设置页能选。沙箱默认仍是阿里测试桶。
+- 一个插件国内四家 + TOS + S3 兼容 + GCS。设置页能选。沙箱默认仍是阿里测试桶。
+- Woo 付费下载走桶 URL/签名 GET。没装 Woo 不接线。
+- `wp sss pull` / 工具「拉回本地」。默认不删远端。
 - S3 对照 Human Made S3-Uploads（GPL）：只对齐 endpoint / path-style / 私有+签名 / Cache-Control。不装、不粘 AWS SDK。
 - 默认留本地。探测对象写了即删。
 - 测试桶 `wenpai-wpsss-test` / `oss-cn-hangzhou` / RAM `wpsss-test`。

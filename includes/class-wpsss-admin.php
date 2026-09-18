@@ -23,6 +23,8 @@ final class Wpsss_Admin
         add_action('admin_post_wpsss_offload', [$this, 'handle_offload']);
         add_action('admin_post_wpsss_offload_one', [$this, 'handle_offload_one']);
         add_action('admin_post_wpsss_rewrite', [$this, 'handle_rewrite']);
+        add_action('admin_post_wpsss_pull', [$this, 'handle_pull']);
+        add_action('admin_post_wpsss_pull_one', [$this, 'handle_pull_one']);
         add_action('admin_post_wpsss_quick', [$this, 'handle_quick']);
         add_filter('wp_redirect', [$this, 'after_options_redirect']);
         add_filter('plugin_action_links_' . plugin_basename(WPSSS_FILE), [$this, 'action_links']);
@@ -179,6 +181,44 @@ final class Wpsss_Admin
         $result = $this->plugin->library()->offload_batch(1, false, $id);
         $ok = $result['fail'] === 0 && $result['ok'] > 0;
         wp_safe_redirect(admin_url('upload.php?wpsss_offload=' . ($ok ? 'ok' : 'fail')));
+        exit;
+    }
+
+    public function handle_pull(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_pull');
+        if (empty($_POST['wpsss_pull_confirm'])) {
+            $this->redirect('tools', 'error', '拉回须勾确认。');
+        }
+        if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+            $this->redirect('tools', 'empty', '先保存桶名和密钥再拉回。');
+        }
+        $delete = !empty($_POST['wpsss_pull_delete']);
+        $result = $this->plugin->library()->pull_batch(20, false, 0, $delete);
+        $msg = sprintf('拉回完成：成功 %d，失败 %d，跳过 %d。', $result['ok'], $result['fail'], $result['skip']);
+        if ($result['errors'] !== []) {
+            $msg .= ' ' . $result['errors'][0];
+        }
+        $this->redirect('tools', $result['fail'] > 0 ? 'error' : 'ok', $msg);
+    }
+
+    public function handle_pull_one(): void
+    {
+        if (!current_user_can('upload_files')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        check_admin_referer('wpsss_pull_one_' . $id);
+        if ($id <= 0) {
+            wp_safe_redirect(admin_url('upload.php'));
+            exit;
+        }
+        $result = $this->plugin->library()->pull_batch(1, false, $id, false);
+        $ok = $result['fail'] === 0 && $result['ok'] > 0;
+        wp_safe_redirect(admin_url('upload.php?wpsss_pull=' . ($ok ? 'ok' : 'fail')));
         exit;
     }
 

@@ -29,6 +29,16 @@ class Wpsss_Kodo_Signer
         return 'QBox ' . $access_key . ':' . $sign;
     }
 
+    public static function private_download_url(string $access_key, string $secret, string $url, int $ttl = 3600, ?int $now = null): string
+    {
+        $now = $now ?? time();
+        $deadline = $now + max(60, $ttl);
+        $sep = strpos($url, '?') === false ? '?' : '&';
+        $to_sign = $url . $sep . 'e=' . $deadline;
+        $sign = self::urlsafe_b64(hash_hmac('sha1', $to_sign, $secret, true));
+        return $to_sign . '&token=' . $access_key . ':' . $sign;
+    }
+
     public static function encoded_entry(string $bucket, string $key): string
     {
         return self::urlsafe_b64($bucket . ':' . $key);

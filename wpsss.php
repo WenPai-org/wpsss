@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WPSSS
  * Plugin URI: https://feicode.com/WenPai-org/wpsss
- * Description: 文派对象存储。国内四家 + 火山 TOS + Amazon S3 兼容。自定义域名接 CyberCDN。
- * Version: 0.7.0
+ * Description: 文派对象存储。国内四家 + TOS + S3 兼容 + GCS。自定义域名接 CyberCDN。
+ * Version: 0.8.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: 文派
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WPSSS_VERSION', '0.7.0');
+define('WPSSS_VERSION', '0.8.0');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
 
@@ -35,6 +35,7 @@ require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-qiniu-kodo.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-huawei-obs.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-s3-compat.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-offload.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-woo.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-library.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-media.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-icons.php';

@@ -21,6 +21,7 @@ wp sss set --from-env
 wp sss probe
 wp sss doctor
 wp sss offload --dry-run
+wp sss pull --dry-run
 wp sss url <附件ID>
 wp sss rewrite
 wp sss upload ./a.png --key=manual/a.png

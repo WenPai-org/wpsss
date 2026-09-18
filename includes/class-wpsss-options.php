@@ -15,6 +15,7 @@ class Wpsss_Options
     public const DRIVER_OBS = 'huawei-obs';
     public const DRIVER_TOS = 'volc-tos';
     public const DRIVER_S3 = 's3-compat';
+    public const DRIVER_GCS = 'gcs';
 
     /**
      * @return array<string, string>
@@ -28,6 +29,7 @@ class Wpsss_Options
             self::DRIVER_OBS => '华为云 OBS',
             self::DRIVER_TOS => '火山 TOS',
             self::DRIVER_S3 => 'Amazon S3 / 兼容',
+            self::DRIVER_GCS => 'Google Cloud Storage',
         ];
     }
 
@@ -47,6 +49,7 @@ class Wpsss_Options
             ],
             'intl' => [
                 self::DRIVER_S3 => $ids[self::DRIVER_S3],
+                self::DRIVER_GCS => $ids[self::DRIVER_GCS],
             ],
         ];
     }
@@ -63,6 +66,7 @@ class Wpsss_Options
             'minio' => 'MinIO',
             'wasabi' => 'Wasabi',
             'tos' => '火山 TOS',
+            'gcs' => 'Google Cloud Storage',
             'custom' => '自定义 endpoint',
         ];
     }
@@ -155,11 +159,14 @@ class Wpsss_Options
         if ($driver === self::DRIVER_TOS) {
             $preset = 'tos';
         }
+        if ($driver === self::DRIVER_GCS) {
+            $preset = 'gcs';
+        }
 
         $path_style = self::default_path_style($preset);
         if (array_key_exists('force_path_style', $input)) {
             $path_style = ((string) $input['force_path_style'] === '1') ? '1' : '0';
-        } elseif ($driver === self::DRIVER_S3 || $driver === self::DRIVER_TOS) {
+        } elseif (self::is_s3_family($driver)) {
             $path_style = self::default_path_style($preset);
         } else {
             $path_style = (string) ($current['force_path_style'] ?? $path_style);
@@ -209,7 +216,7 @@ class Wpsss_Options
 
     public static function default_path_style(string $preset): string
     {
-        return in_array($preset, ['r2', 'minio'], true) ? '1' : '0';
+        return in_array($preset, ['r2', 'minio', 'gcs'], true) ? '1' : '0';
     }
 
     public static function default_region(string $driver): string
@@ -220,6 +227,7 @@ class Wpsss_Options
             self::DRIVER_KODO => 'z0',
             self::DRIVER_OBS => 'cn-north-4',
             self::DRIVER_TOS => 'cn-beijing',
+            self::DRIVER_GCS => 'auto',
             self::DRIVER_S3 => 'us-east-1',
         ];
         return $map[$driver] ?? 'oss-cn-hangzhou';
@@ -244,13 +252,17 @@ class Wpsss_Options
         }
     }
 
-    public static function public_base(): string
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function public_base(array $opts = []): string
     {
-        $opts = self::get();
+        $opts = $opts !== [] ? array_merge(self::defaults(), $opts) : self::get();
         if ($opts['custom_domain'] !== '') {
             return rtrim($opts['custom_domain'], '/');
         }
-        if ($opts['bucket'] === '' || ($opts['region'] === '' && self::effective_s3_preset($opts) !== 'r2')) {
+        $preset = self::effective_s3_preset($opts);
+        if ($opts['bucket'] === '' || ($opts['region'] === '' && !in_array($preset, ['r2', 'gcs'], true))) {
             return '';
         }
         return self::default_public_host($opts);
@@ -272,6 +284,7 @@ class Wpsss_Options
                 return '';
             case self::DRIVER_TOS:
             case self::DRIVER_S3:
+            case self::DRIVER_GCS:
                 $req = self::s3_object_request($opts, '');
                 return $req['public_base'];
             default:
@@ -299,6 +312,7 @@ class Wpsss_Options
                 return self::kodo_upload_host($region);
             case self::DRIVER_TOS:
             case self::DRIVER_S3:
+            case self::DRIVER_GCS:
                 return self::s3_object_request($opts, '')['public_base'];
             default:
                 $suffix = $internal ? '-internal.aliyuncs.com' : '.aliyuncs.com';
@@ -313,6 +327,9 @@ class Wpsss_Options
     {
         if (($opts['driver'] ?? '') === self::DRIVER_TOS) {
             return 'tos';
+        }
+        if (($opts['driver'] ?? '') === self::DRIVER_GCS) {
+            return 'gcs';
         }
         $preset = sanitize_key((string) ($opts['s3_preset'] ?? 'aws'));
         return $preset !== '' ? $preset : 'aws';
@@ -335,6 +352,8 @@ class Wpsss_Options
             case 'r2':
                 $account = trim((string) ($opts['app_id'] ?? ''));
                 return $account !== '' ? 'https://' . $account . '.r2.cloudflarestorage.com' : '';
+            case 'gcs':
+                return 'https://storage.googleapis.com';
             case 'tos':
                 if ($region === '') {
                     return '';
@@ -362,7 +381,7 @@ class Wpsss_Options
     {
         $preset = self::effective_s3_preset($opts);
         $region = trim((string) ($opts['region'] ?? ''));
-        if ($preset === 'r2') {
+        if ($preset === 'r2' || $preset === 'gcs') {
             return $region !== '' ? $region : 'auto';
         }
         return $region !== '' ? $region : 'us-east-1';
@@ -528,6 +547,14 @@ class Wpsss_Options
                     'ap-southeast-1' => '亚太东南 柔佛',
                     'ap-southeast-3' => '亚太东南 雅加达',
                 ];
+            case self::DRIVER_GCS:
+                return [
+                    'auto' => '自动（HMAC）',
+                    'us-central1' => '美中',
+                    'europe-west1' => '欧洲西部',
+                    'asia-east1' => '亚太 台湾',
+                    'asia-northeast1' => '亚太 东京',
+                ];
             case self::DRIVER_S3:
                 return [
                     'us-east-1' => '美东 弗吉尼亚',
@@ -595,7 +622,7 @@ class Wpsss_Options
 
     public static function is_s3_family(string $driver): bool
     {
-        return $driver === self::DRIVER_S3 || $driver === self::DRIVER_TOS;
+        return $driver === self::DRIVER_S3 || $driver === self::DRIVER_TOS || $driver === self::DRIVER_GCS;
     }
 
     /**
@@ -663,7 +690,7 @@ class Wpsss_Options
         } else {
             $groups = $all;
         }
-        if ($current === self::DRIVER_S3 && !isset($groups['intl'])) {
+        if (self::is_s3_family($current) && $current !== self::DRIVER_TOS && !isset($groups['intl'])) {
             $groups['intl'] = $all['intl'];
         }
         return $groups;
@@ -683,6 +710,8 @@ class Wpsss_Options
                 return strpos($r, 'ap-') === 0;
             case self::DRIVER_TOS:
                 return in_array($r, ['cn-hongkong', 'ap-southeast-1', 'ap-southeast-3'], true);
+            case self::DRIVER_GCS:
+                return true;
             case self::DRIVER_S3:
                 return !in_array($r, ['cn-beijing'], true);
             default:

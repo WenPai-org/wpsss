@@ -33,6 +33,7 @@ final class Wpsss_Plugin
         $this->register_driver(new Wpsss_Driver_Qiniu_Kodo());
         $this->register_driver(new Wpsss_Driver_Huawei_Obs());
         $this->register_driver(new Wpsss_Driver_S3_Compat('volc-tos', '火山 TOS'));
+        $this->register_driver(new Wpsss_Driver_S3_Compat('gcs', 'Google Cloud Storage'));
         $this->register_driver(new Wpsss_Driver_S3_Compat());
         add_action('admin_init', [$this, 'register_settings']);
         $this->offload = new Wpsss_Offload($this);
@@ -40,6 +41,7 @@ final class Wpsss_Plugin
         (new Wpsss_Admin($this))->register();
         $this->offload->register();
         $this->library->register();
+        (new Wpsss_Woo())->register();
     }
 
     public function offload(): Wpsss_Offload

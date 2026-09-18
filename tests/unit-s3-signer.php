@@ -151,7 +151,25 @@ wpsss_assert(isset(Wpsss_Options::regions_for('volc-tos')['ap-southeast-3']), 't
 wpsss_assert(Wpsss_Options::region_is_overseas('volc-tos', 'ap-southeast-3'), 'jakarta overseas');
 wpsss_assert(!Wpsss_Options::region_is_overseas('volc-tos', 'cn-beijing'), 'beijing domestic');
 
+
+$gcs = Wpsss_Options::sanitize([
+    'driver' => 'gcs',
+    'bucket' => 'demo-gcs',
+    'region' => 'auto',
+    'access_key_id' => 'id',
+    'access_key_secret' => 'secret',
+    'keep_local' => '1',
+]);
+wpsss_assert($gcs['driver'] === 'gcs', 'sanitize keeps gcs card');
+wpsss_assert($gcs['s3_preset'] === 'gcs', 'gcs card locks preset');
+wpsss_assert(Wpsss_Options::s3_endpoint($gcs) === 'https://storage.googleapis.com', 'gcs endpoint');
+wpsss_assert(Wpsss_Options::s3_force_path_style($gcs) === true, 'gcs path-style');
+wpsss_assert(strpos(Wpsss_Options::s3_object_request($gcs, 'a.png')['public_base'], 'storage.googleapis.com/demo-gcs') !== false, 'gcs public path');
+wpsss_assert(Wpsss_Options::region_is_overseas('gcs', 'auto'), 'gcs overseas');
+wpsss_assert(isset(Wpsss_Options::driver_groups()['intl']['gcs']), 'gcs in intl group');
+
 if ($failed > 0) {
+
 
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

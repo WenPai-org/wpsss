@@ -119,7 +119,7 @@ class Wpsss_Url
         if ($driver === 'aliyun-oss') {
             return Wpsss_Oss_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
         }
-        if ($driver === 's3-compat' || $driver === 'volc-tos') {
+        if ($driver === 's3-compat' || $driver === 'volc-tos' || $driver === 'gcs') {
             $req = Wpsss_Options::s3_object_request($opts, $key);
             if ($req['url'] === '' || $req['host'] === '') {
                 return $url;

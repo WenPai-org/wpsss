@@ -60,6 +60,30 @@ $opts = $view['opts'];
 
   <section class="card">
     <div class="card-head">
+      <span class="tile warn"><?php echo Wpsss_Icons::svg('download'); ?></span>
+      <div>
+        <h2 class="card-title"><?php echo esc_html__('拉回本地', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('把已进桶的附件再写成 uploads。默认不删远端。一次最多 20 个。', 'wpsss'); ?></p>
+      </div>
+    </div>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+      <input type="hidden" name="action" value="wpsss_pull" />
+      <?php wp_nonce_field('wpsss_pull'); ?>
+      <div class="chk" style="padding:0 20px 12px">
+        <label><input type="checkbox" name="wpsss_pull_confirm" value="1" /> <?php echo esc_html__('我确认拉回测试站附件', 'wpsss'); ?></label>
+      </div>
+      <div class="chk" style="padding:0 20px 12px">
+        <label><input type="checkbox" name="wpsss_pull_delete" value="1" /> <?php echo esc_html__('同时删远端（附件 URL 改回本地）', 'wpsss'); ?></label>
+      </div>
+      <div class="card-foot start">
+        <span class="meta"><?php echo esc_html__('keep_local=1 时本地多半已在，拉回会覆盖。', 'wpsss'); ?></span>
+        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('拉回一批', 'wpsss'); ?></button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
       <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('改写文章里的本地上传地址', 'wpsss'); ?></h2>

@@ -78,6 +78,30 @@ class Wpsss_Driver_Qiniu_Kodo implements Wpsss_Driver
         return $this->manage($settings, 'stat', $object);
     }
 
+    public function get_object(array $settings, string $object)
+    {
+        $object = ltrim($object, '/');
+        $base = trim((string) ($settings['custom_domain'] ?? ''));
+        if ($base === '') {
+            return new WP_Error('wpsss_kodo_domain', '七牛拉回需要自定义域名。');
+        }
+        $url = Wpsss_Kodo_Signer::private_download_url(
+            $settings['access_key_id'],
+            $settings['access_key_secret'],
+            untrailingslashit($base) . '/' . $object,
+            3600
+        );
+        $response = wp_remote_get($url, ['timeout' => 60, 'redirection' => 0]);
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        if ($code >= 200 && $code < 300) {
+            return (string) wp_remote_retrieve_body($response);
+        }
+        return new WP_Error('wpsss_kodo_http', 'KODO 拉回 HTTP ' . $code, ['status' => $code]);
+    }
+
     public function probe(array $settings)
     {
         $tmp = wp_tempnam('wpsss-kodo');

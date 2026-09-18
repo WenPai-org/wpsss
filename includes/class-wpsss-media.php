@@ -76,6 +76,11 @@ final class Wpsss_Media
             return $actions;
         }
         if (Wpsss_Library::is_offloaded((int) $post->ID)) {
+            $pull = wp_nonce_url(
+                admin_url('admin-post.php?action=wpsss_pull_one&id=' . (int) $post->ID),
+                'wpsss_pull_one_' . (int) $post->ID
+            );
+            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             return $actions;
         }
         $url = wp_nonce_url(
@@ -93,6 +98,7 @@ final class Wpsss_Media
     public function bulk_actions(array $actions): array
     {
         $actions['wpsss_offload'] = __('传到对象存储', 'wpsss');
+        $actions['wpsss_pull'] = __('拉回本地', 'wpsss');
         return $actions;
     }
 
@@ -101,6 +107,19 @@ final class Wpsss_Media
      */
     public function handle_bulk(string $redirect, string $doaction, array $post_ids): string
     {
+        if ($doaction === 'wpsss_pull') {
+            $ok = 0;
+            $fail = 0;
+            foreach ($post_ids as $id) {
+                $result = $this->offload->pull_attachment((int) $id, false);
+                if (is_wp_error($result)) {
+                    $fail++;
+                    continue;
+                }
+                $ok++;
+            }
+            return add_query_arg(['wpsss_bulk_ok' => $ok, 'wpsss_bulk_fail' => $fail], $redirect);
+        }
         if ($doaction !== 'wpsss_offload') {
             return $redirect;
         }

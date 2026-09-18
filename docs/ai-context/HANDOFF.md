@@ -39,3 +39,7 @@
 ## 2026-09-18 23:58 - [Cursor] TOS 要做；S3 对照 Human Made S3-Uploads
 
 火山对象存储继续做（TOS 卡 + 官方区域 + 内网 ivolces）。S3 对照 github.com/humanmade/S3-Uploads：只记能力（endpoint/path-style/私有+签名/Cache-Control），不装、不粘 AWS SDK、不抄 stream wrapper。ImageX / BOS 仍不做。
+
+## 2026-09-19 00:30 - [Cursor] 0.8.0 Woo / 拉回 / GCS
+
+Woo 付费下载改写到桶 URL（没装 Woo 空操作）。工具/CLI/媒体库拉回本地，默认不删远端。GCS 命名卡走 HMAC + SigV4，不粘 Google SDK。无 GCS 测试桶，不宣称 probe。
