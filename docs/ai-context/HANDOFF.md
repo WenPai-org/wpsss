@@ -31,3 +31,7 @@
 ## 2026-09-18 23:50 - [Cursor] 0.7.0 站点场景 + 签名读
 
 跟文派叶子：domestic / crossborder / mixed。切换只改推荐厂商，不改桶密钥。国内云海外区域可自选。url_access=signed 给阿里 OSS 与 S3/TOS。无新桶不宣称海外 probe。
+
+## 2026-09-18 23:55 - [Cursor] 不做百度 BOS / ImageX
+
+人批：没做的先等。sy-records `volcengine-imagex-wordpress` 不当对象存储。百度 BOS 不做（含 S3 预设）。TOS 仍是火山对象存储卡。

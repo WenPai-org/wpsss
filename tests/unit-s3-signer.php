@@ -93,16 +93,17 @@ $aws_req = Wpsss_Options::s3_object_request($aws, 'test.txt');
 wpsss_assert($aws_req['host'] === 'examplebucket.s3.us-east-1.amazonaws.com', 'aws virtual host');
 wpsss_assert(Wpsss_Options::default_public_host($aws) === 'https://examplebucket.s3.us-east-1.amazonaws.com', 'aws public host');
 
-$bos = Wpsss_Options::sanitize([
+$nobos = Wpsss_Options::sanitize([
     'driver' => 's3-compat',
     's3_preset' => 'bos',
-    'bucket' => 'demo-bos',
-    'region' => 'bj',
+    'bucket' => 'demo',
+    'region' => 'us-east-1',
     'access_key_id' => 'id',
     'access_key_secret' => 'secret',
     'keep_local' => '1',
 ]);
-wpsss_assert(Wpsss_Options::s3_endpoint($bos) === 'https://s3.bj.bcebos.com', 'bos beijing endpoint');
+wpsss_assert($nobos['s3_preset'] === 'aws', 'bos preset rejected');
+wpsss_assert(!isset(Wpsss_Options::s3_presets()['bos']), 'no bos preset');
 
 
 $oss_signed = Wpsss_Oss_Signer::signed_get_url(

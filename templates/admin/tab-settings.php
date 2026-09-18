@@ -25,7 +25,7 @@ $driver_help = [
     Wpsss_Options::DRIVER_KODO => '对外地址必须填自定义域',
     Wpsss_Options::DRIVER_OBS => '签名走 OBS V2，不粘 SDK',
     Wpsss_Options::DRIVER_TOS => '内部复用 S3 兼容。不是 ImageX',
-    Wpsss_Options::DRIVER_S3 => '一张卡盖住 AWS / Spaces / R2 / MinIO / Wasabi / BOS',
+    Wpsss_Options::DRIVER_S3 => '一张卡盖住 AWS / Spaces / R2 / MinIO / Wasabi',
 ];
 $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
 ?>

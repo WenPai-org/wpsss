@@ -117,7 +117,7 @@ final class Wpsss_CLI
      * [--endpoint=<url>]
      * : S3 兼容 endpoint。空着按预设拼。
      * [--s3-preset=<id>]
-     * : aws / do / r2 / minio / wasabi / tos / bos / custom。
+     * : aws / do / r2 / minio / wasabi / tos / custom。不做百度 BOS。
      * [--force-path-style=<value>]
      * : 1 走 path-style。R2 / MinIO 默认 1。
      * [--site-mode=<mode>]

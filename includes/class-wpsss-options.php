@@ -63,7 +63,6 @@ class Wpsss_Options
             'minio' => 'MinIO',
             'wasabi' => 'Wasabi',
             'tos' => '火山 TOS',
-            'bos' => '百度 BOS',
             'custom' => '自定义 endpoint',
         ];
     }
@@ -338,9 +337,6 @@ class Wpsss_Options
                 return $account !== '' ? 'https://' . $account . '.r2.cloudflarestorage.com' : '';
             case 'tos':
                 return $region !== '' ? 'https://tos-s3-' . $region . '.volces.com' : '';
-            case 'bos':
-                $region = $region !== '' ? $region : 'bj';
-                return 'https://s3.' . $region . '.bcebos.com';
             default:
                 return '';
         }
@@ -521,9 +517,6 @@ class Wpsss_Options
                     'ap-northeast-1' => '亚太 东京',
                     'auto' => 'R2 auto',
                     'nyc3' => 'Spaces nyc3',
-                    'bj' => 'BOS 北京',
-                    'gz' => 'BOS 广州',
-                    'su' => 'BOS 苏州',
                     'cn-beijing' => 'TOS 北京',
                 ];
             default:
@@ -671,7 +664,7 @@ class Wpsss_Options
             case self::DRIVER_TOS:
                 return in_array($r, ['cn-hongkong', 'ap-southeast-1'], true);
             case self::DRIVER_S3:
-                return !in_array($r, ['cn-beijing', 'bj', 'gz', 'su'], true);
+                return !in_array($r, ['cn-beijing'], true);
             default:
                 return false;
         }
