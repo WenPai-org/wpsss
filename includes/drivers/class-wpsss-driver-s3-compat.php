@@ -50,17 +50,30 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
         }
 
         $mime = $mime !== '' ? $mime : 'application/octet-stream';
-        $result = $this->request($settings, 'PUT', $object, $body, $mime, ['x-amz-acl' => 'public-read']);
-        if (!is_wp_error($result)) {
-            return $result;
+        $extra = $this->put_headers($settings);
+        if (($settings['url_access'] ?? 'public') !== 'signed') {
+            $result = $this->request($settings, 'PUT', $object, $body, $mime, $extra + ['x-amz-acl' => 'public-read']);
+            if (!is_wp_error($result)) {
+                return $result;
+            }
+            $msg = $result->get_error_message();
+            if (stripos($msg, 'AccessDenied') === false && stripos($msg, 'Acl') === false && stripos($msg, 'ACL') === false) {
+                return $result;
+            }
         }
+        return $this->request($settings, 'PUT', $object, $body, $mime, $extra);
+    }
 
-        $msg = $result->get_error_message();
-        if (stripos($msg, 'AccessDenied') === false && stripos($msg, 'Acl') === false && stripos($msg, 'ACL') === false) {
-            return $result;
+    /**
+     * @param array<string, string> $settings
+     * @return array<string, string>
+     */
+    private function put_headers(array $settings): array
+    {
+        if (($settings['url_access'] ?? 'public') === 'signed') {
+            return ['Cache-Control' => 'private, max-age=3600'];
         }
-
-        return $this->request($settings, 'PUT', $object, $body, $mime);
+        return ['Cache-Control' => 'public, max-age=2592000'];
     }
 
     public function delete_objects(array $settings, array $objects)

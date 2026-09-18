@@ -130,7 +130,24 @@ $s3q = Wpsss_S3_Signer::sign_get_query(
 wpsss_assert(strpos($s3q, 'X-Amz-Algorithm=AWS4-HMAC-SHA256') !== false, 's3 query algo');
 wpsss_assert(strpos($s3q, 'X-Amz-Signature=') !== false, 's3 query signature');
 
+
+$tos_in = Wpsss_Options::sanitize([
+    'driver' => 'volc-tos',
+    'bucket' => 'demo-tos',
+    'region' => 'ap-southeast-3',
+    'access_key_id' => 'id',
+    'access_key_secret' => 'secret',
+    'keep_local' => '1',
+    'use_internal' => '1',
+]);
+wpsss_assert($tos_in['s3_preset'] === 'tos', 'jakarta still tos');
+wpsss_assert(Wpsss_Options::s3_endpoint($tos_in) === 'https://tos-s3-ap-southeast-3.ivolces.com', 'tos internal endpoint');
+wpsss_assert(isset(Wpsss_Options::regions_for('volc-tos')['ap-southeast-3']), 'tos lists jakarta');
+wpsss_assert(Wpsss_Options::region_is_overseas('volc-tos', 'ap-southeast-3'), 'jakarta overseas');
+wpsss_assert(!Wpsss_Options::region_is_overseas('volc-tos', 'cn-beijing'), 'beijing domestic');
+
 if ($failed > 0) {
+
     fwrite(STDERR, $failed . " failed\n");
     exit(1);
 }

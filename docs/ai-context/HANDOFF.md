@@ -26,7 +26,7 @@
 
 ## 2026-09-18 23:20 - [Cursor] 0.6.0 S3 兼容
 
-自写 SigV4。driver `s3-compat` + 国内第五张 `volc-tos`（内部 tos 预设）。预设 aws/do/r2/minio/wasabi/tos/bos/custom。单测 `tests/unit-s3-signer.php`。没有人批的 AWS/R2/TOS 桶，不宣称 probe 绿。不粘 SDK，不装 WOM。
+自写 SigV4。driver `s3-compat` + 国内第五张 `volc-tos`（内部 tos 预设）。预设 aws/do/r2/minio/wasabi/tos/custom。BOS 已删。单测 `tests/unit-s3-signer.php`。没有人批的 AWS/R2/TOS 桶，不宣称 probe 绿。不粘 SDK，不装 WOM。
 
 ## 2026-09-18 23:50 - [Cursor] 0.7.0 站点场景 + 签名读
 
@@ -35,3 +35,7 @@
 ## 2026-09-18 23:55 - [Cursor] 不做百度 BOS / ImageX
 
 人批：没做的先等。sy-records `volcengine-imagex-wordpress` 不当对象存储。百度 BOS 不做（含 S3 预设）。TOS 仍是火山对象存储卡。
+
+## 2026-09-18 23:58 - [Cursor] TOS 要做；S3 对照 Human Made S3-Uploads
+
+火山对象存储继续做（TOS 卡 + 官方区域 + 内网 ivolces）。S3 对照 github.com/humanmade/S3-Uploads：只记能力（endpoint/path-style/私有+签名/Cache-Control），不装、不粘 AWS SDK、不抄 stream wrapper。ImageX / BOS 仍不做。

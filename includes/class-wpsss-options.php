@@ -336,7 +336,11 @@ class Wpsss_Options
                 $account = trim((string) ($opts['app_id'] ?? ''));
                 return $account !== '' ? 'https://' . $account . '.r2.cloudflarestorage.com' : '';
             case 'tos':
-                return $region !== '' ? 'https://tos-s3-' . $region . '.volces.com' : '';
+                if ($region === '') {
+                    return '';
+                }
+                $suffix = (($opts['use_internal'] ?? '0') === '1') ? '.ivolces.com' : '.volces.com';
+                return 'https://tos-s3-' . $region . $suffix;
             default:
                 return '';
         }
@@ -502,11 +506,12 @@ class Wpsss_Options
                 ];
             case self::DRIVER_TOS:
                 return [
-                    'cn-beijing' => '华北 北京',
-                    'cn-shanghai' => '华东 上海',
-                    'cn-guangzhou' => '华南 广州',
+                    'cn-beijing' => '华北2 北京',
+                    'cn-shanghai' => '华东2 上海',
+                    'cn-guangzhou' => '华南1 广州',
                     'cn-hongkong' => '中国香港',
-                    'ap-southeast-1' => '亚太东南 新加坡',
+                    'ap-southeast-1' => '亚太东南 柔佛',
+                    'ap-southeast-3' => '亚太东南 雅加达',
                 ];
             case self::DRIVER_S3:
                 return [
@@ -662,7 +667,7 @@ class Wpsss_Options
             case self::DRIVER_OBS:
                 return strpos($r, 'ap-') === 0;
             case self::DRIVER_TOS:
-                return in_array($r, ['cn-hongkong', 'ap-southeast-1'], true);
+                return in_array($r, ['cn-hongkong', 'ap-southeast-1', 'ap-southeast-3'], true);
             case self::DRIVER_S3:
                 return !in_array($r, ['cn-beijing'], true);
             default:

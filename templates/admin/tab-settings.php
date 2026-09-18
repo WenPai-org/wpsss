@@ -24,7 +24,7 @@ $driver_help = [
     Wpsss_Options::DRIVER_COS => '自写 REST，不是 Mac Studio 那份官方套件',
     Wpsss_Options::DRIVER_KODO => '对外地址必须填自定义域',
     Wpsss_Options::DRIVER_OBS => '签名走 OBS V2，不粘 SDK',
-    Wpsss_Options::DRIVER_TOS => '内部复用 S3 兼容。不是 ImageX',
+    Wpsss_Options::DRIVER_TOS => '火山对象存储。S3 兼容域 tos-s3-{region}.volces.com。不是 ImageX',
     Wpsss_Options::DRIVER_S3 => '一张卡盖住 AWS / Spaces / R2 / MinIO / Wasabi',
 ];
 $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
@@ -192,7 +192,7 @@ $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'publi
       <div class="field"><div><div class="field-label"><?php echo $driver === Wpsss_Options::DRIVER_S3 && ($opts['s3_preset'] ?? '') === 'r2' ? esc_html__('R2 Account ID', 'wpsss') : esc_html__('APPID（COS / R2）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('COS 桶名已含 -数字 时可空。R2 用来拼 *.r2.cloudflarestorage.com', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[app_id]" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" /></div></div>
       <div class="field"><div><div class="field-label">AccessKey ID</div><div class="field-help"><?php echo esc_html__('子用户 / SecretId', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_id]" type="text" value="<?php echo esc_attr($opts['access_key_id']); ?>" autocomplete="off" /></div></div>
       <div class="field"><div><div class="field-label">AccessKey Secret</div><div class="field-help"><?php echo $view['secret_set'] ? esc_html__('已保存。留空保存时不改', 'wpsss') : esc_html__('不会出现在页面源码里', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_secret]" type="password" value="" autocomplete="new-password" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('源站和桶在同一云厂商区域时再开', 'wpsss'); ?></div></div><div class="field-ctl">
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo $driver === Wpsss_Options::DRIVER_TOS ? esc_html__('同区域源站再开。签名域 tos-s3-{region}.ivolces.com', 'wpsss') : esc_html__('源站和桶在同一云厂商区域时再开', 'wpsss'); ?></div></div><div class="field-ctl">
         <input type="hidden" name="<?php echo esc_attr($key); ?>[use_internal]" value="0" />
         <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[use_internal]" value="1" <?php checked($opts['use_internal'], '1'); ?> /> <?php echo esc_html__('已开启', 'wpsss'); ?></label></div>
       </div></div>
