@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/wp-stubs.php';
 require dirname(__DIR__) . '/includes/class-wpsss-s3-signer.php';
+require dirname(__DIR__) . '/includes/class-wpsss-oss-signer.php';
 require dirname(__DIR__) . '/includes/class-wpsss-options.php';
 
 $failed = 0;
@@ -102,6 +103,31 @@ $bos = Wpsss_Options::sanitize([
     'keep_local' => '1',
 ]);
 wpsss_assert(Wpsss_Options::s3_endpoint($bos) === 'https://s3.bj.bcebos.com', 'bos beijing endpoint');
+
+
+$oss_signed = Wpsss_Oss_Signer::signed_get_url(
+    'https://wenpai-wpsss-test.oss-cn-hangzhou.aliyuncs.com',
+    'wenpai-wpsss-test',
+    '2026/a.png',
+    'id',
+    'secret',
+    3600,
+    1700000000
+);
+wpsss_assert(strpos($oss_signed, 'OSSAccessKeyId=id') !== false, 'oss signed get query');
+wpsss_assert(strpos($oss_signed, 'Expires=1700003600') !== false, 'oss signed expiry');
+
+$s3q = Wpsss_S3_Signer::sign_get_query(
+    'AKIAIOSFODNN7EXAMPLE',
+    'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+    'examplebucket.s3.us-east-1.amazonaws.com',
+    '/test.txt',
+    '20130524T000000Z',
+    'us-east-1',
+    86400
+);
+wpsss_assert(strpos($s3q, 'X-Amz-Algorithm=AWS4-HMAC-SHA256') !== false, 's3 query algo');
+wpsss_assert(strpos($s3q, 'X-Amz-Signature=') !== false, 's3 query signature');
 
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");

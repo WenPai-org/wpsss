@@ -8,6 +8,9 @@ $regions = Wpsss_Options::regions_for($opts['driver']);
 $region_label = $regions[$opts['region']] ?? $opts['region'];
 $keep = $opts['keep_local'] === '1';
 $custom = $opts['custom_domain'] !== '';
+$site_mode = Wpsss_Options::sanitize_site_mode($opts['site_mode'] ?? 'domestic');
+$site_label = Wpsss_Options::site_modes()[$site_mode]['label'];
+$url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
 ?>
 <div class="wpcy-page-head">
   <div>
@@ -44,7 +47,7 @@ $custom = $opts['custom_domain'] !== '';
           <span class="tile<?php echo $on ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
           <div>
             <div class="n"><?php echo esc_html__('存储桶', 'wpsss'); ?></div>
-            <div class="p"><?php echo $on ? esc_html(sprintf('经 %s 接通 · %s', $view['driver']->label(), $region_label)) : esc_html__('还没有密钥 · 不要填账号根密钥', 'wpsss'); ?></div>
+            <div class="p"><?php echo $on ? esc_html(sprintf('%s · 经 %s 接通 · %s', $site_label, $view['driver']->label(), $region_label)) : esc_html__('还没有密钥 · 不要填账号根密钥', 'wpsss'); ?></div>
           </div>
           <div class="svc-r"><span class="pill<?php echo $on ? ' ok' : ''; ?>"><?php echo $on ? esc_html__('已接通', 'wpsss') : esc_html__('未启用', 'wpsss'); ?></span></div>
         </li>
@@ -54,7 +57,7 @@ $custom = $opts['custom_domain'] !== '';
             <div class="n"><?php echo esc_html__('对外地址', 'wpsss'); ?> <?php if (!$custom) : ?><span class="scope"><?php echo esc_html__('未设自定义域', 'wpsss'); ?></span><?php endif; ?></div>
             <div class="p"><?php echo $custom ? esc_html((string) $view['public_base']) : esc_html__('桶默认域名 · 以后可挂 CyberCDN', 'wpsss'); ?></div>
           </div>
-          <div class="svc-r"><span class="pill"><?php echo $custom ? esc_html__('自定义域', 'wpsss') : esc_html__('直连桶', 'wpsss'); ?></span></div>
+          <div class="svc-r"><span class="pill"><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : ($custom ? esc_html__('自定义域', 'wpsss') : esc_html__('直连桶', 'wpsss')); ?></span></div>
         </li>
         <li>
           <span class="tile<?php echo $keep ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('plug'); ?></span>

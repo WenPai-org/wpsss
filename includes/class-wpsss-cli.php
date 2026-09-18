@@ -120,6 +120,12 @@ final class Wpsss_CLI
      * : aws / do / r2 / minio / wasabi / tos / bos / custom。
      * [--force-path-style=<value>]
      * : 1 走 path-style。R2 / MinIO 默认 1。
+     * [--site-mode=<mode>]
+     * : domestic / crossborder / mixed。跟文派叶子站点场景。
+     * [--url-access=<mode>]
+     * : public / signed。
+     * [--signed-ttl=<seconds>]
+     * : 签名有效期，默认 3600。
      * [--allow-no-local]
      * : 允许把 keep_local 写成 0。无人批不要用。
      *
@@ -161,6 +167,9 @@ final class Wpsss_CLI
             'endpoint' => 'endpoint',
             's3-preset' => 's3_preset',
             'force-path-style' => 'force_path_style',
+            'site-mode' => 'site_mode',
+            'url-access' => 'url_access',
+            'signed-ttl' => 'signed_ttl',
         ];
         foreach ($map as $flag => $key) {
             if (array_key_exists($flag, $assoc_args)) {
@@ -309,8 +318,13 @@ final class Wpsss_CLI
         $sample = $this->doctor_sample_public_url();
         if ($sample !== '') {
             $code = self::anonymous_http_status($sample);
-            if (self::classify_anonymous_http($code) === 'ok') {
-                $report['oks'][] = '匿名可读 HTTP ' . $code;
+            $access = (string) ($opts['url_access'] ?? 'public');
+            if (self::classify_anonymous_http($code, $access) === 'ok') {
+                if ($access === 'signed' && ($code === 403 || $code === 401)) {
+                    $report['oks'][] = '匿名 ' . $code . ' 属预期（签名访问）';
+                } else {
+                    $report['oks'][] = '匿名可读 HTTP ' . $code;
+                }
             } else {
                 $report['warnings'][] = self::anonymous_read_message($code);
             }
@@ -404,6 +418,19 @@ final class Wpsss_CLI
         } else {
             $oks[] = '密钥已配置（不回显）';
         }
+        $mode = (string) ($opts['site_mode'] ?? 'domestic');
+        if (!in_array($mode, ['domestic', 'crossborder', 'mixed'], true)) {
+            $mode = 'domestic';
+        }
+        $oks[] = 'site_mode=' . $mode;
+        $driver = (string) ($opts['driver'] ?? 'aliyun-oss');
+        if (($opts['url_access'] ?? 'public') === 'signed') {
+            if (!in_array($driver, ['aliyun-oss', 's3-compat', 'volc-tos'], true)) {
+                $warnings[] = '签名访问目前只支持阿里 OSS 与 S3 兼容 / TOS。';
+            } else {
+                $oks[] = 'url_access=signed';
+            }
+        }
         return [
             'blockers' => $blockers,
             'warnings' => $warnings,
@@ -416,15 +443,18 @@ final class Wpsss_CLI
     /**
      * 200 才算访客能读。403 是 WARN，不阻断。
      */
-    public static function classify_anonymous_http(int $code): string
+    public static function classify_anonymous_http(int $code, string $url_access = 'public'): string
     {
+        if ($url_access === 'signed') {
+            return $code === 200 || $code === 403 || $code === 401 ? 'ok' : 'warn';
+        }
         return $code === 200 ? 'ok' : 'warn';
     }
 
     public static function anonymous_read_message(int $code): string
     {
         if ($code === 403 || $code === 401) {
-            return '匿名读不到对象（HTTP ' . $code . '）。测试桶阻止公共访问时属预期，前台会裂图。';
+            return '匿名读不到对象（HTTP ' . $code . '）。公开读会裂图。可改「签名访问」，或开桶公共读 / 自定义域。';
         }
         if ($code === 0) {
             return '匿名探测没返回状态。不能当可读。';

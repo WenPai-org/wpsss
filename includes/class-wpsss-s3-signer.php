@@ -84,6 +84,45 @@ class Wpsss_S3_Signer
         ];
     }
 
+    public static function sign_get_query(
+        string $access_key,
+        string $secret,
+        string $host,
+        string $canonical_uri,
+        string $amz_date,
+        string $region,
+        int $expires = 3600
+    ): string {
+        $short_date = substr($amz_date, 0, 8);
+        $region = $region !== '' ? $region : 'us-east-1';
+        $scope = $short_date . '/' . $region . '/s3/aws4_request';
+        $query = [
+            'X-Amz-Algorithm' => 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential' => $access_key . '/' . $scope,
+            'X-Amz-Date' => $amz_date,
+            'X-Amz-Expires' => (string) max(60, $expires),
+            'X-Amz-SignedHeaders' => 'host',
+        ];
+        ksort($query);
+        $pairs = [];
+        foreach ($query as $name => $value) {
+            $pairs[] = rawurlencode($name) . '=' . rawurlencode($value);
+        }
+        $canonical_query = implode('&', $pairs);
+        $signed = self::sign(
+            $access_key,
+            $secret,
+            'GET',
+            $canonical_uri,
+            $canonical_query,
+            ['host' => $host],
+            'UNSIGNED-PAYLOAD',
+            $amz_date,
+            $region
+        );
+        return $canonical_query . '&X-Amz-Signature=' . $signed['signature'];
+    }
+
     public static function encode_key(string $object): string
     {
         $object = ltrim($object, '/');

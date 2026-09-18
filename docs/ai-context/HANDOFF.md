@@ -27,3 +27,7 @@
 ## 2026-09-18 23:20 - [Cursor] 0.6.0 S3 兼容
 
 自写 SigV4。driver `s3-compat` + 国内第五张 `volc-tos`（内部 tos 预设）。预设 aws/do/r2/minio/wasabi/tos/bos/custom。单测 `tests/unit-s3-signer.php`。没有人批的 AWS/R2/TOS 桶，不宣称 probe 绿。不粘 SDK，不装 WOM。
+
+## 2026-09-18 23:50 - [Cursor] 0.7.0 站点场景 + 签名读
+
+跟文派叶子：domestic / crossborder / mixed。切换只改推荐厂商，不改桶密钥。国内云海外区域可自选。url_access=signed 给阿里 OSS 与 S3/TOS。无新桶不宣称海外 probe。

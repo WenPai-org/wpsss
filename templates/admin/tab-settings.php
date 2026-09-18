@@ -6,14 +6,17 @@ $opts = $view['opts'];
 $mode = (string) $view['mode'];
 $key = Wpsss_Options::OPTION_KEY;
 $driver = (string) $opts['driver'];
+$site_mode = Wpsss_Options::sanitize_site_mode($opts['site_mode'] ?? 'domestic');
+$site_modes = Wpsss_Options::site_modes();
 $regions = Wpsss_Options::regions_for($driver);
 $region_label = $regions[$opts['region']] ?? $opts['region'];
+$grouped_regions = Wpsss_Options::grouped_regions($driver);
 $adv = $mode === 'advanced';
 $drivers = Wpsss_Options::driver_ids();
-$groups = Wpsss_Options::driver_groups();
+$groups = Wpsss_Options::driver_groups_for_mode($site_mode, $driver);
 $group_label = [
-    'cn' => '国内',
-    'intl' => '国外 / 兼容',
+    'cn' => '国内厂商（海外区域可自选）',
+    'intl' => '国外 / S3 兼容',
 ];
 $s3_family = Wpsss_Options::is_s3_family($driver);
 $driver_help = [
@@ -24,6 +27,7 @@ $driver_help = [
     Wpsss_Options::DRIVER_TOS => '内部复用 S3 兼容。不是 ImageX',
     Wpsss_Options::DRIVER_S3 => '一张卡盖住 AWS / Spaces / R2 / MinIO / Wasabi / BOS',
 ];
+$url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
 ?>
 <div class="wpcy-page-head">
   <div>
@@ -39,13 +43,45 @@ $driver_help = [
 </div>
 
 <div class="wpcy-stack">
+  <?php if ($adv) : ?>
+  <form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>" id="wpsss-settings-form">
+    <?php settings_fields('wpsss'); ?>
+  <?php endif; ?>
+  <section class="card">
+    <h2 class="section-title"><?php echo Wpsss_Icons::svg('cloud'); ?> <?php echo esc_html__('站点场景', 'wpsss'); ?></h2>
+    <p class="section-desc"><?php echo esc_html__('跟文派叶子一样：先选站点在哪，再挑云。切换只改推荐列表，不改已保存的桶和密钥。', 'wpsss'); ?></p>
+    <?php if (!$adv) : ?>
+    <form class="wpsss-toggle-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+      <input type="hidden" name="action" value="wpsss_quick" />
+      <?php wp_nonce_field('wpsss_quick'); ?>
+    <?php endif; ?>
+    <div class="choice-cards">
+      <?php foreach ($site_modes as $id => $row) : ?>
+        <?php $on = $site_mode === $id; ?>
+        <label class="choice<?php echo $on ? ' is-on' : ''; ?>">
+          <?php if ($adv) : ?>
+            <input type="radio" name="<?php echo esc_attr($key); ?>[site_mode]" value="<?php echo esc_attr($id); ?>" <?php checked($on); ?> />
+          <?php else : ?>
+            <input type="radio" name="site_mode" value="<?php echo esc_attr($id); ?>" <?php checked($on); ?> />
+          <?php endif; ?>
+          <span>
+            <div class="t"><?php echo esc_html($row['label']); ?></div>
+            <div class="d"><?php echo esc_html($row['help']); ?></div>
+          </span>
+        </label>
+      <?php endforeach; ?>
+    </div>
+    <?php if (!$adv) : ?>
+      <div class="card-foot">
+        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('应用场景', 'wpsss'); ?></button>
+      </div>
+    </form>
+    <?php endif; ?>
+  </section>
+
   <section class="card">
     <h2 class="section-title"><?php echo Wpsss_Icons::svg('cloud'); ?> <?php echo esc_html__('云厂商', 'wpsss'); ?></h2>
-    <p class="section-desc"><?php echo esc_html__('国内走自家 REST。国外和火山 TOS 走自写 SigV4，不粘 SDK。', 'wpsss'); ?></p>
-    <?php if ($adv) : ?>
-    <form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>" id="wpsss-settings-form">
-      <?php settings_fields('wpsss'); ?>
-    <?php endif; ?>
+    <p class="section-desc"><?php echo esc_html__('国内走自家 REST。国外和火山 TOS 走自写 SigV4。国内厂商的海外区域可自选。', 'wpsss'); ?></p>
     <?php foreach ($groups as $gid => $items) : ?>
       <p class="section-desc"><?php echo esc_html($group_label[$gid] ?? $gid); ?></p>
       <div class="choice-cards">
@@ -104,13 +140,32 @@ $driver_help = [
         </div>
       </div>
     <?php endforeach; ?>
+    <div class="simple-row">
+      <div class="tile<?php echo $url_access === 'signed' ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('image'); ?></div>
+      <div><div class="t"><?php echo esc_html__('对象访问', 'wpsss'); ?></div><div class="d"><?php echo $url_access === 'signed' ? esc_html__('签名 URL。私有桶也能看图。', 'wpsss') : esc_html__('公开读。桶若禁匿名，前台会裂图。', 'wpsss'); ?></div></div>
+      <div class="r">
+        <form class="wpsss-toggle-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+          <input type="hidden" name="action" value="wpsss_quick" />
+          <?php wp_nonce_field('wpsss_quick'); ?>
+          <input type="hidden" name="url_access" value="<?php echo $url_access === 'signed' ? 'public' : 'signed'; ?>" />
+          <button type="submit" class="toggle<?php echo $url_access === 'signed' ? ' on' : ''; ?> js-wpsss-toggle"><i></i><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : esc_html__('公开读', 'wpsss'); ?></button>
+        </form>
+      </div>
+    </div>
   </section>
   <?php else : ?>
   <section class="card">
     <h2 class="section-title"><?php echo esc_html__('桶与密钥', 'wpsss'); ?></h2>
     <p class="section-desc"><?php echo esc_html__('用子用户，只授这一只桶。不要填账号根密钥。', 'wpsss'); ?></p>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('桶名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('COS 填 name-appid。不要带厂商域名', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[bucket]" type="text" value="<?php echo esc_attr($opts['bucket']); ?>" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('S3 兼容按预设填。R2 常用 auto。和源站同区域才勾内网', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]"><?php foreach (Wpsss_Options::all_regions() as $group => $items) : ?><optgroup label="<?php echo esc_attr($drivers[$group] ?? $group); ?>"><?php foreach ($items as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?></select></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('只列当前厂商。国内/海外分组，自己选。', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]"><?php foreach (['cn' => '国内', 'overseas' => '海外'] as $rid => $rlabel) : if ($grouped_regions[$rid] === []) { continue; } ?><optgroup label="<?php echo esc_attr($rlabel); ?>"><?php foreach ($grouped_regions[$rid] as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?></select></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('对象访问', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('公开读要桶允许匿名或自定义域。签名访问目前支持阿里 OSS 与 S3 兼容 / TOS。', 'wpsss'); ?></div></div><div class="field-ctl">
+        <select name="<?php echo esc_attr($key); ?>[url_access]">
+          <option value="public"<?php selected($url_access, 'public'); ?>><?php echo esc_html__('公开读', 'wpsss'); ?></option>
+          <option value="signed"<?php selected($url_access, 'signed'); ?>><?php echo esc_html__('签名访问', 'wpsss'); ?></option>
+        </select>
+      </div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('签名有效期（秒）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('默认 3600。最长 7 天。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[signed_ttl]" type="number" min="60" max="604800" value="<?php echo esc_attr((string) ($opts['signed_ttl'] ?? '3600')); ?>" /></div></div>
       <?php if ($s3_family) : ?>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('S3 预设', 'wpsss'); ?></div><div class="field-help"><?php echo $driver === Wpsss_Options::DRIVER_TOS ? esc_html__('火山 TOS 锁定 tos，走 SigV4。', 'wpsss') : esc_html__('改预设会带上默认 endpoint。密钥另填。', 'wpsss'); ?></div></div><div class="field-ctl">
         <?php if ($driver === Wpsss_Options::DRIVER_TOS) : ?>

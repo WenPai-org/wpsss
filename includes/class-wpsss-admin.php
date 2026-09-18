@@ -232,6 +232,12 @@ final class Wpsss_Admin
             }
             $opts[$key] = (string) wp_unslash($_POST[$key]) === '1' ? '1' : '0';
         }
+        if (isset($_POST['site_mode'])) {
+            $opts['site_mode'] = Wpsss_Options::sanitize_site_mode(wp_unslash($_POST['site_mode']));
+        }
+        if (isset($_POST['url_access'])) {
+            $opts['url_access'] = Wpsss_Options::sanitize_url_access(wp_unslash($_POST['url_access']));
+        }
         update_option(Wpsss_Options::OPTION_KEY, $opts);
         wp_safe_redirect($this->url('settings', ['mode' => 'simple', 'saved' => '1']));
         exit;

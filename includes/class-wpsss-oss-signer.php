@@ -83,6 +83,26 @@ class Wpsss_Oss_Signer
         return 'OSS ' . $access_key_id . ':' . self::signature($secret, $canonical);
     }
 
+    public static function signed_get_url(
+        string $host,
+        string $bucket,
+        string $object,
+        string $access_key,
+        string $secret,
+        int $ttl = 3600,
+        ?int $now = null
+    ): string {
+        $object = ltrim($object, '/');
+        $expires = ($now ?? time()) + max(60, $ttl);
+        $canonical = "GET\n\n\n" . $expires . "\n/" . $bucket . "/" . $object;
+        $query = [
+            'OSSAccessKeyId' => $access_key,
+            'Expires' => (string) $expires,
+            'Signature' => self::signature($secret, $canonical),
+        ];
+        return self::object_url($host, $object) . '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+    }
+
     public static function object_url(string $host, string $object): string
     {
         $parts = array_map('rawurlencode', explode('/', ltrim($object, '/')));

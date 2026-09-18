@@ -95,6 +95,9 @@ class Wpsss_Options
             'endpoint' => '',
             's3_preset' => 'aws',
             'force_path_style' => '0',
+            'site_mode' => 'domestic',
+            'url_access' => 'public',
+            'signed_ttl' => '3600',
         ];
     }
 
@@ -196,6 +199,9 @@ class Wpsss_Options
             'endpoint' => $endpoint,
             's3_preset' => $preset,
             'force_path_style' => $path_style,
+            'site_mode' => self::sanitize_site_mode($input['site_mode'] ?? $current['site_mode'] ?? 'domestic'),
+            'url_access' => self::sanitize_url_access($input['url_access'] ?? $current['url_access'] ?? 'public'),
+            'signed_ttl' => self::sanitize_signed_ttl($input['signed_ttl'] ?? $current['signed_ttl'] ?? '3600'),
         ];
 
         self::sync_upload_url_path($out['custom_domain']);
@@ -577,5 +583,114 @@ class Wpsss_Options
     public static function is_s3_family(string $driver): bool
     {
         return $driver === self::DRIVER_S3 || $driver === self::DRIVER_TOS;
+    }
+
+    /**
+     * @return array<string, array{label: string, help: string}>
+     */
+    public static function site_modes(): array
+    {
+        return [
+            'domestic' => [
+                'label' => '国内站',
+                'help' => '服务器、访客、管理员都在中国大陆。推荐国内云。厂商若有海外区域，自己选即可。',
+            ],
+            'crossborder' => [
+                'label' => '跨境 · 外贸站',
+                'help' => '服务器与访客在海外，管理员在中国大陆。推荐 S3 兼容。国内云仍可选。',
+            ],
+            'mixed' => [
+                'label' => '混合站',
+                'help' => '服务器在海外，访客中外都有。两组厂商都列出，自己挑。',
+            ],
+        ];
+    }
+
+    public static function sanitize_site_mode($value): string
+    {
+        $mode = sanitize_key((string) $value);
+        return isset(self::site_modes()[$mode]) ? $mode : 'domestic';
+    }
+
+    public static function sanitize_url_access($value): string
+    {
+        return (string) $value === 'signed' ? 'signed' : 'public';
+    }
+
+    public static function sanitize_signed_ttl($value): string
+    {
+        $ttl = (int) $value;
+        if ($ttl < 60) {
+            $ttl = 3600;
+        }
+        if ($ttl > 604800) {
+            $ttl = 604800;
+        }
+        return (string) $ttl;
+    }
+
+    public static function supports_signed_get(string $driver): bool
+    {
+        return $driver === self::DRIVER_ALIYUN || self::is_s3_family($driver);
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    public static function driver_groups_for_mode(string $mode, string $current = ''): array
+    {
+        $all = self::driver_groups();
+        if ($mode === 'domestic') {
+            $groups = ['cn' => $all['cn']];
+        } elseif ($mode === 'crossborder') {
+            $groups = [
+                'intl' => $all['intl'],
+                'cn' => $all['cn'],
+            ];
+        } else {
+            $groups = $all;
+        }
+        if ($current === self::DRIVER_S3 && !isset($groups['intl'])) {
+            $groups['intl'] = $all['intl'];
+        }
+        return $groups;
+    }
+
+    public static function region_is_overseas(string $driver, string $region): bool
+    {
+        $r = strtolower($region);
+        switch ($driver) {
+            case self::DRIVER_ALIYUN:
+                return (bool) preg_match('/^oss-(us|ap|eu|me)-|^oss-accelerate-overseas$|^oss-cn-hongkong$/', $r);
+            case self::DRIVER_COS:
+                return (bool) preg_match('/^(ap-hongkong|ap-singapore|ap-tokyo|na-|eu-)/', $r);
+            case self::DRIVER_KODO:
+                return in_array($r, ['na0', 'as0'], true);
+            case self::DRIVER_OBS:
+                return strpos($r, 'ap-') === 0;
+            case self::DRIVER_TOS:
+                return in_array($r, ['cn-hongkong', 'ap-southeast-1'], true);
+            case self::DRIVER_S3:
+                return !in_array($r, ['cn-beijing', 'bj', 'gz', 'su'], true);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * @return array{cn: array<string, string>, overseas: array<string, string>}
+     */
+    public static function grouped_regions(string $driver): array
+    {
+        $cn = [];
+        $overseas = [];
+        foreach (self::regions_for($driver) as $id => $label) {
+            if (self::region_is_overseas($driver, $id)) {
+                $overseas[$id] = $label;
+            } else {
+                $cn[$id] = $label;
+            }
+        }
+        return ['cn' => $cn, 'overseas' => $overseas];
     }
 }

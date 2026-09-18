@@ -100,6 +100,79 @@ class Wpsss_Url
      * @param array<int|string, array<string, mixed>> $sources
      * @return array<int|string, array<string, mixed>>
      */
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function sign_object_url(string $base, string $key, array $opts, ?int $now = null): string
+    {
+        $url = Wpsss_Oss_Signer::object_url($base, $key);
+        if (($opts['url_access'] ?? 'public') !== 'signed') {
+            return $url;
+        }
+        $driver = (string) ($opts['driver'] ?? '');
+        $ttl = max(60, (int) ($opts['signed_ttl'] ?? 3600));
+        $ak = (string) ($opts['access_key_id'] ?? '');
+        $sk = (string) ($opts['access_key_secret'] ?? '');
+        if ($ak === '' || $sk === '') {
+            return $url;
+        }
+        if ($driver === 'aliyun-oss') {
+            return Wpsss_Oss_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
+        }
+        if ($driver === 's3-compat' || $driver === 'volc-tos') {
+            $req = Wpsss_Options::s3_object_request($opts, $key);
+            if ($req['url'] === '' || $req['host'] === '') {
+                return $url;
+            }
+            $qs = Wpsss_S3_Signer::sign_get_query(
+                $ak,
+                $sk,
+                $req['host'],
+                $req['canonical_uri'],
+                Wpsss_S3_Signer::amz_date($now),
+                Wpsss_Options::s3_signing_region($opts),
+                $ttl
+            );
+            return $req['url'] . '?' . $qs;
+        }
+        return $url;
+    }
+
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function sign_rewritten_text(string $text, string $base, array $opts): string
+    {
+        if (($opts['url_access'] ?? 'public') !== 'signed' || $base === '') {
+            return $text;
+        }
+        $base = rtrim($base, '/');
+        if (!preg_match_all('#https?://[^\s"\'<>]+#', $text, $matches)) {
+            return $text;
+        }
+        foreach (array_unique($matches[0]) as $item) {
+            if (strpos($item, $base) !== 0) {
+                continue;
+            }
+            if (strpos($item, 'Signature=') !== false || strpos($item, 'X-Amz-Signature=') !== false) {
+                continue;
+            }
+            $path = (string) (wp_parse_url($item, PHP_URL_PATH) ?: '');
+            $object = ltrim(rawurldecode($path), '/');
+            if ($object === '') {
+                continue;
+            }
+            if (Wpsss_Options::is_s3_family((string) ($opts['driver'] ?? '')) && Wpsss_Options::s3_force_path_style($opts)) {
+                $prefix = (string) ($opts['bucket'] ?? '') . '/';
+                if (strpos($object, $prefix) === 0) {
+                    $object = substr($object, strlen($prefix));
+                }
+            }
+            $text = str_replace($item, self::sign_object_url($base, $object, $opts), $text);
+        }
+        return $text;
+    }
+
     public static function style_srcset(array $sources, string $style): array
     {
         if ($style === '') {

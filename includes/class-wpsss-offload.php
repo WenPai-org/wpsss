@@ -205,7 +205,7 @@ class Wpsss_Offload
         if ($key === '') {
             return $url;
         }
-        $next = Wpsss_Oss_Signer::object_url($base, $key);
+        $next = Wpsss_Url::sign_object_url($base, $key, $opts);
         $next = Wpsss_Url::apply_style($next, $opts);
         $mime = (string) get_post_mime_type($post_id);
         return Wpsss_Url::apply_preview($next, $mime, $opts);
@@ -240,7 +240,7 @@ class Wpsss_Offload
                 continue;
             }
             $file = wp_basename((string) $source['url']);
-            $sources[$width]['url'] = Wpsss_Oss_Signer::object_url($base, $dir . $file);
+            $sources[$width]['url'] = Wpsss_Url::sign_object_url($base, $dir . $file, $opts);
         }
         $style = Wpsss_Url::should_protect_origin($opts) || Wpsss_Url::style_suffix($opts) !== ''
             ? Wpsss_Url::style_suffix($opts)
@@ -263,7 +263,7 @@ class Wpsss_Offload
         if ($extra !== '') {
             $content = Wpsss_Url::rewrite_text($content, $extra, $to, $style);
         }
-        return $content;
+        return Wpsss_Url::sign_rewritten_text($content, $to, $opts);
     }
 
     private function should_offload(): bool

@@ -116,6 +116,26 @@ wpsss_assert(Wpsss_Options::apply_object_prefix('2026/a.png', $cos) === 'media/2
 $bad_driver = Wpsss_Options::sanitize(array_merge($cos, ['driver' => 'volcengine']));
 wpsss_assert($bad_driver['driver'] === 'aliyun-oss', 'unknown driver falls back');
 
+$mode = Wpsss_Options::sanitize([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'wenpai-wpsss-test',
+    'region' => 'oss-us-west-1',
+    'access_key_id' => 'id',
+    'access_key_secret' => 'secret',
+    'keep_local' => '1',
+    'site_mode' => 'crossborder',
+    'url_access' => 'signed',
+]);
+wpsss_assert($mode['site_mode'] === 'crossborder', 'sanitize keeps crossborder');
+wpsss_assert($mode['url_access'] === 'signed', 'sanitize url_access signed');
+wpsss_assert(Wpsss_Options::region_is_overseas('aliyun-oss', 'oss-us-west-1'), 'aliyun us is overseas');
+wpsss_assert(!Wpsss_Options::region_is_overseas('aliyun-oss', 'oss-cn-hangzhou'), 'aliyun hangzhou is domestic');
+$dom = Wpsss_Options::driver_groups_for_mode('domestic', 'aliyun-oss');
+wpsss_assert(!isset($dom['intl']), 'domestic hides s3 group');
+$xb = Wpsss_Options::driver_groups_for_mode('crossborder', 'aliyun-oss');
+wpsss_assert(isset($xb['intl']['s3-compat']), 'crossborder leads with s3');
+wpsss_assert(isset($xb['cn']['aliyun-oss']), 'crossborder still lists aliyun');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);
