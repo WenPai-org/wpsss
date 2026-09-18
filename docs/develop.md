@@ -18,8 +18,8 @@ cd ~/Projects/wpsss
 # 沙箱（已有，SQLite；无 DISPLAY 不要 studio create）
 ln -sfn ~/Projects/wpsss ~/Studio/wpsss-dev/wp-content/plugins/wpsss
 wp --path=~/Studio/wpsss-dev plugin activate wpsss
-wp --path=~/Studio/wpsss-dev wpsss set --from-env
-wp --path=~/Studio/wpsss-dev wpsss probe
+wp --path=~/Studio/wpsss-dev sss set --from-env
+wp --path=~/Studio/wpsss-dev sss probe
 ```
 
 Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**不要当真源改完不推**。有 leftover `vm-takeover` 座位时，本机 Write 进 `~/Projects/*` 会被拒。
@@ -63,15 +63,16 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 | Studio 无 DISPLAY | 用系统 `wp` + SQLite 沙箱 |
 | AppleDouble `._*` | `.gitignore` 已挡 |
 | `empty('0')` 会吞 checkbox | sanitize 用 `=== '1'` |
+| 关 `keep_local` | sanitize / 简单页 / `wp sss set` 都挡住；须 `--allow-no-local` 且人批 |
 | FeiCode 端口 | `:2222`，不要 apex |
 | leftover GC | 只报不删 |
 
 ## 验证
 
 ```bash
-php tests/unit-oss-signer.php
-wp --path=~/Studio/wpsss-dev wpsss doctor
-wp --path=~/Studio/wpsss-dev wpsss probe
+php tests/run.php
+wp --path=/home/parallels/Studio/wpsss-dev sss doctor
+wp --path=/home/parallels/Studio/wpsss-dev sss probe
 ```
 
 改 UI 后在沙箱后台点：概览空态/接通态、设置简单/高级保存、工具探测。

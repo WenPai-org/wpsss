@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * WP-CLI：wp wpsss …
+ * WP-CLI：wp sss …
  *
  * Agent 优先走这里，不要在对话里贴密钥。
  */
@@ -16,7 +16,7 @@ final class Wpsss_CLI
      *
      * ## EXAMPLES
      *
-     *     wp wpsss status
+     *     wp sss status
      *
      * @when after_wp_load
      */
@@ -41,7 +41,7 @@ final class Wpsss_CLI
         if ($configured) {
             WP_CLI::success('已配置。');
         } else {
-            WP_CLI::warning('未配置。wp wpsss set --from-env');
+            WP_CLI::warning('未配置。wp sss set --from-env');
         }
     }
 
@@ -50,7 +50,7 @@ final class Wpsss_CLI
      *
      * ## EXAMPLES
      *
-     *     wp wpsss probe
+     *     wp sss probe
      *
      * @when after_wp_load
      */
@@ -85,13 +85,15 @@ final class Wpsss_CLI
      * [--access-key-id=<id>]
      * [--access-key-secret=<secret>]
      * [--custom-domain=<url>]
-     * [--keep-local=<0|1>]
-     * [--upload-thumbs=<0|1>]
-     * [--use-internal=<0|1>]
+     * [--keep-local=<value>]
+     * [--upload-thumbs=<value>]
+     * [--use-internal=<value>]
+     * [--allow-no-local]
+     * : 允许把 keep_local 写成 0。无人批不要用。
      *
      * ## EXAMPLES
      *
-     *     wp wpsss set --from-env
+     *     wp sss set --from-env
      *
      * @when after_wp_load
      */
@@ -124,13 +126,24 @@ final class Wpsss_CLI
             }
         }
 
+        if (isset($incoming['keep_local']) && (string) $incoming['keep_local'] === '0'
+            && !self::can_turn_off_keep_local($assoc_args)
+        ) {
+            WP_CLI::error('关 keep_local 须人批。确认后加 --allow-no-local。');
+        }
+        if (self::can_turn_off_keep_local($assoc_args)) {
+            $incoming['_allow_no_local'] = '1';
+        }
+
         $saved = Wpsss_Options::sanitize(array_merge($current, $incoming));
         update_option(Wpsss_Options::OPTION_KEY, $saved);
-        WP_CLI::success('已保存。密钥不回显。再跑 wp wpsss status / probe。');
+        WP_CLI::success('已保存。密钥不回显。再跑 wp sss status / probe。');
     }
 
     /**
-     * 体检：桶、本地备份、upload_url_path。
+     * 体检：桶、本地备份、密钥、upload_url_path。
+     *
+     * BLOCK 才失败。WARN 不阻断（例如桶不是测试桶）。
      *
      * @when after_wp_load
      */
@@ -138,30 +151,27 @@ final class Wpsss_CLI
     {
         unset($args, $assoc_args);
         $opts = Wpsss_Options::get();
-        $ok = true;
-        if ($opts['bucket'] === 'wenpai-wpsss-test') {
-            WP_CLI::log('bucket=test ok');
-        } elseif ($opts['bucket'] === '') {
-            WP_CLI::warning('bucket empty');
-            $ok = false;
-        } else {
-            WP_CLI::warning('bucket 不是测试桶。生产须人批。');
+        $report = self::doctor_findings(
+            $opts,
+            (string) get_option('upload_url_path', ''),
+            (string) get_option(Wpsss_Options::OWN_URL_FLAG, '')
+        );
+        foreach ($report['oks'] as $line) {
+            WP_CLI::log('OK    ' . $line);
         }
-        if ($opts['keep_local'] !== '1') {
-            WP_CLI::warning('keep_local=0。关掉须人批。');
-            $ok = false;
-        } else {
-            WP_CLI::log('keep_local=1 ok');
+        foreach ($report['warnings'] as $line) {
+            WP_CLI::warning('WARN  ' . $line);
         }
-        $url = (string) get_option('upload_url_path', '');
-        $owns = (string) get_option(Wpsss_Options::OWN_URL_FLAG, '');
-        WP_CLI::log('upload_url_path=' . $url);
-        WP_CLI::log('owns=' . $owns);
-        if ($ok) {
+        foreach ($report['blockers'] as $line) {
+            WP_CLI::log('BLOCK ' . $line);
+        }
+        WP_CLI::log('upload_url_path=' . $report['upload_url_path']);
+        WP_CLI::log('owns=' . $report['owns']);
+        if ($report['blockers'] === []) {
             WP_CLI::success('doctor 无阻断。');
-        } else {
-            WP_CLI::error('doctor 有警告。', false);
+            return;
         }
+        WP_CLI::error('doctor 有阻断：' . implode(' / ', $report['blockers']));
     }
 
     /**
@@ -172,6 +182,18 @@ final class Wpsss_CLI
         if (!is_readable($path)) {
             WP_CLI::error('读不到 env：' . $path);
         }
+        $out = self::parse_env_text((string) file_get_contents($path));
+        if ($out === []) {
+            WP_CLI::error('env 里没有 WPSSS_OSS_*。');
+        }
+        return $out;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function parse_env_text(string $text): array
+    {
         $out = [];
         $map = [
             'WPSSS_OSS_BUCKET' => 'bucket',
@@ -179,7 +201,7 @@ final class Wpsss_CLI
             'WPSSS_OSS_ACCESS_KEY_ID' => 'access_key_id',
             'WPSSS_OSS_ACCESS_KEY_SECRET' => 'access_key_secret',
         ];
-        foreach (file($path, FILE_IGNORE_NEW_LINES) ?: [] as $line) {
+        foreach (preg_split('/\R/', $text) ?: [] as $line) {
             $line = trim((string) $line);
             if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
                 continue;
@@ -191,13 +213,54 @@ final class Wpsss_CLI
                 $out[$map[$k]] = $v;
             }
         }
-        if ($out === []) {
-            WP_CLI::error('env 里没有 WPSSS_OSS_*。');
-        }
         return $out;
     }
 
-    private function mask(string $value): string
+    /**
+     * @param array<string, string> $opts
+     * @return array{blockers: string[], warnings: string[], oks: string[], upload_url_path: string, owns: string}
+     */
+    public static function doctor_findings(array $opts, string $upload_url_path, string $owns): array
+    {
+        $blockers = [];
+        $warnings = [];
+        $oks = [];
+        $bucket = (string) ($opts['bucket'] ?? '');
+        if ($bucket === '') {
+            $blockers[] = 'bucket 空。先 wp sss set --from-env';
+        } elseif ($bucket === 'wenpai-wpsss-test') {
+            $oks[] = 'bucket=wenpai-wpsss-test';
+        } else {
+            $warnings[] = 'bucket 不是测试桶 wenpai-wpsss-test。生产须人批。';
+        }
+        if (($opts['keep_local'] ?? '') !== '1') {
+            $blockers[] = 'keep_local=0。关掉须人批。';
+        } else {
+            $oks[] = 'keep_local=1';
+        }
+        if (($opts['access_key_id'] ?? '') === '' || ($opts['access_key_secret'] ?? '') === '') {
+            $blockers[] = '密钥未齐。wp sss set --from-env';
+        } else {
+            $oks[] = '密钥已配置（不回显）';
+        }
+        return [
+            'blockers' => $blockers,
+            'warnings' => $warnings,
+            'oks' => $oks,
+            'upload_url_path' => $upload_url_path,
+            'owns' => $owns,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $assoc_args
+     */
+    public static function can_turn_off_keep_local(array $assoc_args): bool
+    {
+        return !empty($assoc_args['allow-no-local']);
+    }
+
+    public static function mask_key(string $value): string
     {
         if ($value === '') {
             return 'empty';
@@ -207,5 +270,10 @@ final class Wpsss_CLI
             return 'set';
         }
         return substr($value, 0, 4) . '…' . substr($value, -2);
+    }
+
+    private function mask(string $value): string
+    {
+        return self::mask_key($value);
     }
 }

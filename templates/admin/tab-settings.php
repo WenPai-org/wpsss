@@ -53,12 +53,16 @@ $adv = $mode === 'advanced';
         <div class="tile<?php echo $on ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('plug'); ?></div>
         <div><div class="t"><?php echo esc_html($copy[0]); ?></div><div class="d"><?php echo esc_html($copy[1]); ?></div></div>
         <div class="r">
+          <?php if ($field === 'keep_local' && $on) : ?>
+            <button type="button" class="toggle on" disabled title="<?php echo esc_attr__('关掉须人批', 'wpsss'); ?>"><i></i><?php echo esc_html__('已开启', 'wpsss'); ?></button>
+          <?php else : ?>
           <form class="wpsss-toggle-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="wpsss_quick" />
             <?php wp_nonce_field('wpsss_quick'); ?>
             <input type="hidden" name="<?php echo esc_attr($field); ?>" value="<?php echo $on ? '0' : '1'; ?>" />
             <button type="submit" class="toggle<?php echo $on ? ' on' : ''; ?> js-wpsss-toggle"><i></i><?php echo $on ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
           </form>
+          <?php endif; ?>
         </div>
       </div>
     <?php endforeach; ?>

@@ -40,5 +40,5 @@ add_action('plugins_loaded', static function () {
 });
 
 if (defined('WP_CLI') && WP_CLI) {
-    WP_CLI::add_command('wpsss', 'Wpsss_CLI');
+    WP_CLI::add_command('sss', 'Wpsss_CLI');
 }

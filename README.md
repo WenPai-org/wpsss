@@ -15,7 +15,7 @@
 
 1. 激活插件。后台左侧「文派对象存储」。
 2. **设置 → 高级**：桶、区域、RAM 密钥。默认保留本地文件。
-3. **工具 → 测试连通**。或 `wp wpsss probe`。
+3. **工具 → 测试连通**。或 `wp sss probe`。
 4. 上传媒体，附件 URL 应是桶域或自定义域。
 
 开关即时生效。桶和密钥要保存。
@@ -24,10 +24,10 @@
 
 ```bash
 wenpai-repo start wpsss --task <短名>
-wp --path=~/Studio/wpsss-dev wpsss status
-wp --path=~/Studio/wpsss-dev wpsss set --from-env
-wp --path=~/Studio/wpsss-dev wpsss probe
-wp --path=~/Studio/wpsss-dev wpsss doctor
+wp --path=~/Studio/wpsss-dev sss status
+wp --path=~/Studio/wpsss-dev sss set --from-env
+wp --path=~/Studio/wpsss-dev sss probe
+wp --path=~/Studio/wpsss-dev sss doctor
 ```
 
 `--from-env` 读 `~/.config/linuxjoy/wpsss-test.env`（`WPSSS_OSS_*`）。密钥不进 git、不进对话。

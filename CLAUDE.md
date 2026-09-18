@@ -20,7 +20,7 @@ wpsss.php                 入口、WP-CLI 登记
 includes/
   class-wpsss-plugin.php  单例、driver、Settings API
   class-wpsss-admin.php   菜单、enqueue、probe/quick
-  class-wpsss-cli.php     wp wpsss status|set|probe|doctor
+  class-wpsss-cli.php     wp sss status|set|probe|doctor
   class-wpsss-options.php 选项、区域、upload_url_path 旗
   class-wpsss-oss-signer.php  Signature V1
   class-wpsss-offload.php 上传/删/URL/srcset

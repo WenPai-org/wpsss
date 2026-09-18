@@ -147,6 +147,14 @@ final class Wpsss_Admin
         check_admin_referer('wpsss_quick');
 
         $opts = Wpsss_Options::get();
+        if (isset($_POST['keep_local']) && (string) wp_unslash($_POST['keep_local']) !== '1') {
+            wp_safe_redirect($this->url('settings', [
+                'mode' => 'simple',
+                'wpsss_level' => 'error',
+                'wpsss_notice' => '关掉本地备份须人批。',
+            ]));
+            exit;
+        }
         foreach (['keep_local', 'upload_thumbs'] as $key) {
             if (!isset($_POST[$key])) {
                 continue;

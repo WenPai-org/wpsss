@@ -25,9 +25,9 @@
 
 ```bash
 php -l wpsss.php
-php tests/unit-oss-signer.php
-wp --path=~/Studio/wpsss-dev wpsss status
-wp --path=~/Studio/wpsss-dev wpsss doctor
+php tests/run.php
+wp --path=/home/parallels/Studio/wpsss-dev sss status
+wp --path=/home/parallels/Studio/wpsss-dev sss doctor
 ```
 
 改签名再跑 signer 单测。改 offload / CLI 再 probe。没跑只能写「已改，未验证」。

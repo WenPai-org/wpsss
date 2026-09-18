@@ -81,13 +81,19 @@ class Wpsss_Offload
         return $metadata;
     }
 
+    /** @var bool */
+    private static $editor_hooked = false;
+
     /**
      * @param mixed $override
      * @return mixed
      */
     public function on_save_image_editor($override)
     {
-        add_filter('wp_update_attachment_metadata', [$this, 'on_generate_metadata']);
+        if (!self::$editor_hooked) {
+            add_filter('wp_update_attachment_metadata', [$this, 'on_generate_metadata']);
+            self::$editor_hooked = true;
+        }
         return $override;
     }
 
@@ -196,27 +202,25 @@ class Wpsss_Offload
         }
     }
 
-    private function object_key(string $absolute_path): string
+    public static function key_from_uploads(string $absolute_path, string $basedir): string
     {
-        $uploads = wp_upload_dir();
-        $basedir = wp_normalize_path(trailingslashit((string) $uploads['basedir']));
-        $path = wp_normalize_path($absolute_path);
-        if (strpos($path, $basedir) !== 0) {
+        $basedir = str_replace('\\', '/', $basedir);
+        $basedir = rtrim($basedir, '/') . '/';
+        $path = str_replace('\\', '/', $absolute_path);
+        if ($basedir === '/' || strpos($path, $basedir) !== 0) {
             return '';
         }
         return ltrim(substr($path, strlen($basedir)), '/');
     }
 
     /**
+     * @param array<string, mixed> $meta
      * @return string[]
      */
-    private function attachment_keys(int $post_id): array
+    public static function keys_from_metadata(array $meta): array
     {
-        $meta = wp_get_attachment_metadata($post_id);
-        if (!is_array($meta) || empty($meta['file'])) {
-            $file = get_attached_file($post_id);
-            $key = $file ? $this->object_key($file) : '';
-            return $key !== '' ? [$key] : [];
+        if (empty($meta['file'])) {
+            return [];
         }
 
         $dir = dirname((string) $meta['file']);
@@ -232,6 +236,37 @@ class Wpsss_Offload
                 }
             }
         }
+        if (!empty($meta['backup_sizes']) && is_array($meta['backup_sizes'])) {
+            foreach ($meta['backup_sizes'] as $size) {
+                if (!empty($size['file'])) {
+                    $keys[] = $prefix . $size['file'];
+                }
+            }
+        }
+        return array_values(array_unique($keys));
+    }
+
+    private function object_key(string $absolute_path): string
+    {
+        $uploads = wp_upload_dir();
+        return self::key_from_uploads($absolute_path, (string) $uploads['basedir']);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function attachment_keys(int $post_id): array
+    {
+        $meta = wp_get_attachment_metadata($post_id);
+        if (!is_array($meta) || empty($meta['file'])) {
+            $file = get_attached_file($post_id);
+            $key = $file ? $this->object_key($file) : '';
+            return $key !== '' ? [$key] : [];
+        }
+
+        $keys = self::keys_from_metadata($meta);
+        $dir = dirname((string) $meta['file']);
+        $prefix = $dir === '.' ? '' : $dir . '/';
         $backups = get_post_meta($post_id, '_wp_attachment_backup_sizes', true);
         if (is_array($backups)) {
             foreach ($backups as $size) {

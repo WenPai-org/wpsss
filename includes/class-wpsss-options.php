@@ -56,6 +56,12 @@ class Wpsss_Options
         $custom = isset($input['custom_domain']) ? trim((string) $input['custom_domain']) : '';
         $custom = untrailingslashit(esc_url_raw($custom));
 
+        $keep = (isset($input['keep_local']) && (string) $input['keep_local'] === '1') ? '1' : '0';
+        $allow_off = isset($input['_allow_no_local']) && (string) $input['_allow_no_local'] === '1';
+        if ($keep === '0' && $current['keep_local'] === '1' && !$allow_off) {
+            $keep = '1';
+        }
+
         $out = [
             'driver' => 'aliyun-oss',
             'bucket' => sanitize_text_field($input['bucket'] ?? ''),
@@ -63,7 +69,7 @@ class Wpsss_Options
             'access_key_id' => sanitize_text_field($input['access_key_id'] ?? ''),
             'access_key_secret' => $secret,
             'custom_domain' => $custom,
-            'keep_local' => (isset($input['keep_local']) && (string) $input['keep_local'] === '1') ? '1' : '0',
+            'keep_local' => $keep,
             'upload_thumbs' => (isset($input['upload_thumbs']) && (string) $input['upload_thumbs'] === '1') ? '1' : '0',
             'use_internal' => (isset($input['use_internal']) && (string) $input['use_internal'] === '1') ? '1' : '0',
         ];
