@@ -4,7 +4,7 @@ Tags: oss, cdn, aliyun, offload
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.1.0-dev
+Stable tag: 0.2.0-dev
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -12,12 +12,14 @@ License URI: https://www.apache.org/licenses/LICENSE-2.0
 
 == Description ==
 
-准备稿见 linuxjoy `docs/plans/2026-09-18-wpsss.md`。
-
-本插件参考 sy-records 的 Apache-2.0 OSS 系列，不整仓粘贴。火山 ImageX 不是对象存储 driver。
+对照 sy-records Apache-2.0 全家桶的上传 / 删除 / URL 路径，自写 OSS REST + Signature V1，不整仓粘贴 SDK。
 不是 Mac Studio/wpsss 腾讯云官方套件，也不是 wenpai-static-host。
 
 == Changelog ==
 
+= 0.2.0-dev =
+* 阿里云 OSS：上传原图和缩略图、删附件同步删远端、自定义域改 URL。
+* 默认保留本地文件。Settings API。连通探测写了即删。
+
 = 0.1.0-dev =
-* 骨架：设置页 + Aliyun OSS driver 登记。未接上传。
+* 骨架：设置页 + Aliyun OSS driver 登记。
