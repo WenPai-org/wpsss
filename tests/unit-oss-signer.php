@@ -48,6 +48,30 @@ $url = Wpsss_Oss_Signer::object_url('https://cdn.example.com', '2026/09/图片.p
 wpsss_assert(strpos($url, 'https://cdn.example.com/2026/09/') === 0, 'object url host');
 wpsss_assert(substr_count($url, ' ') === 0, 'object url encoded');
 
+$canonical_acl = Wpsss_Oss_Signer::canonical_string(
+    'PUT',
+    $md5,
+    'text/plain',
+    'Fri, 18 Sep 2026 08:00:00 GMT',
+    'demo-bucket',
+    '2026/09/hello.txt',
+    ['x-oss-object-acl' => 'public-read']
+);
+$expected_acl = "PUT\nXUFAKrxLKna5cZ2REBfFkg==\ntext/plain\nFri, 18 Sep 2026 08:00:00 GMT\nx-oss-object-acl:public-read\n/demo-bucket/2026/09/hello.txt";
+wpsss_assert($canonical_acl === $expected_acl, 'canonical includes object acl');
+$auth_acl = Wpsss_Oss_Signer::authorization(
+    'testid',
+    'test-secret',
+    'PUT',
+    $md5,
+    'text/plain',
+    'Fri, 18 Sep 2026 08:00:00 GMT',
+    'demo-bucket',
+    '2026/09/hello.txt',
+    ['X-OSS-Object-Acl' => 'public-read']
+);
+wpsss_assert($auth_acl === 'OSS testid:e6Zvqd+dZVmCKJmymanLVPurcro=', 'authorization with acl header');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

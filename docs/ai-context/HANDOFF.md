@@ -4,11 +4,12 @@
 
 ## 现在（2026-09-18）
 
-- **main `09ea925` 已是 0.3.0-dev**（功能在 `262c6bc`，说明提交 `09ea925`）。
-- 本会话工作树 `~/wt/wpsss/plugin-iter`（`wt/plugin-iter`）：补 options / offload / CLI 单测；doctor 分 `OK` / `WARN` / `BLOCK`；CLI 现为 `wp sss`（不再用 `wp wpsss`）；关 `keep_local` 须 `--allow-no-local`；简单页不能一键关掉本地备份。
-- 沙箱 `~/Studio/wpsss-dev` 应软链到工作树验收。
+- **0.4.0**：Aliyun v1 闭环（新上传、已有补传、媒体库列/批量/筛选/侧栏、文章和普通字段 URL 改写、`wp sss`、doctor）。
+- 对象 PUT 带 `x-oss-object-acl: public-read`；RAM 拒 ACL 时回退无 ACL。桶仍是 private。
+- 关 `keep_local` 须 `--allow-no-local`。简单页不能一键关本地备份。
+- 沙箱 `~/Studio/wpsss-dev` 软链工作树或 `~/Projects/wpsss`。
 - 组织仍是 staging candidate，未 publish。
-- **未做**：自定义域、CyberCDN 焊 purge、第二家 driver、装任何生产站。人要才 commit。
+- **未做（须人批）**：自定义域、CyberCDN purge、第二家 driver、生产站。
 
 ## 建议下一刀（等人说再做）
 

@@ -81,13 +81,21 @@ final class Wpsss_CLI
      * : env 路径。
      *
      * [--bucket=<name>]
+     * : 桶名。
      * [--region=<id>]
+     * : 区域，如 oss-cn-hangzhou。
      * [--access-key-id=<id>]
+     * : RAM AccessKey ID。
      * [--access-key-secret=<secret>]
+     * : RAM Secret。不回显。
      * [--custom-domain=<url>]
+     * : 自定义域。无人批不要填。
      * [--keep-local=<value>]
+     * : 1 留本地。0 须同时加 --allow-no-local。
      * [--upload-thumbs=<value>]
+     * : 1 上传缩略图。
      * [--use-internal=<value>]
+     * : 1 走 OSS 内网。
      * [--allow-no-local]
      * : 允许把 keep_local 写成 0。无人批不要用。
      *
@@ -141,6 +149,108 @@ final class Wpsss_CLI
     }
 
     /**
+     * 把已有附件补传到桶。默认只处理未进桶的。
+     *
+     * ## OPTIONS
+     *
+     * [--id=<id>]
+     * : 只处理这一个附件。
+     *
+     * [--limit=<n>]
+     * : 一批最多几个。默认 20。
+     *
+     * [--dry-run]
+     * : 只数不传。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss offload --dry-run
+     *     wp sss offload --limit=20
+     *
+     * @when after_wp_load
+     */
+    public function offload(array $args, array $assoc_args): void
+    {
+        unset($args);
+        $id = isset($assoc_args['id']) ? (int) $assoc_args['id'] : 0;
+        $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
+        $dry = !empty($assoc_args['dry-run']);
+        $result = wpsss()->library()->offload_batch($limit, $dry, $id);
+        WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip']);
+        foreach ($result['errors'] as $line) {
+            WP_CLI::warning($line);
+        }
+        if ($result['fail'] > 0) {
+            WP_CLI::error('有附件没传上去。');
+        }
+        WP_CLI::success($dry ? 'dry-run 结束。' : '补传结束。');
+    }
+
+    /**
+     * 看改写后的附件 URL。
+     *
+     * ## OPTIONS
+     *
+     * <id>
+     * : 附件 ID。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss url 12
+     *
+     * @when after_wp_load
+     */
+    public function url(array $args, array $assoc_args): void
+    {
+        unset($assoc_args);
+        $id = isset($args[0]) ? (int) $args[0] : 0;
+        if ($id <= 0) {
+            WP_CLI::error('要附件 ID。');
+        }
+        $url = wp_get_attachment_url($id);
+        WP_CLI::log('url=' . (is_string($url) ? $url : ''));
+        WP_CLI::log('offloaded=' . (Wpsss_Library::is_offloaded($id) ? '1' : '0'));
+        $key = (string) get_post_meta($id, Wpsss_Library::META_KEY, true);
+        if ($key !== '') {
+            WP_CLI::log('key=' . $key);
+            $head = wpsss()->active_driver()->head_object(Wpsss_Options::get(), $key);
+            if (is_wp_error($head)) {
+                WP_CLI::log('head=' . $head->get_error_message());
+            } else {
+                WP_CLI::log('head=200');
+            }
+        }
+    }
+
+    /**
+     * 把文章里的本地 uploads URL 换成桶域。默认 dry-run。
+     *
+     * ## OPTIONS
+     *
+     * [--apply]
+     * : 真写库。不加就只预览。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss rewrite
+     *     wp sss rewrite --apply
+     *
+     * @when after_wp_load
+     */
+    public function rewrite(array $args, array $assoc_args): void
+    {
+        unset($args);
+        $apply = !empty($assoc_args['apply']);
+        $result = wpsss()->library()->rewrite_posts($apply);
+        WP_CLI::log('scanned=' . $result['scanned'] . ' changed=' . $result['changed']);
+        WP_CLI::log('meta_scanned=' . $result['meta_scanned'] . ' meta_changed=' . $result['meta_changed']);
+        if ($result['samples'] !== []) {
+            WP_CLI::log('ids=' . implode(',', $result['samples']));
+        }
+        WP_CLI::success($apply ? '已改写。' : '预览结束。要写库加 --apply。');
+    }
+
+    /**
      * 体检：桶、本地备份、密钥、upload_url_path。
      *
      * BLOCK 才失败。WARN 不阻断（例如桶不是测试桶）。
@@ -167,6 +277,8 @@ final class Wpsss_CLI
         }
         WP_CLI::log('upload_url_path=' . $report['upload_url_path']);
         WP_CLI::log('owns=' . $report['owns']);
+        $stats = wpsss()->library()->stats();
+        WP_CLI::log('attachments=' . $stats['total'] . ' offloaded=' . $stats['offloaded'] . ' pending=' . $stats['pending']);
         if ($report['blockers'] === []) {
             WP_CLI::success('doctor 无阻断。');
             return;

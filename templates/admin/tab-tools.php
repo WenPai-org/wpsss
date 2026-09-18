@@ -1,6 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 /** @var array<string, mixed> $view */
+$stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['total' => 0, 'offloaded' => 0, 'pending' => 0];
 ?>
 <div class="wpcy-page-head">
   <div>
@@ -30,6 +31,46 @@ defined('ABSPATH') || exit;
       </div>
     </form>
   </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="tile<?php echo ((int) $stats['pending'] > 0) ? ' warn' : ' ok'; ?>"><?php echo Wpsss_Icons::svg('image'); ?></span>
+      <div>
+        <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html(sprintf('媒体库一共 %d 个，已进桶 %d，还没传 %d。一次最多 20 个。留本地。', (int) $stats['total'], (int) $stats['offloaded'], (int) $stats['pending'])); ?></p>
+      </div>
+    </div>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+      <input type="hidden" name="action" value="wpsss_offload" />
+      <?php wp_nonce_field('wpsss_offload'); ?>
+      <div class="card-foot start">
+        <span class="meta"><?php echo esc_html__('只写测试桶。新上传会自动进桶。', 'wpsss'); ?></span>
+        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('补传一批', 'wpsss'); ?></button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
+      <div>
+        <h2 class="card-title"><?php echo esc_html__('改写文章里的本地上传地址', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('把正文、摘要和普通字段里的 /wp-content/uploads 换成桶域。序列化字段不改。先预览再写库。', 'wpsss'); ?></p>
+      </div>
+    </div>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+      <input type="hidden" name="action" value="wpsss_rewrite" />
+      <?php wp_nonce_field('wpsss_rewrite'); ?>
+      <div class="chk" style="padding:0 20px 12px">
+        <label><input type="checkbox" name="wpsss_rewrite_confirm" value="1" /> <?php echo esc_html__('我确认这是测试站 / 要改的就是这些文章', 'wpsss'); ?></label>
+      </div>
+      <div class="card-foot start">
+        <button class="btn btn-ghost" type="submit" name="wpsss_rewrite_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1"><?php echo esc_html__('写进文章', 'wpsss'); ?></button>
+      </div>
+    </form>
+  </section>
+
   <section class="card">
     <div class="card-head">
       <span class="tile"><?php echo Wpsss_Icons::svg('flash'); ?></span>

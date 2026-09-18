@@ -32,5 +32,11 @@ interface Wpsss_Driver
      * @param array<string, string> $settings
      * @return true|WP_Error
      */
+    public function head_object(array $settings, string $object);
+
+    /**
+     * @param array<string, string> $settings
+     * @return true|WP_Error
+     */
     public function probe(array $settings);
 }

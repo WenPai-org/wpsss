@@ -64,6 +64,16 @@ $custom = $opts['custom_domain'] !== '';
           </div>
           <div class="svc-r"><span class="pill<?php echo $keep ? ' ok' : ' warn'; ?>"><?php echo $keep ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></span></div>
         </li>
+        <?php if ($on && isset($view['stats']) && is_array($view['stats'])) : ?>
+        <li>
+          <span class="tile<?php echo ((int) $view['stats']['pending'] === 0) ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('image'); ?></span>
+          <div>
+            <div class="n"><?php echo esc_html__('已有附件', 'wpsss'); ?></div>
+            <div class="p"><?php echo esc_html(sprintf('已进桶 %d / 共 %d · 未传 %d', (int) $view['stats']['offloaded'], (int) $view['stats']['total'], (int) $view['stats']['pending'])); ?></div>
+          </div>
+          <div class="svc-r"><a class="btn btn-ghost" href="<?php echo esc_url($url('tools')); ?>"><?php echo esc_html__('去补传', 'wpsss'); ?></a></div>
+        </li>
+        <?php endif; ?>
       </ul>
     </div>
   </div>

@@ -36,6 +36,17 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
         }
 
         $mime = $mime !== '' ? $mime : 'application/octet-stream';
+        $acl = ['x-oss-object-acl' => 'public-read'];
+        $result = $this->request($settings, 'PUT', $object, $body, $mime, $acl);
+        if (!is_wp_error($result)) {
+            return $result;
+        }
+
+        $msg = $result->get_error_message();
+        if (stripos($msg, 'AccessDenied') === false && stripos($msg, 'Acl') === false) {
+            return $result;
+        }
+
         return $this->request($settings, 'PUT', $object, $body, $mime);
     }
 
@@ -49,6 +60,11 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
             }
         }
         return $last;
+    }
+
+    public function head_object(array $settings, string $object)
+    {
+        return $this->request($settings, 'HEAD', $object, '', '');
     }
 
     public function probe(array $settings)
@@ -66,10 +82,17 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
     }
 
     /**
+     * @param array<string, string> $oss_headers
      * @return true|WP_Error
      */
-    private function request(array $settings, string $method, string $object, string $body, string $mime)
-    {
+    private function request(
+        array $settings,
+        string $method,
+        string $object,
+        string $body,
+        string $mime,
+        array $oss_headers = []
+    ) {
         $object = ltrim($object, '/');
         $date = Wpsss_Oss_Signer::gmt_date();
         $md5 = ($method === 'PUT') ? Wpsss_Oss_Signer::content_md5($body) : '';
@@ -81,7 +104,8 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
             $mime,
             $date,
             $settings['bucket'],
-            $object
+            $object,
+            $oss_headers
         );
 
         $headers = [
@@ -93,6 +117,9 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
         }
         if ($mime !== '') {
             $headers['Content-Type'] = $mime;
+        }
+        foreach ($oss_headers as $name => $value) {
+            $headers[$name] = $value;
         }
 
         $url = Wpsss_Oss_Signer::object_url(Wpsss_Options::api_host($settings), $object);

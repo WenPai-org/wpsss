@@ -50,6 +50,23 @@ wpsss_assert(in_array('2026/09/pic-150x150.jpg', $keys, true), 'includes thumb')
 wpsss_assert(in_array('2026/09/pic-backup.jpg', $keys, true), 'includes backup size');
 wpsss_assert(Wpsss_Offload::keys_from_metadata([]) === [], 'empty meta');
 
+wpsss_assert(
+    Wpsss_Offload::rewrite_urls_in_text(
+        'src="http://site.local/wp-content/uploads/2026/09/a.png"',
+        'http://site.local/wp-content/uploads',
+        'https://bucket.oss-cn-hangzhou.aliyuncs.com'
+    ) === 'src="https://bucket.oss-cn-hangzhou.aliyuncs.com/2026/09/a.png"',
+    'rewrite local uploads host'
+);
+wpsss_assert(
+    Wpsss_Offload::rewrite_urls_in_text('hello', '', 'https://x') === 'hello',
+    'rewrite empty from leaves text'
+);
+wpsss_assert(
+    Wpsss_Offload::rewrite_urls_in_text('https://other.example/a.png', 'http://site.local/wp-content/uploads', 'https://bucket') === 'https://other.example/a.png',
+    'rewrite leaves other hosts'
+);
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

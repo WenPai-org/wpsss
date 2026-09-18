@@ -20,6 +20,9 @@ final class Wpsss_Admin
         add_action('admin_enqueue_scripts', [$this, 'enqueue']);
         add_filter('admin_body_class', [$this, 'body_class']);
         add_action('admin_post_wpsss_probe', [$this, 'handle_probe']);
+        add_action('admin_post_wpsss_offload', [$this, 'handle_offload']);
+        add_action('admin_post_wpsss_offload_one', [$this, 'handle_offload_one']);
+        add_action('admin_post_wpsss_rewrite', [$this, 'handle_rewrite']);
         add_action('admin_post_wpsss_quick', [$this, 'handle_quick']);
         add_filter('wp_redirect', [$this, 'after_options_redirect']);
         add_filter('plugin_action_links_' . plugin_basename(WPSSS_FILE), [$this, 'action_links']);
@@ -44,16 +47,20 @@ final class Wpsss_Admin
         return $classes;
     }
 
-    public function enqueue(string $_hook): void
+    public function enqueue(string $hook): void
     {
-        unset($_hook);
-        if (!$this->is_screen()) {
+        $media = in_array($hook, ['upload.php', 'post.php', 'media-new.php'], true);
+        if (!$this->is_screen() && !$media) {
             return;
         }
         $base = plugin_dir_url(WPSSS_FILE);
-        wp_enqueue_style('wpsss-e', $base . 'assets/css/e.css', [], WPSSS_VERSION);
-        wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', ['wpsss-e'], WPSSS_VERSION);
-        wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', [], WPSSS_VERSION, true);
+        if ($this->is_screen()) {
+            wp_enqueue_style('wpsss-e', $base . 'assets/css/e.css', [], WPSSS_VERSION);
+            wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', ['wpsss-e'], WPSSS_VERSION);
+            wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', [], WPSSS_VERSION, true);
+            return;
+        }
+        wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', [], WPSSS_VERSION);
     }
 
     public function register_menu(): void
@@ -97,6 +104,7 @@ final class Wpsss_Admin
             'level' => $level,
             'secret_set' => $opts['access_key_secret'] !== '',
             'public_base' => Wpsss_Options::public_base(),
+            'stats' => $this->plugin->library()->stats(),
             'url' => [$this, 'url'],
         ];
 
@@ -137,6 +145,66 @@ final class Wpsss_Admin
             $this->redirect('tools', 'error', $result->get_error_message());
         }
         $this->redirect('tools', 'ok', '已写入并删除探测对象。');
+    }
+
+    public function handle_offload(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_offload');
+        if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+            $this->redirect('tools', 'empty', '先保存桶名和密钥再补传。');
+        }
+        $result = $this->plugin->library()->offload_batch(20, false, 0);
+        $msg = sprintf('补传完成：成功 %d，失败 %d，跳过 %d。', $result['ok'], $result['fail'], $result['skip']);
+        if ($result['errors'] !== []) {
+            $msg .= ' ' . $result['errors'][0];
+        }
+        $this->redirect('tools', $result['fail'] > 0 ? 'error' : 'ok', $msg);
+    }
+
+    public function handle_offload_one(): void
+    {
+        if (!current_user_can('upload_files')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        check_admin_referer('wpsss_offload_one_' . $id);
+        if ($id <= 0) {
+            wp_safe_redirect(admin_url('upload.php'));
+            exit;
+        }
+        $result = $this->plugin->library()->offload_batch(1, false, $id);
+        $ok = $result['fail'] === 0 && $result['ok'] > 0;
+        wp_safe_redirect(admin_url('upload.php?wpsss_offload=' . ($ok ? 'ok' : 'fail')));
+        exit;
+    }
+
+    public function handle_rewrite(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_rewrite');
+        if (empty($_POST['wpsss_rewrite_confirm'])) {
+            $this->redirect('tools', 'error', '改写文章 URL 须勾确认。');
+        }
+        $apply = !empty($_POST['wpsss_rewrite_apply']);
+        $result = $this->plugin->library()->rewrite_posts($apply);
+        $verb = $apply ? '已改写' : '预览';
+        $this->redirect(
+            'tools',
+            'ok',
+            sprintf(
+                '%s：扫 %d 篇命中 %d，字段扫 %d 命中 %d。',
+                $verb,
+                $result['scanned'],
+                $result['changed'],
+                $result['meta_scanned'],
+                $result['meta_changed']
+            )
+        );
     }
 
     public function handle_quick(): void

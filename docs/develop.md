@@ -32,6 +32,8 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 | 4.0 外观 | `assets/css/e.css` + `admin.css` | token 跟 `~/wt/wpcy-proto/E/e.css`。不要另起一套色 |
 | 选项 | `class-wpsss-options.php` | `upload_url_path` 只在空或自有旗时改 |
 | 上传/删/URL | `class-wpsss-offload.php` | 图走 metadata；非图走 `wp_handle_upload` |
+| 已有附件 / 文章 URL | `class-wpsss-library.php` | `wp sss offload` / `rewrite` |
+| 媒体库列 / 批量 / 侧栏 | `class-wpsss-media.php` | 列表「对象存储」列 |
 | 签名 | `class-wpsss-oss-signer.php` | 改完必跑 `php tests/unit-oss-signer.php` |
 | 阿里请求 | `drivers/class-wpsss-driver-aliyun-oss.php` | `wp_remote_request` PUT/DELETE |
 | 新云厂商 | 新 `drivers/class-wpsss-driver-*.php` + `register_driver` | 先接口齐，再 UI 打开选择卡 |

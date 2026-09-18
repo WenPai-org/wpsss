@@ -12,6 +12,12 @@ final class Wpsss_Plugin
     /** @var array<string, Wpsss_Driver> */
     private $drivers = [];
 
+    /** @var Wpsss_Offload|null */
+    private $offload = null;
+
+    /** @var Wpsss_Library|null */
+    private $library = null;
+
     public static function instance(): self
     {
         if (self::$instance === null) {
@@ -24,8 +30,27 @@ final class Wpsss_Plugin
     {
         $this->register_driver(new Wpsss_Driver_Aliyun_Oss());
         add_action('admin_init', [$this, 'register_settings']);
+        $this->offload = new Wpsss_Offload($this);
+        $this->library = new Wpsss_Library($this, $this->offload);
         (new Wpsss_Admin($this))->register();
-        (new Wpsss_Offload($this))->register();
+        $this->offload->register();
+        $this->library->register();
+    }
+
+    public function offload(): Wpsss_Offload
+    {
+        if ($this->offload === null) {
+            $this->offload = new Wpsss_Offload($this);
+        }
+        return $this->offload;
+    }
+
+    public function library(): Wpsss_Library
+    {
+        if ($this->library === null) {
+            $this->library = new Wpsss_Library($this, $this->offload());
+        }
+        return $this->library;
     }
 
     public function register_driver(Wpsss_Driver $driver): void
