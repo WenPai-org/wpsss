@@ -1,0 +1,49 @@
+/* WP 后台里套 4.0 壳。token 在 e.css。 */
+body.wpsss-admin #wpcontent {
+  padding: 0;
+}
+body.wpsss-admin #wpbody-content {
+  padding-bottom: 0;
+  float: none;
+}
+body.wpsss-admin #wpfooter {
+  display: none;
+}
+body.wpsss-admin #wpbody-content > .notice,
+body.wpsss-admin #wpbody-content > .updated,
+body.wpsss-admin #wpbody-content > .error {
+  margin: 16px 32px 0;
+}
+.wpcy-app input[type="text"],
+.wpcy-app input[type="password"],
+.wpcy-app select {
+  width: 100%;
+  max-width: 28rem;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+  font: inherit;
+  color: var(--wpcy-ink);
+  background: #fff;
+}
+.wpcy-app input::placeholder {
+  color: var(--wpcy-ink-3);
+}
+.choice.is-soon {
+  opacity: 0.55;
+  cursor: default;
+}
+.choice.is-soon input {
+  pointer-events: none;
+}
+.wpsss-toggle-form {
+  margin: 0;
+}
+.wpsss-toggle-form button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}

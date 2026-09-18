@@ -4,7 +4,7 @@ Tags: oss, cdn, aliyun, offload
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.2.0-dev
+Stable tag: 0.3.0-dev
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -16,6 +16,9 @@ License URI: https://www.apache.org/licenses/LICENSE-2.0
 不是 Mac Studio/wpsss 腾讯云官方套件，也不是 wenpai-static-host。
 
 == Changelog ==
+
+= 0.3.0-dev =
+* 后台按文派叶子 4.0 方向 E：概览 / 设置 / 工具。
 
 = 0.2.0-dev =
 * 阿里云 OSS：上传原图和缩略图、删附件同步删远端、自定义域改 URL。

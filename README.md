@@ -1,9 +1,42 @@
-# WPSSS
+# WPSSS · 文派对象存储
 
-文派对象存储。真源本仓；工位 wenpai `~/Projects/wpsss`（`wenpai-repo start wpsss`）。
+一个 WordPress 插件，多个对象存储 driver。先做阿里云 OSS。自定义域名以后接 CyberCDN。**HTML 仍在源站。**
 
-计划：linuxjoy `docs/plans/2026-09-18-wpsss.md`。
+| | |
+|--|--|
+| 真源 | FeiCode 私有 [`WenPai-org/wpsss`](https://feicode.com/WenPai-org/wpsss)（`git.feicode.com:2222`） |
+| 工位 | wenpai `~/Projects/wpsss`（`wenpai-repo start wpsss`） |
+| 版本 | 0.3.0-dev |
+| 许可 | Apache-2.0（NOTICE 写明对照 sy-records） |
 
-自定义域名接 CyberCDN。不是 `wenpai-static-host`，不是 Mac `~/Studio/wpsss` 腾讯云官方套件。
+**不是** Mac `~/Studio/wpsss`（腾讯云官方 COS/CDN 套件）。**不是** `wenpai-static-host`。**不是** 火山 ImageX。
 
-签名与上传对照 sy-records Apache-2.0 路径，自写 OSS REST + Signature V1，不整仓粘贴 SDK。
+## 人怎么用
+
+1. 激活插件。后台左侧「文派对象存储」。
+2. **设置 → 高级**：桶、区域、RAM 密钥。默认保留本地文件。
+3. **工具 → 测试连通**。或 `wp wpsss probe`。
+4. 上传媒体，附件 URL 应是桶域或自定义域。
+
+开关即时生效。桶和密钥要保存。
+
+## Agent / CLI
+
+```bash
+wenpai-repo start wpsss --task <短名>
+wp --path=~/Studio/wpsss-dev wpsss status
+wp --path=~/Studio/wpsss-dev wpsss set --from-env
+wp --path=~/Studio/wpsss-dev wpsss probe
+wp --path=~/Studio/wpsss-dev wpsss doctor
+```
+
+`--from-env` 读 `~/.config/linuxjoy/wpsss-test.env`（`WPSSS_OSS_*`）。密钥不进 git、不进对话。
+
+下一个 agent **先读**：
+
+1. [`AGENTS.md`](AGENTS.md)
+2. [`CLAUDE.md`](CLAUDE.md)
+3. [`docs/develop.md`](docs/develop.md)
+4. [`docs/ai-context/HANDOFF.md`](docs/ai-context/HANDOFF.md)
+
+集群 SOP：linuxjoy `docs/ops/sop-wpsss.md`。计划：`docs/plans/2026-09-18-wpsss.md`。UI 原型：`docs/plans/wpsss-ui/`。
