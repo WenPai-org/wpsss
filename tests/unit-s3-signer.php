@@ -142,6 +142,11 @@ $tos_in = Wpsss_Options::sanitize([
 ]);
 wpsss_assert($tos_in['s3_preset'] === 'tos', 'jakarta still tos');
 wpsss_assert(Wpsss_Options::s3_endpoint($tos_in) === 'https://tos-s3-ap-southeast-3.ivolces.com', 'tos internal endpoint');
+wpsss_assert(Wpsss_Options::s3_endpoint($tos_in, true) === 'https://tos-s3-ap-southeast-3.volces.com', 'tos public ignores internal');
+$tos_req = Wpsss_Options::s3_object_request($tos_in, 'a.png');
+wpsss_assert(strpos($tos_req['host'], 'ivolces.com') !== false, 'api host internal');
+wpsss_assert(strpos($tos_req['public_host'], 'volces.com') !== false, 'visitor host public');
+wpsss_assert(strpos($tos_req['public_base'], 'ivolces') === false, 'public_base not internal');
 wpsss_assert(isset(Wpsss_Options::regions_for('volc-tos')['ap-southeast-3']), 'tos lists jakarta');
 wpsss_assert(Wpsss_Options::region_is_overseas('volc-tos', 'ap-southeast-3'), 'jakarta overseas');
 wpsss_assert(!Wpsss_Options::region_is_overseas('volc-tos', 'cn-beijing'), 'beijing domestic');

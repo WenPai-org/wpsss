@@ -321,7 +321,7 @@ class Wpsss_Options
     /**
      * @param array<string, string> $opts
      */
-    public static function s3_endpoint(array $opts): string
+    public static function s3_endpoint(array $opts, bool $public = false): string
     {
         $endpoint = trim((string) ($opts['endpoint'] ?? ''));
         if ($endpoint !== '') {
@@ -339,7 +339,8 @@ class Wpsss_Options
                 if ($region === '') {
                     return '';
                 }
-                $suffix = (($opts['use_internal'] ?? '0') === '1') ? '.ivolces.com' : '.volces.com';
+                $internal = !$public && (($opts['use_internal'] ?? '0') === '1');
+                $suffix = $internal ? '.ivolces.com' : '.volces.com';
                 return 'https://tos-s3-' . $region . $suffix;
             default:
                 return '';
@@ -377,16 +378,30 @@ class Wpsss_Options
 
     /**
      * @param array<string, string> $opts
-     * @return array{url: string, host: string, canonical_uri: string, public_base: string}
+     * @return array{url: string, host: string, canonical_uri: string, public_base: string, public_url: string, public_host: string}
      */
     public static function s3_object_request(array $opts, string $object): array
+    {
+        $api = self::s3_build_request($opts, $object, false);
+        $pub = self::s3_build_request($opts, $object, true);
+        $api['public_base'] = $pub['public_base'];
+        $api['public_url'] = $pub['url'];
+        $api['public_host'] = $pub['host'];
+        return $api;
+    }
+
+    /**
+     * @param array<string, string> $opts
+     * @return array{url: string, host: string, canonical_uri: string, public_base: string}
+     */
+    private static function s3_build_request(array $opts, string $object, bool $public): array
     {
         $bucket = trim((string) ($opts['bucket'] ?? ''));
         $object = ltrim($object, '/');
         $encoded = $object !== '' ? Wpsss_S3_Signer::encode_key($object) : '';
         $preset = self::effective_s3_preset($opts);
         $path_style = self::s3_force_path_style($opts);
-        $endpoint = self::s3_endpoint($opts);
+        $endpoint = self::s3_endpoint($opts, $public);
         $region = self::s3_signing_region($opts);
 
         $base_host = '';

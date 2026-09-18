@@ -127,13 +127,14 @@ class Wpsss_Url
             $qs = Wpsss_S3_Signer::sign_get_query(
                 $ak,
                 $sk,
-                $req['host'],
+                $req['public_host'] !== '' ? $req['public_host'] : $req['host'],
                 $req['canonical_uri'],
                 Wpsss_S3_Signer::amz_date($now),
                 Wpsss_Options::s3_signing_region($opts),
                 $ttl
             );
-            return $req['url'] . '?' . $qs;
+            $signed_url = $req['public_url'] !== '' ? $req['public_url'] : $req['url'];
+            return $signed_url . '?' . $qs;
         }
         return $url;
     }
