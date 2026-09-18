@@ -4,11 +4,11 @@ Tags: oss, cdn, aliyun, offload
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
-文派对象存储。一个插件、多个 driver；先做阿里云 OSS，自定义域名接 CyberCDN。
+文派对象存储。一个插件、四个 driver：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。
 
 == Description ==
 
@@ -16,6 +16,9 @@ License URI: https://www.apache.org/licenses/LICENSE-2.0
 不是 Mac Studio/wpsss 腾讯云官方套件，也不是 wenpai-static-host。
 
 == Changelog ==
+
+= 0.5.0 =
+四家 driver + 共有能力（样式/原图保护/重命名/前缀/同步记录/CLI upload-delete）。
 
 = 0.4.0 =
 * CLI 改为 `wp sss`。关 keep_local 须人批。

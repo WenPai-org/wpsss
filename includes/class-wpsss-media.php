@@ -53,6 +53,12 @@ final class Wpsss_Media
             echo esc_html__('未接通', 'wpsss');
             return;
         }
+        $err = Wpsss_Library::last_error($post_id);
+        if ($err !== '') {
+            echo '<span class="pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
+            echo '<div class="p">' . esc_html($err) . '</div>';
+            return;
+        }
         if (Wpsss_Library::is_offloaded($post_id)) {
             echo '<span class="pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
             return;
@@ -128,6 +134,7 @@ final class Wpsss_Media
         echo '<option value="">' . esc_html__('对象存储（全部）', 'wpsss') . '</option>';
         echo '<option value="offloaded"' . selected($cur, 'offloaded', false) . '>' . esc_html__('已进桶', 'wpsss') . '</option>';
         echo '<option value="pending"' . selected($cur, 'pending', false) . '>' . esc_html__('未进桶', 'wpsss') . '</option>';
+        echo '<option value="failed"' . selected($cur, 'failed', false) . '>' . esc_html__('失败', 'wpsss') . '</option>';
         echo '</select>';
     }
 
@@ -143,6 +150,11 @@ final class Wpsss_Media
         if ($state === 'offloaded') {
             $query->set('meta_key', Wpsss_Library::META_OFFLOADED);
             $query->set('meta_value', '1');
+            return;
+        }
+        if ($state === 'failed') {
+            $query->set('meta_key', Wpsss_Library::META_ERROR);
+            $query->set('meta_compare', 'EXISTS');
             return;
         }
         if ($state !== 'pending') {
@@ -179,7 +191,11 @@ final class Wpsss_Media
         $off = Wpsss_Library::is_offloaded($id);
         $key = (string) get_post_meta($id, Wpsss_Library::META_KEY, true);
         $url = wp_get_attachment_url($id);
+        $err = Wpsss_Library::last_error($id);
         echo '<p>' . esc_html($off ? __('已进桶', 'wpsss') : __('未进桶', 'wpsss')) . '</p>';
+        if ($err !== '') {
+            echo '<p>' . esc_html($err) . '</p>';
+        }
         if ($key !== '') {
             echo '<p><code>' . esc_html($key) . '</code></p>';
         }

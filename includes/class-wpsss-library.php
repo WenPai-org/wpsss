@@ -11,6 +11,7 @@ final class Wpsss_Library
 {
     public const META_OFFLOADED = '_wpsss_offloaded';
     public const META_KEY = '_wpsss_key';
+    public const META_ERROR = '_wpsss_error';
 
     /** @var Wpsss_Plugin */
     private $plugin;
@@ -47,8 +48,13 @@ final class Wpsss_Library
         return get_post_meta($post_id, self::META_OFFLOADED, true) === '1';
     }
 
+    public static function last_error(int $post_id): string
+    {
+        return (string) get_post_meta($post_id, self::META_ERROR, true);
+    }
+
     /**
-     * @return array{total: int, offloaded: int, pending: int}
+     * @return array{total: int, offloaded: int, pending: int, failed: int}
      */
     public function stats(): array
     {
@@ -63,11 +69,21 @@ final class Wpsss_Library
             'meta_value' => '1',
             'no_found_rows' => false,
         ]);
+        $failed = new WP_Query([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'meta_key' => self::META_ERROR,
+            'meta_compare' => 'EXISTS',
+            'no_found_rows' => false,
+        ]);
         $offloaded = (int) $done->found_posts;
         return [
             'total' => $total,
             'offloaded' => $offloaded,
             'pending' => max(0, $total - $offloaded),
+            'failed' => (int) $failed->found_posts,
         ];
     }
 
@@ -130,11 +146,12 @@ final class Wpsss_Library
     /**
      * @return array{scanned: int, changed: int, samples: string[], meta_scanned: int, meta_changed: int}
      */
-    public function rewrite_posts(bool $apply): array
+    public function rewrite_posts(bool $apply, string $from = '', string $to = ''): array
     {
         $uploads = wp_upload_dir();
-        $from = untrailingslashit((string) $uploads['baseurl']);
-        $to = untrailingslashit(Wpsss_Options::public_base());
+        $from = $from !== '' ? untrailingslashit($from) : untrailingslashit((string) $uploads['baseurl']);
+        $extra = (string) Wpsss_Options::get()['rewrite_from'];
+        $to = $to !== '' ? untrailingslashit($to) : untrailingslashit(Wpsss_Options::public_base());
         $scanned = 0;
         $changed = 0;
         $samples = [];
@@ -142,6 +159,11 @@ final class Wpsss_Library
         $meta_changed = 0;
         if ($from === '' || $to === '' || $from === $to) {
             return compact('scanned', 'changed', 'samples', 'meta_scanned', 'meta_changed');
+        }
+
+        $pairs = [[$from, $to]];
+        if ($extra !== '' && untrailingslashit($extra) !== $to && untrailingslashit($extra) !== $from) {
+            $pairs[] = [untrailingslashit($extra), $to];
         }
 
         global $wpdb;
@@ -158,8 +180,12 @@ final class Wpsss_Library
                 continue;
             }
             $scanned++;
-            $content = Wpsss_Offload::rewrite_urls_in_text((string) $post->post_content, $from, $to);
-            $excerpt = Wpsss_Offload::rewrite_urls_in_text((string) $post->post_excerpt, $from, $to);
+            $content = (string) $post->post_content;
+            $excerpt = (string) $post->post_excerpt;
+            foreach ($pairs as [$src, $dst]) {
+                $content = Wpsss_Offload::rewrite_urls_in_text($content, $src, $dst);
+                $excerpt = Wpsss_Offload::rewrite_urls_in_text($excerpt, $src, $dst);
+            }
             if ($content === $post->post_content && $excerpt === $post->post_excerpt) {
                 continue;
             }
@@ -186,7 +212,10 @@ final class Wpsss_Library
                 continue;
             }
             $meta_scanned++;
-            $next = Wpsss_Offload::rewrite_urls_in_text($value, $from, $to);
+            $next = $value;
+            foreach ($pairs as [$src, $dst]) {
+                $next = Wpsss_Offload::rewrite_urls_in_text($next, $src, $dst);
+            }
             if ($next === $value) {
                 continue;
             }

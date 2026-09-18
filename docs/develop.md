@@ -4,7 +4,7 @@
 
 文派要自己的「对象存储挂 WordPress」：媒体进桶，页面仍在源站，自定义域以后走 **CyberCDN**（不是整站上 OSS，不是腾讯官方套件）。
 
-2026-09-18 从零建仓。对照 [sy-records](https://github.com/sy-records) Apache-2.0 全家桶的上传/删除/URL 路径，**自写 OSS REST + Signature V1**，不粘贴 Aliyun SDK。后台按文派叶子 **4.0 方向 E**（人批「就按这个来」）：页头横向 概览 / 设置 / 工具。
+2026-09-18 从零建仓。对照 [sy-records](https://github.com/sy-records) 四家 Apache-2.0 插件的上传/删除/URL/样式，**自写 REST 签名**，不粘 SDK。后台按文派叶子 **4.0 方向 E**（人批「就按这个来」）：页头横向 概览 / 设置 / 工具。
 
 集群会话拍板：linuxjoy `docs/plans/2026-09-18-wpsss.md`、SOP `#36`、cluster-recall **#8398**（UI 跟 4.0 E）。
 
@@ -34,16 +34,16 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 | 上传/删/URL | `class-wpsss-offload.php` | 图走 metadata；非图走 `wp_handle_upload` |
 | 已有附件 / 文章 URL | `class-wpsss-library.php` | `wp sss offload` / `rewrite` |
 | 媒体库列 / 批量 / 侧栏 | `class-wpsss-media.php` | 列表「对象存储」列 |
-| 签名 | `class-wpsss-oss-signer.php` | 改完必跑 `php tests/unit-oss-signer.php` |
-| 阿里请求 | `drivers/class-wpsss-driver-aliyun-oss.php` | `wp_remote_request` PUT/DELETE |
-| 新云厂商 | 新 `drivers/class-wpsss-driver-*.php` + `register_driver` | 先接口齐，再 UI 打开选择卡 |
+| 签名 | `class-wpsss-*-signer.php` | OSS / COS q-sign / KODO / OBS。改完 `php tests/run.php` |
+| URL / 样式 | `class-wpsss-url.php` | 正文运行时改写、原图保护 |
+| 四家请求 | `drivers/class-wpsss-driver-*.php` | 已注册 OSS/COS/KODO/OBS |
 | CLI | `class-wpsss-cli.php` | 密钥不 echo |
 
 `Wpsss_Driver`：`id` `label` `is_configured` `put_object` `delete_objects` `probe`。
 
 ## 已拍板
 
-- 一个插件多个 driver，v1 只有阿里。
+- 一个插件四个 driver。设置页能选。沙箱默认仍是阿里测试桶。
 - 默认留本地。探测对象写了即删。
 - 测试桶 `wenpai-wpsss-test` / `oss-cn-hangzhou` / RAM `wpsss-test`。
 - 后台跟 4.0 E，RemixIcon line 内联，不用图标字体 CDN。
@@ -53,9 +53,9 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 ## 未做（须人批再开）
 
 1. 自定义域 + CyberCDN Zone（备案 CNAME，复用现成六边，不要加机器）。
-2. COS / OBS / KODO driver。
-3. 接到自用生产站。
-4. 把 `e.css` 收成共享包 / `wpcy-settings` schema（现在是抄进来的视觉层）。
+2. 接到自用生产站。
+3. 把 `e.css` 收成共享包 / `wpcy-settings` schema（现在是抄进来的视觉层）。
+4. COS/KODO/OBS 用对应测试桶做 probe（现在只有阿里测试桶）。
 
 ## 陷阱
 

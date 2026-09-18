@@ -16,6 +16,7 @@ class Wpsss_Offload
 
     public function register(): void
     {
+        add_filter('sanitize_file_name', [$this, 'rename_file'], 10, 1);
         add_filter('wp_handle_upload', [$this, 'on_handle_upload'], 50);
         add_filter('wp_generate_attachment_metadata', [$this, 'on_generate_metadata'], 100, 2);
         add_filter('wp_update_attachment_metadata', [$this, 'on_generate_metadata'], 100, 2);
@@ -23,6 +24,24 @@ class Wpsss_Offload
         add_action('delete_attachment', [$this, 'on_delete_attachment']);
         add_filter('wp_get_attachment_url', [$this, 'rewrite_url'], 30, 2);
         add_filter('wp_calculate_image_srcset', [$this, 'rewrite_srcset'], 10, 5);
+        add_filter('the_content', [$this, 'rewrite_content'], 100);
+        add_filter('the_excerpt', [$this, 'rewrite_content'], 100);
+        add_filter('post_thumbnail_html', [$this, 'rewrite_content'], 100);
+    }
+
+    public function rename_file(string $filename): string
+    {
+        $opts = Wpsss_Options::get();
+        $mode = $opts['auto_rename'] ?? 'off';
+        if ($mode === 'off' || $filename === '') {
+            return $filename;
+        }
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        $suffix = $ext !== '' ? '.' . $ext : '';
+        if ($mode === 'md5') {
+            return md5($filename . microtime(true)) . $suffix;
+        }
+        return gmdate('YmdHis', time()) . wp_rand(100, 999) . $suffix;
     }
 
     /**
@@ -79,8 +98,12 @@ class Wpsss_Offload
             }
         }
 
-        if ((int) $attachment_id > 0 && !is_wp_error($ok)) {
-            $this->mark_offloaded((int) $attachment_id, (string) $metadata['file']);
+        if ((int) $attachment_id > 0) {
+            if (!is_wp_error($ok)) {
+                $this->mark_offloaded((int) $attachment_id, $this->object_key($primary));
+            } else {
+                $this->mark_failed((int) $attachment_id, $ok->get_error_message());
+            }
         }
 
         return $metadata;
@@ -102,12 +125,13 @@ class Wpsss_Offload
         if (is_array($meta) && !empty($meta['file'])) {
             $this->on_generate_metadata($meta, $post_id);
             if (!Wpsss_Library::is_offloaded($post_id)) {
-                $this->mark_offloaded($post_id, (string) $meta['file']);
+                $this->mark_offloaded($post_id, $this->object_key($file));
             }
             return true;
         }
         $put = $this->put_local_file($file, (string) (get_post_mime_type($post_id) ?: ''));
         if (is_wp_error($put)) {
+            $this->mark_failed($post_id, $put->get_error_message());
             return $put;
         }
         $this->mark_offloaded($post_id, $this->object_key($file));
@@ -117,19 +141,22 @@ class Wpsss_Offload
     public function mark_offloaded(int $post_id, string $key = ''): void
     {
         update_post_meta($post_id, Wpsss_Library::META_OFFLOADED, '1');
+        delete_post_meta($post_id, Wpsss_Library::META_ERROR);
         if ($key !== '') {
             update_post_meta($post_id, Wpsss_Library::META_KEY, $key);
         }
+        Wpsss_History::add('offload', '附件 ' . $post_id . ($key !== '' ? ' → ' . $key : ''));
+    }
+
+    public function mark_failed(int $post_id, string $message): void
+    {
+        update_post_meta($post_id, Wpsss_Library::META_ERROR, $message);
+        Wpsss_History::add('fail', '附件 ' . $post_id . '：' . $message);
     }
 
     public static function rewrite_urls_in_text(string $text, string $from_base, string $to_base): string
     {
-        $from = rtrim($from_base, '/');
-        $to = rtrim($to_base, '/');
-        if ($from === '' || $to === '' || $from === $to || $text === '') {
-            return $text;
-        }
-        return str_replace($from, $to, $text);
+        return Wpsss_Url::rewrite_text($text, $from_base, $to_base, '');
     }
 
     /** @var bool */
@@ -160,12 +187,14 @@ class Wpsss_Offload
         }
 
         $this->plugin->active_driver()->delete_objects(Wpsss_Options::get(), $keys);
+        Wpsss_History::add('delete', '附件 ' . $post_id . ' ×' . count($keys));
     }
 
     public function rewrite_url(string $url, int $post_id): string
     {
         $base = Wpsss_Options::public_base();
-        if ($base === '' || !$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+        $opts = Wpsss_Options::get();
+        if ($base === '' || !$this->plugin->active_driver()->is_configured($opts)) {
             return $url;
         }
         if (!Wpsss_Library::is_offloaded($post_id)) {
@@ -176,7 +205,10 @@ class Wpsss_Offload
         if ($key === '') {
             return $url;
         }
-        return Wpsss_Oss_Signer::object_url($base, $key);
+        $next = Wpsss_Oss_Signer::object_url($base, $key);
+        $next = Wpsss_Url::apply_style($next, $opts);
+        $mime = (string) get_post_mime_type($post_id);
+        return Wpsss_Url::apply_preview($next, $mime, $opts);
     }
 
     /**
@@ -187,8 +219,9 @@ class Wpsss_Offload
      */
     public function rewrite_srcset($sources, $size_array, $image_src, $image_meta, $attachment_id)
     {
+        $opts = Wpsss_Options::get();
         $base = Wpsss_Options::public_base();
-        if ($base === '' || !is_array($sources) || !$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+        if ($base === '' || !is_array($sources) || !$this->plugin->active_driver()->is_configured($opts)) {
             return $sources;
         }
         if (!Wpsss_Library::is_offloaded((int) $attachment_id)) {
@@ -209,7 +242,28 @@ class Wpsss_Offload
             $file = wp_basename((string) $source['url']);
             $sources[$width]['url'] = Wpsss_Oss_Signer::object_url($base, $dir . $file);
         }
-        return $sources;
+        $style = Wpsss_Url::should_protect_origin($opts) || Wpsss_Url::style_suffix($opts) !== ''
+            ? Wpsss_Url::style_suffix($opts)
+            : '';
+        return Wpsss_Url::style_srcset($sources, $style);
+    }
+
+    public function rewrite_content(string $content): string
+    {
+        $opts = Wpsss_Options::get();
+        $to = Wpsss_Options::public_base();
+        if ($to === '' || !$this->plugin->active_driver()->is_configured($opts)) {
+            return $content;
+        }
+        $uploads = wp_upload_dir();
+        $from = untrailingslashit((string) $uploads['baseurl']);
+        $style = Wpsss_Url::style_suffix($opts);
+        $content = Wpsss_Url::rewrite_text($content, $from, $to, $style);
+        $extra = (string) ($opts['rewrite_from'] ?? '');
+        if ($extra !== '') {
+            $content = Wpsss_Url::rewrite_text($content, $extra, $to, $style);
+        }
+        return $content;
     }
 
     private function should_offload(): bool
@@ -310,7 +364,11 @@ class Wpsss_Offload
     private function object_key(string $absolute_path): string
     {
         $uploads = wp_upload_dir();
-        return self::key_from_uploads($absolute_path, (string) $uploads['basedir']);
+        $key = self::key_from_uploads($absolute_path, (string) $uploads['basedir']);
+        if ($key === '') {
+            return '';
+        }
+        return Wpsss_Options::apply_object_prefix($key);
     }
 
     /**
@@ -336,14 +394,26 @@ class Wpsss_Offload
                 }
             }
         }
+        $stored = (string) get_post_meta($post_id, Wpsss_Library::META_KEY, true);
+        if ($stored !== '') {
+            $keys[] = $stored;
+        }
+        $opts = Wpsss_Options::get();
+        $keys = array_map(static function ($key) use ($opts) {
+            return Wpsss_Options::apply_object_prefix((string) $key, $opts);
+        }, $keys);
         return array_values(array_unique($keys));
     }
 
     private function attachment_primary_key(int $post_id): string
     {
+        $stored = (string) get_post_meta($post_id, Wpsss_Library::META_KEY, true);
+        if ($stored !== '') {
+            return $stored;
+        }
         $meta = wp_get_attachment_metadata($post_id);
         if (is_array($meta) && !empty($meta['file'])) {
-            return (string) $meta['file'];
+            return Wpsss_Options::apply_object_prefix((string) $meta['file']);
         }
         $file = get_attached_file($post_id);
         return $file ? $this->object_key($file) : '';

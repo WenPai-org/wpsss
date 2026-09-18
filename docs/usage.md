@@ -8,7 +8,7 @@
 |----|--------|
 | 概览 | 桶 / 对外地址 / 本地备份是否接通 |
 | 设置 · 简单 | 看当前组合；本地备份、缩略图开关即时写 |
-| 设置 · 高级 | 桶、区域、密钥、内网、自定义域。保存走 Settings API |
+| 设置 · 高级 | 厂商、桶、区域、密钥、前缀、重命名、图片样式、原图保护、自定义域 |
 | 工具 | 测试连通、补传已有附件、改写文章 URL。清边缘尚未开放 |
 
 ## WP-CLI
@@ -23,13 +23,15 @@ wp sss doctor
 wp sss offload --dry-run
 wp sss url <附件ID>
 wp sss rewrite
+wp sss upload ./a.png --key=manual/a.png
+wp sss delete manual/a.png
 ```
 
 `set --from-env` 读 `~/.config/linuxjoy/wpsss-test.env`。不要 `cat` 密钥进会话。
 
 ## 验收（测试桶）
 
-1. `wp sss doctor` 无阻断，`keep_local=1`。
+1. `wp sss doctor` 无阻断，`keep_local=1`。匿名 403 只 WARN。
 2. `wp sss probe` 成功。
 3. 媒体库导入一张图：附件 URL 是 `https://<bucket>.<region>.aliyuncs.com/...`。
 4. 已有附件：`wp sss offload`；文章硬编码地址：`wp sss rewrite --apply`。

@@ -29,6 +29,9 @@ final class Wpsss_Plugin
     public function boot(): void
     {
         $this->register_driver(new Wpsss_Driver_Aliyun_Oss());
+        $this->register_driver(new Wpsss_Driver_Qcloud_Cos());
+        $this->register_driver(new Wpsss_Driver_Qiniu_Kodo());
+        $this->register_driver(new Wpsss_Driver_Huawei_Obs());
         add_action('admin_init', [$this, 'register_settings']);
         $this->offload = new Wpsss_Offload($this);
         $this->library = new Wpsss_Library($this, $this->offload);
@@ -61,7 +64,7 @@ final class Wpsss_Plugin
     public function active_driver(): Wpsss_Driver
     {
         $id = Wpsss_Options::get()['driver'];
-        return $this->drivers[$id] ?? $this->drivers['aliyun-oss'];
+        return $this->drivers[$id] ?? $this->drivers[Wpsss_Options::DRIVER_ALIYUN];
     }
 
     /**

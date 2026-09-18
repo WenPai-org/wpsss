@@ -89,6 +89,33 @@ wpsss_assert(
     'public_base bucket host'
 );
 
+
+$GLOBALS['wpsss_options_store'] = [];
+$cos = Wpsss_Options::sanitize([
+    'driver' => 'qcloud-cos',
+    'bucket' => 'demo-1250000000',
+    'region' => 'ap-guangzhou',
+    'access_key_id' => 'id',
+    'access_key_secret' => 'secret',
+    'keep_local' => '1',
+    'auto_rename' => 'md5',
+    'object_prefix' => 'media/',
+    'image_style' => '?imageMogr2/format/webp',
+    'origin_protect' => '1',
+]);
+wpsss_assert($cos['driver'] === 'qcloud-cos', 'sanitize keeps cos driver');
+wpsss_assert($cos['auto_rename'] === 'md5', 'sanitize auto_rename');
+wpsss_assert($cos['object_prefix'] === 'media', 'sanitize trims prefix slash');
+wpsss_assert($cos['origin_protect'] === '1', 'sanitize origin_protect');
+$GLOBALS['wpsss_options_store'][Wpsss_Options::OPTION_KEY] = $cos;
+wpsss_assert(
+    Wpsss_Options::public_base() === 'https://demo-1250000000.cos.ap-guangzhou.myqcloud.com',
+    'public_base cos host'
+);
+wpsss_assert(Wpsss_Options::apply_object_prefix('2026/a.png', $cos) === 'media/2026/a.png', 'prefix join');
+$bad_driver = Wpsss_Options::sanitize(array_merge($cos, ['driver' => 'volcengine']));
+wpsss_assert($bad_driver['driver'] === 'aliyun-oss', 'unknown driver falls back');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

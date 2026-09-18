@@ -2,6 +2,8 @@
 if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/');
 }
+define('WPSSS_TEST', true);
+require dirname(__DIR__) . '/includes/class-wpsss-url.php';
 require dirname(__DIR__) . '/includes/class-wpsss-offload.php';
 
 $failed = 0;

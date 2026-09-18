@@ -5,9 +5,17 @@ $url = $view['url'];
 $opts = $view['opts'];
 $mode = (string) $view['mode'];
 $key = Wpsss_Options::OPTION_KEY;
-$regions = Wpsss_Options::regions();
+$driver = (string) $opts['driver'];
+$regions = Wpsss_Options::regions_for($driver);
 $region_label = $regions[$opts['region']] ?? $opts['region'];
 $adv = $mode === 'advanced';
+$drivers = Wpsss_Options::driver_ids();
+$driver_help = [
+    Wpsss_Options::DRIVER_ALIYUN => '现网已通。自定义域以后走 CyberCDN',
+    Wpsss_Options::DRIVER_COS => '自写 REST，不是 Mac Studio 那份官方套件',
+    Wpsss_Options::DRIVER_KODO => '对外地址必须填自定义域',
+    Wpsss_Options::DRIVER_OBS => '签名走 OBS V2，不粘 SDK',
+];
 ?>
 <div class="wpcy-page-head">
   <div>
@@ -25,29 +33,48 @@ $adv = $mode === 'advanced';
 <div class="wpcy-stack">
   <section class="card">
     <h2 class="section-title"><?php echo Wpsss_Icons::svg('cloud'); ?> <?php echo esc_html__('云厂商', 'wpsss'); ?></h2>
-    <p class="section-desc"><?php echo esc_html__('一个插件、多个 driver。现在只能接阿里云 OSS。', 'wpsss'); ?></p>
+    <p class="section-desc"><?php echo esc_html__('一个插件、四个 driver。对照 sy-records 四家，功能按同一套来。', 'wpsss'); ?></p>
+    <?php if ($adv) : ?>
+    <form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>" id="wpsss-settings-form">
+      <?php settings_fields('wpsss'); ?>
+    <?php endif; ?>
     <div class="choice-cards">
-      <label class="choice is-on"><input type="radio" checked disabled><span><div class="t"><?php echo esc_html__('阿里云 OSS', 'wpsss'); ?></div><div class="d"><?php echo esc_html__('现网已通。自定义域以后走 CyberCDN', 'wpsss'); ?></div></span></label>
-      <label class="choice is-soon"><input type="radio" disabled><span><div class="t"><?php echo esc_html__('腾讯云 COS', 'wpsss'); ?></div><div class="d"><?php echo esc_html__('即将提供 · 不是 Mac Studio 那份官方套件', 'wpsss'); ?></div></span></label>
-      <label class="choice is-soon"><input type="radio" disabled><span><div class="t"><?php echo esc_html__('华为云 OBS', 'wpsss'); ?></div><div class="d"><?php echo esc_html__('即将提供', 'wpsss'); ?></div></span></label>
+      <?php foreach ($drivers as $id => $label) : ?>
+        <?php $on = $driver === $id; ?>
+        <label class="choice<?php echo $on ? ' is-on' : ''; ?>">
+          <?php if ($adv) : ?>
+            <input type="radio" name="<?php echo esc_attr($key); ?>[driver]" value="<?php echo esc_attr($id); ?>" <?php checked($on); ?> />
+          <?php else : ?>
+            <input type="radio" <?php echo $on ? 'checked' : ''; ?> disabled />
+          <?php endif; ?>
+          <span>
+            <div class="t"><?php echo esc_html($label); ?></div>
+            <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
+          </span>
+        </label>
+      <?php endforeach; ?>
     </div>
   </section>
 
   <?php if (!$adv) : ?>
   <section class="card">
     <h2 class="section-title"><?php echo esc_html__('当前组合', 'wpsss'); ?></h2>
-    <p class="section-desc"><?php echo esc_html__('想改密钥或自定义域，切到「高级」。', 'wpsss'); ?></p>
+    <p class="section-desc"><?php echo esc_html__('想改密钥、厂商或自定义域，切到「高级」。', 'wpsss'); ?></p>
     <div class="simple-row">
       <div class="tile<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('cloud'); ?></div>
-      <div><div class="t"><?php echo esc_html__('存储桶', 'wpsss'); ?></div><div class="d"><?php echo esc_html($view['driver']->label() . ' · ' . $region_label); ?></div></div>
+      <div><div class="t"><?php echo esc_html__('存储桶', 'wpsss'); ?></div><div class="d"><?php echo esc_html(($drivers[$driver] ?? $driver) . ' · ' . $region_label); ?></div></div>
       <div class="r"><span class="pill<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo $opts['bucket'] !== '' ? esc_html($opts['bucket']) : esc_html__('未设置', 'wpsss'); ?></span></div>
     </div>
     <div class="simple-row">
       <div class="tile"><?php echo Wpsss_Icons::svg('image'); ?></div>
-      <div><div class="t"><?php echo esc_html__('对外地址', 'wpsss'); ?></div><div class="d"><?php echo esc_html__('空着就用桶默认域名。填了只在 upload_url_path 为空或由本插件写入时才改', 'wpsss'); ?></div></div>
+      <div><div class="t"><?php echo esc_html__('对外地址', 'wpsss'); ?></div><div class="d"><?php echo esc_html__('空着就用桶默认域名。七牛必须填自定义域。', 'wpsss'); ?></div></div>
       <div class="r"><span class="scope"><?php echo $opts['custom_domain'] !== '' ? esc_html($opts['custom_domain']) : esc_html__('未设自定义域', 'wpsss'); ?></span></div>
     </div>
-    <?php foreach (['keep_local' => ['上传后保留本地文件', '关掉须人批。源站还能退回'], 'upload_thumbs' => ['同时上传缩略图', '附件生成的尺寸一并进桶']] as $field => $copy) : ?>
+    <?php foreach ([
+        'keep_local' => ['上传后保留本地文件', '关掉须人批。源站还能退回'],
+        'upload_thumbs' => ['同时上传缩略图', '附件生成的尺寸一并进桶'],
+        'origin_protect' => ['原图保护', '对已进桶的地址追加图片样式'],
+    ] as $field => $copy) : ?>
       <?php $on = $opts[$field] === '1'; ?>
       <div class="simple-row">
         <div class="tile<?php echo $on ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('plug'); ?></div>
@@ -70,18 +97,45 @@ $adv = $mode === 'advanced';
   <?php else : ?>
   <section class="card">
     <h2 class="section-title"><?php echo esc_html__('桶与密钥', 'wpsss'); ?></h2>
-    <p class="section-desc"><?php echo esc_html__('用 RAM 子用户，只授这一只桶。不要填账号根密钥。', 'wpsss'); ?></p>
-    <form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>">
-      <?php settings_fields('wpsss'); ?>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('桶名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('只填桶名，不要带 .oss-cn-*.aliyuncs.com', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[bucket]" type="text" value="<?php echo esc_attr($opts['bucket']); ?>" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('和源站同区域才勾内网', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]"><?php foreach ($regions as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select></div></div>
-      <div class="field"><div><div class="field-label">AccessKey ID</div><div class="field-help"><?php echo esc_html__('RAM 子用户', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_id]" type="text" value="<?php echo esc_attr($opts['access_key_id']); ?>" autocomplete="off" /></div></div>
+    <p class="section-desc"><?php echo esc_html__('用子用户，只授这一只桶。不要填账号根密钥。', 'wpsss'); ?></p>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('桶名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('COS 填 name-appid。不要带厂商域名', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[bucket]" type="text" value="<?php echo esc_attr($opts['bucket']); ?>" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('四家各自的区域列表。和源站同区域才勾内网', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]"><?php foreach (Wpsss_Options::all_regions() as $group => $items) : ?><optgroup label="<?php echo esc_attr($drivers[$group] ?? $group); ?>"><?php foreach ($items as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?></select></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('APPID（COS）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('可选。桶名已含 -数字 时可空', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[app_id]" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" /></div></div>
+      <div class="field"><div><div class="field-label">AccessKey ID</div><div class="field-help"><?php echo esc_html__('子用户 / SecretId', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_id]" type="text" value="<?php echo esc_attr($opts['access_key_id']); ?>" autocomplete="off" /></div></div>
       <div class="field"><div><div class="field-label">AccessKey Secret</div><div class="field-help"><?php echo $view['secret_set'] ? esc_html__('已保存。留空保存时不改', 'wpsss') : esc_html__('不会出现在页面源码里', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_secret]" type="password" value="" autocomplete="new-password" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('走 OSS 内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('源站和桶在同一阿里云区域时再开', 'wpsss'); ?></div></div><div class="field-ctl">
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('源站和桶在同一云厂商区域时再开', 'wpsss'); ?></div></div><div class="field-ctl">
         <input type="hidden" name="<?php echo esc_attr($key); ?>[use_internal]" value="0" />
         <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[use_internal]" value="1" <?php checked($opts['use_internal'], '1'); ?> /> <?php echo esc_html__('已开启', 'wpsss'); ?></label></div>
       </div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('自定义域名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('备案后的 HTTPS。边缘用现成 CyberCDN Zone', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[custom_domain]" type="text" value="<?php echo esc_attr($opts['custom_domain']); ?>" placeholder="https://static.example.com" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('自定义域名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('备案后的 HTTPS。七牛必填。边缘用现成 CyberCDN Zone', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[custom_domain]" type="text" value="<?php echo esc_attr($opts['custom_domain']); ?>" placeholder="https://static.example.com" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('对象前缀 / 子目录', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('进桶路径前面再加一层，例如 media', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[object_prefix]" type="text" value="<?php echo esc_attr($opts['object_prefix']); ?>" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('自动重命名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('对照四家插件的文件名随机化', 'wpsss'); ?></div></div><div class="field-ctl">
+        <select name="<?php echo esc_attr($key); ?>[auto_rename]">
+          <option value="off"<?php selected($opts['auto_rename'], 'off'); ?>><?php echo esc_html__('不改文件名', 'wpsss'); ?></option>
+          <option value="md5"<?php selected($opts['auto_rename'], 'md5'); ?>><?php echo esc_html__('MD5', 'wpsss'); ?></option>
+          <option value="time"<?php selected($opts['auto_rename'], 'time'); ?>><?php echo esc_html__('时间戳+随机', 'wpsss'); ?></option>
+        </select>
+      </div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('图片样式', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('原样接到 URL 后。阿里如 ?x-oss-process=style/st；七牛如 !blog', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[image_style]" type="text" value="<?php echo esc_attr($opts['image_style']); ?>" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('原图保护', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('开了就把样式接到附件和正文图上', 'wpsss'); ?></div></div><div class="field-ctl">
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[origin_protect]" value="0" />
+        <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[origin_protect]" value="1" <?php checked($opts['origin_protect'], '1'); ?> /> <?php echo esc_html__('已开启', 'wpsss'); ?></label></div>
+      </div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('额外改写来源', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('工具页改写时，除本地 uploads 外再换这一段', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[rewrite_from]" type="text" value="<?php echo esc_attr($opts['rewrite_from']); ?>" placeholder="https://old-cdn.example.com" /></div></div>
+      <?php if ($driver === Wpsss_Options::DRIVER_COS) : ?>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('COS 数据万象', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('样式走 URL。审核只记开关，不代跑整站扫描', 'wpsss'); ?></div></div><div class="field-ctl">
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_slim]" value="0" />
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_preview]" value="0" />
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_audit]" value="0" />
+        <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[ci_slim]" value="1" <?php checked($opts['ci_slim'], '1'); ?> /> <?php echo esc_html__('图片极智压缩 / webp', 'wpsss'); ?></label></div>
+        <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[ci_preview]" value="1" <?php checked($opts['ci_preview'], '1'); ?> /> <?php echo esc_html__('文档预览参数', 'wpsss'); ?></label></div>
+        <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[ci_audit]" value="1" <?php checked($opts['ci_audit'], '1'); ?> /> <?php echo esc_html__('内容审核（仅开关）', 'wpsss'); ?></label></div>
+      </div></div>
+      <?php else : ?>
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_slim]" value="<?php echo esc_attr($opts['ci_slim']); ?>" />
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_preview]" value="<?php echo esc_attr($opts['ci_preview']); ?>" />
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_audit]" value="<?php echo esc_attr($opts['ci_audit']); ?>" />
+      <?php endif; ?>
       <input type="hidden" name="<?php echo esc_attr($key); ?>[keep_local]" value="<?php echo esc_attr($opts['keep_local']); ?>" />
       <input type="hidden" name="<?php echo esc_attr($key); ?>[upload_thumbs]" value="<?php echo esc_attr($opts['upload_thumbs']); ?>" />
       <div class="card-foot">

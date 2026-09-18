@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 $url = $view['url'];
 $on = (bool) $view['configured'];
 $opts = $view['opts'];
-$regions = Wpsss_Options::regions();
+$regions = Wpsss_Options::regions_for($opts['driver']);
 $region_label = $regions[$opts['region']] ?? $opts['region'];
 $keep = $opts['keep_local'] === '1';
 $custom = $opts['custom_domain'] !== '';

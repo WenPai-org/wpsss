@@ -105,6 +105,7 @@ final class Wpsss_Admin
             'secret_set' => $opts['access_key_secret'] !== '',
             'public_base' => Wpsss_Options::public_base(),
             'stats' => $this->plugin->library()->stats(),
+            'history' => Wpsss_History::all(),
             'url' => [$this, 'url'],
         ];
 
@@ -191,7 +192,9 @@ final class Wpsss_Admin
             $this->redirect('tools', 'error', '改写文章 URL 须勾确认。');
         }
         $apply = !empty($_POST['wpsss_rewrite_apply']);
-        $result = $this->plugin->library()->rewrite_posts($apply);
+        $from = isset($_POST['wpsss_rewrite_from']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_from'])) : '';
+        $to = isset($_POST['wpsss_rewrite_to']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_to'])) : '';
+        $result = $this->plugin->library()->rewrite_posts($apply, $from, $to);
         $verb = $apply ? '已改写' : '预览';
         $this->redirect(
             'tools',
@@ -223,7 +226,7 @@ final class Wpsss_Admin
             ]));
             exit;
         }
-        foreach (['keep_local', 'upload_thumbs'] as $key) {
+        foreach (['keep_local', 'upload_thumbs', 'origin_protect'] as $key) {
             if (!isset($_POST[$key])) {
                 continue;
             }

@@ -1,12 +1,12 @@
 # WPSSS · 文派对象存储
 
-一个 WordPress 插件，多个对象存储 driver。先做阿里云 OSS。自定义域名以后接 CyberCDN。**HTML 仍在源站。**
+一个 WordPress 插件，四个对象存储 driver：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。自定义域名以后接 CyberCDN。**HTML 仍在源站。**
 
 | | |
 |--|--|
 | 真源 | FeiCode 私有 [`WenPai-org/wpsss`](https://feicode.com/WenPai-org/wpsss)（`git.feicode.com:2222`） |
 | 工位 | wenpai `~/Projects/wpsss`（`wenpai-repo start wpsss`） |
-| 版本 | 0.3.0-dev |
+| 版本 | 0.5.0 |
 | 许可 | Apache-2.0（NOTICE 写明对照 sy-records） |
 
 **不是** Mac `~/Studio/wpsss`（腾讯云官方 COS/CDN 套件）。**不是** `wenpai-static-host`。**不是** 火山 ImageX。

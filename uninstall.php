@@ -10,5 +10,7 @@ if ($owns === '1') {
     delete_option('wpsss_owns_upload_url_path');
 }
 delete_option('wpsss_options');
+delete_option('wpsss_history');
 delete_metadata('post', 0, '_wpsss_offloaded', '', true);
 delete_metadata('post', 0, '_wpsss_key', '', true);
+delete_metadata('post', 0, '_wpsss_error', '', true);

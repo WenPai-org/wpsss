@@ -37,6 +37,10 @@ final class Wpsss_CLI
         WP_CLI::log('keep_local=' . $opts['keep_local']);
         WP_CLI::log('upload_thumbs=' . $opts['upload_thumbs']);
         WP_CLI::log('use_internal=' . $opts['use_internal']);
+        WP_CLI::log('object_prefix=' . $opts['object_prefix']);
+        WP_CLI::log('auto_rename=' . $opts['auto_rename']);
+        WP_CLI::log('image_style=' . $opts['image_style']);
+        WP_CLI::log('origin_protect=' . $opts['origin_protect']);
         WP_CLI::log('owns_upload_url_path=' . (string) get_option(Wpsss_Options::OWN_URL_FLAG, ''));
         if ($configured) {
             WP_CLI::success('已配置。');
@@ -95,7 +99,21 @@ final class Wpsss_CLI
      * [--upload-thumbs=<value>]
      * : 1 上传缩略图。
      * [--use-internal=<value>]
-     * : 1 走 OSS 内网。
+     * : 1 走内网。
+     * [--driver=<id>]
+     * : aliyun-oss / qcloud-cos / qiniu-kodo / huawei-obs。
+     * [--app-id=<id>]
+     * : COS APPID，可选。
+     * [--object-prefix=<path>]
+     * : 对象前缀 / 子目录。
+     * [--auto-rename=<mode>]
+     * : off / md5 / time。
+     * [--image-style=<suffix>]
+     * : 接到 URL 后的图片样式。
+     * [--origin-protect=<value>]
+     * : 1 原图保护。
+     * [--rewrite-from=<url>]
+     * : 额外改写来源。
      * [--allow-no-local]
      * : 允许把 keep_local 写成 0。无人批不要用。
      *
@@ -127,6 +145,13 @@ final class Wpsss_CLI
             'keep-local' => 'keep_local',
             'upload-thumbs' => 'upload_thumbs',
             'use-internal' => 'use_internal',
+            'driver' => 'driver',
+            'app-id' => 'app_id',
+            'object-prefix' => 'object_prefix',
+            'auto-rename' => 'auto_rename',
+            'image-style' => 'image_style',
+            'origin-protect' => 'origin_protect',
+            'rewrite-from' => 'rewrite_from',
         ];
         foreach ($map as $flag => $key) {
             if (array_key_exists($flag, $assoc_args)) {
@@ -229,6 +254,10 @@ final class Wpsss_CLI
      *
      * [--apply]
      * : 真写库。不加就只预览。
+     * [--from=<url>]
+     * : 被替换的前缀。默认本站 uploads。
+     * [--to=<url>]
+     * : 换成这个。默认当前对外地址。
      *
      * ## EXAMPLES
      *
@@ -241,7 +270,9 @@ final class Wpsss_CLI
     {
         unset($args);
         $apply = !empty($assoc_args['apply']);
-        $result = wpsss()->library()->rewrite_posts($apply);
+        $from = isset($assoc_args['from']) ? (string) $assoc_args['from'] : '';
+        $to = isset($assoc_args['to']) ? (string) $assoc_args['to'] : '';
+        $result = wpsss()->library()->rewrite_posts($apply, $from, $to);
         WP_CLI::log('scanned=' . $result['scanned'] . ' changed=' . $result['changed']);
         WP_CLI::log('meta_scanned=' . $result['meta_scanned'] . ' meta_changed=' . $result['meta_changed']);
         if ($result['samples'] !== []) {
@@ -251,9 +282,9 @@ final class Wpsss_CLI
     }
 
     /**
-     * 体检：桶、本地备份、密钥、upload_url_path。
+     * 体检：桶、本地备份、密钥、upload_url_path、匿名可读。
      *
-     * BLOCK 才失败。WARN 不阻断（例如桶不是测试桶）。
+     * BLOCK 才失败。WARN 不阻断（例如桶不是测试桶、匿名 403）。
      *
      * @when after_wp_load
      */
@@ -266,6 +297,15 @@ final class Wpsss_CLI
             (string) get_option('upload_url_path', ''),
             (string) get_option(Wpsss_Options::OWN_URL_FLAG, '')
         );
+        $sample = $this->doctor_sample_public_url();
+        if ($sample !== '') {
+            $code = self::anonymous_http_status($sample);
+            if (self::classify_anonymous_http($code) === 'ok') {
+                $report['oks'][] = '匿名可读 HTTP ' . $code;
+            } else {
+                $report['warnings'][] = self::anonymous_read_message($code);
+            }
+        }
         foreach ($report['oks'] as $line) {
             WP_CLI::log('OK    ' . $line);
         }
@@ -365,8 +405,126 @@ final class Wpsss_CLI
     }
 
     /**
+     * 200 才算访客能读。403 是 WARN，不阻断。
+     */
+    public static function classify_anonymous_http(int $code): string
+    {
+        return $code === 200 ? 'ok' : 'warn';
+    }
+
+    public static function anonymous_read_message(int $code): string
+    {
+        if ($code === 403 || $code === 401) {
+            return '匿名读不到对象（HTTP ' . $code . '）。测试桶阻止公共访问时属预期，前台会裂图。';
+        }
+        if ($code === 0) {
+            return '匿名探测没返回状态。不能当可读。';
+        }
+        return '匿名读对象 HTTP ' . $code . '。200 才是访客能看。';
+    }
+
+    public static function anonymous_http_status(string $url): int
+    {
+        if ($url === '' || !function_exists('wp_remote_head')) {
+            return 0;
+        }
+        $response = wp_remote_head(
+            $url,
+            [
+                'timeout' => 15,
+                'redirection' => 0,
+            ]
+        );
+        if (is_wp_error($response)) {
+            return 0;
+        }
+        return (int) wp_remote_retrieve_response_code($response);
+    }
+
+    private function doctor_sample_public_url(): string
+    {
+        $ids = get_posts([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'meta_key' => Wpsss_Library::META_OFFLOADED,
+            'meta_value' => '1',
+        ]);
+        if ($ids === []) {
+            return '';
+        }
+        $url = wp_get_attachment_url((int) $ids[0]);
+        return is_string($url) ? $url : '';
+    }
+
+    /**
      * @param array<string, mixed> $assoc_args
      */
+
+    /**
+     * 把本地文件直接传到当前 driver。
+     *
+     * ## OPTIONS
+     *
+     * <file>
+     * : 本地路径。
+     *
+     * [--key=<object>]
+     * : 对象键。默认用文件名。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss upload ./a.png --key=manual/a.png
+     *
+     * @when after_wp_load
+     */
+    public function upload(array $args, array $assoc_args): void
+    {
+        $file = isset($args[0]) ? (string) $args[0] : '';
+        if ($file === '' || !is_readable($file)) {
+            WP_CLI::error('读不到文件。');
+        }
+        $key = isset($assoc_args['key']) ? ltrim((string) $assoc_args['key'], '/') : basename($file);
+        $key = Wpsss_Options::apply_object_prefix($key);
+        $mime = (string) (function_exists('mime_content_type') ? (mime_content_type($file) ?: '') : '');
+        $result = wpsss()->active_driver()->put_object(Wpsss_Options::get(), $key, $file, $mime);
+        if (is_wp_error($result)) {
+            WP_CLI::error($result->get_error_message());
+        }
+        Wpsss_History::add('upload', $key);
+        WP_CLI::success('已上传 ' . $key);
+    }
+
+    /**
+     * 按对象键删除。
+     *
+     * ## OPTIONS
+     *
+     * <key>
+     * : 对象键。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss delete manual/a.png
+     *
+     * @when after_wp_load
+     */
+    public function delete(array $args, array $assoc_args): void
+    {
+        unset($assoc_args);
+        $key = isset($args[0]) ? ltrim((string) $args[0], '/') : '';
+        if ($key === '') {
+            WP_CLI::error('要对象键。');
+        }
+        $result = wpsss()->active_driver()->delete_objects(Wpsss_Options::get(), [$key]);
+        if (is_wp_error($result)) {
+            WP_CLI::error($result->get_error_message());
+        }
+        Wpsss_History::add('delete', $key);
+        WP_CLI::success('已删除 ' . $key);
+    }
+
     public static function can_turn_off_keep_local(array $assoc_args): bool
     {
         return !empty($assoc_args['allow-no-local']);

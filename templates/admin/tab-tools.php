@@ -1,7 +1,9 @@
 <?php
 defined('ABSPATH') || exit;
 /** @var array<string, mixed> $view */
-$stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['total' => 0, 'offloaded' => 0, 'pending' => 0];
+$stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['total' => 0, 'offloaded' => 0, 'pending' => 0, 'failed' => 0];
+$history = isset($view['history']) && is_array($view['history']) ? $view['history'] : [];
+$opts = $view['opts'];
 ?>
 <div class="wpcy-page-head">
   <div>
@@ -37,7 +39,13 @@ $stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['
       <span class="tile<?php echo ((int) $stats['pending'] > 0) ? ' warn' : ' ok'; ?>"><?php echo Wpsss_Icons::svg('image'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html(sprintf('媒体库一共 %d 个，已进桶 %d，还没传 %d。一次最多 20 个。留本地。', (int) $stats['total'], (int) $stats['offloaded'], (int) $stats['pending'])); ?></p>
+        <p class="card-sub"><?php echo esc_html(sprintf(
+            '媒体库一共 %d 个，已进桶 %d，还没传 %d，失败 %d。一次最多 20 个。',
+            (int) $stats['total'],
+            (int) $stats['offloaded'],
+            (int) $stats['pending'],
+            (int) ($stats['failed'] ?? 0)
+        )); ?></p>
       </div>
     </div>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -55,12 +63,20 @@ $stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['
       <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('改写文章里的本地上传地址', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('把正文、摘要和普通字段里的 /wp-content/uploads 换成桶域。序列化字段不改。先预览再写库。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('把正文、摘要和普通字段里的地址换成桶域。序列化字段不改。先预览再写库。', 'wpsss'); ?></p>
       </div>
     </div>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_rewrite" />
       <?php wp_nonce_field('wpsss_rewrite'); ?>
+      <div class="field" style="padding:0 20px">
+        <div><div class="field-label"><?php echo esc_html__('从', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('空着就用本站 uploads', 'wpsss'); ?></div></div>
+        <div class="field-ctl"><input type="text" name="wpsss_rewrite_from" value="<?php echo esc_attr((string) $opts['rewrite_from']); ?>" placeholder="https://old.example.com/wp-content/uploads" /></div>
+      </div>
+      <div class="field" style="padding:0 20px">
+        <div><div class="field-label"><?php echo esc_html__('到', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('空着就用当前对外地址', 'wpsss'); ?></div></div>
+        <div class="field-ctl"><input type="text" name="wpsss_rewrite_to" value="<?php echo esc_attr((string) $view['public_base']); ?>" /></div>
+      </div>
       <div class="chk" style="padding:0 20px 12px">
         <label><input type="checkbox" name="wpsss_rewrite_confirm" value="1" /> <?php echo esc_html__('我确认这是测试站 / 要改的就是这些文章', 'wpsss'); ?></label>
       </div>
@@ -69,6 +85,30 @@ $stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['
         <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1"><?php echo esc_html__('写进文章', 'wpsss'); ?></button>
       </div>
     </form>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
+      <div>
+        <h2 class="card-title"><?php echo esc_html__('同步记录', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('最近 50 条进桶 / 失败 / 删除。对照四家插件的同步历史。', 'wpsss'); ?></p>
+      </div>
+    </div>
+    <?php if ($history === []) : ?>
+      <p class="section-desc" style="padding:0 20px 16px"><?php echo esc_html__('还没有记录。', 'wpsss'); ?></p>
+    <?php else : ?>
+      <ul class="svc-stack" style="padding:0 20px 16px">
+        <?php foreach (array_slice($history, 0, 12) as $row) : ?>
+          <li>
+            <div>
+              <div class="n"><?php echo esc_html((string) ($row['event'] ?? '')); ?></div>
+              <div class="p"><?php echo esc_html((string) ($row['t'] ?? '') . ' · ' . (string) ($row['detail'] ?? '')); ?></div>
+            </div>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
   </section>
 
   <section class="card">

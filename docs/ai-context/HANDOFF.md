@@ -4,16 +4,17 @@
 
 ## 现在（2026-09-18）
 
-- **0.4.0**：Aliyun v1 闭环（新上传、已有补传、媒体库列/批量/筛选/侧栏、文章和普通字段 URL 改写、`wp sss`、doctor）。
-- 对象 PUT 带 `x-oss-object-acl: public-read`；RAM 拒 ACL 时回退无 ACL。桶仍是 private。
-- 关 `keep_local` 须 `--allow-no-local`。简单页不能一键关本地备份。
-- 沙箱 `~/Studio/wpsss-dev` 软链工作树或 `~/Projects/wpsss`。
+- **0.5.0**：四家 driver 都接上了（阿里 OSS / 腾讯 COS / 七牛 KODO / 华为 OBS），自写 REST，不粘 SDK。
+- 共有能力对齐 sy-records：缩略图、留/删本地、自定义域字段、库内 URL 改写（from/to）、全区域、同步记录、自动重命名、媒体编辑/原图、多站点 uploads 路径、`wp sss upload|delete`、图片样式、原图保护、对象前缀、失败可见、正文运行时改写。
+- COS 另有 APPID、万象开关（slim / 文档预览 URL、审核只记开关）。七牛对外必须自定义域。
+- Aliyun 沙箱回归：`wp sss doctor` 无阻断，`probe` 成功。匿名 403 仍 WARN。
+- 关 `keep_local` 仍须 `--allow-no-local`。简单页不能一键关本地备份。
 - 组织仍是 staging candidate，未 publish。
-- **未做（须人批）**：自定义域、CyberCDN purge、第二家 driver、生产站。
+- **未做（须人批）**：自定义域 + CyberCDN Zone、生产站、万象审核实打 CI、清边缘。
 
 ## 建议下一刀（等人说再做）
 
-自定义域 + 现成 CyberCDN Zone。不要买节点。不要装 wptea。
+自定义域 + 现成 CyberCDN Zone。不要买节点。不要装 wptea。COS/KODO/OBS 只在有对应测试桶后再 `probe`。
 
 ## 会话里已经否决
 

@@ -63,6 +63,12 @@ wpsss_assert(strpos(implode(' ', $bad['warnings']), 'wenpai-wpsss-test') !== fal
 wpsss_assert(Wpsss_CLI::can_turn_off_keep_local([]) === false, 'set refuses off by default');
 wpsss_assert(Wpsss_CLI::can_turn_off_keep_local(['allow-no-local' => true]) === true, 'set allows with flag');
 
+wpsss_assert(Wpsss_CLI::classify_anonymous_http(200) === 'ok', 'anon 200 is ok');
+wpsss_assert(Wpsss_CLI::classify_anonymous_http(403) === 'warn', 'anon 403 is warn');
+wpsss_assert(Wpsss_CLI::classify_anonymous_http(0) === 'warn', 'anon 0 is warn');
+wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '403') !== false, 'anon message names 403');
+wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '裂图') !== false, 'anon message says broken image');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);
