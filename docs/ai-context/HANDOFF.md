@@ -23,3 +23,7 @@
 ## 联系
 
 集群 SOP / 计划 / 原型在 linuxjoy，不在本仓复制密钥。
+
+## 2026-09-18 23:20 - [Cursor] 0.6.0 S3 兼容
+
+自写 SigV4。driver `s3-compat` + 国内第五张 `volc-tos`（内部 tos 预设）。预设 aws/do/r2/minio/wasabi/tos/bos/custom。单测 `tests/unit-s3-signer.php`。没有人批的 AWS/R2/TOS 桶，不宣称 probe 绿。不粘 SDK，不装 WOM。

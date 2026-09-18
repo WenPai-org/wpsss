@@ -43,7 +43,7 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 
 ## 已拍板
 
-- 一个插件四个 driver。设置页能选。沙箱默认仍是阿里测试桶。
+- 一个插件国内四家 + TOS + S3 兼容。设置页能选。沙箱默认仍是阿里测试桶。
 - 默认留本地。探测对象写了即删。
 - 测试桶 `wenpai-wpsss-test` / `oss-cn-hangzhou` / RAM `wpsss-test`。
 - 后台跟 4.0 E，RemixIcon line 内联，不用图标字体 CDN。

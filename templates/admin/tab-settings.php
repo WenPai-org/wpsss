@@ -10,11 +10,19 @@ $regions = Wpsss_Options::regions_for($driver);
 $region_label = $regions[$opts['region']] ?? $opts['region'];
 $adv = $mode === 'advanced';
 $drivers = Wpsss_Options::driver_ids();
+$groups = Wpsss_Options::driver_groups();
+$group_label = [
+    'cn' => '国内',
+    'intl' => '国外 / 兼容',
+];
+$s3_family = Wpsss_Options::is_s3_family($driver);
 $driver_help = [
     Wpsss_Options::DRIVER_ALIYUN => '现网已通。自定义域以后走 CyberCDN',
     Wpsss_Options::DRIVER_COS => '自写 REST，不是 Mac Studio 那份官方套件',
     Wpsss_Options::DRIVER_KODO => '对外地址必须填自定义域',
     Wpsss_Options::DRIVER_OBS => '签名走 OBS V2，不粘 SDK',
+    Wpsss_Options::DRIVER_TOS => '内部复用 S3 兼容。不是 ImageX',
+    Wpsss_Options::DRIVER_S3 => '一张卡盖住 AWS / Spaces / R2 / MinIO / Wasabi / BOS',
 ];
 ?>
 <div class="wpcy-page-head">
@@ -33,27 +41,30 @@ $driver_help = [
 <div class="wpcy-stack">
   <section class="card">
     <h2 class="section-title"><?php echo Wpsss_Icons::svg('cloud'); ?> <?php echo esc_html__('云厂商', 'wpsss'); ?></h2>
-    <p class="section-desc"><?php echo esc_html__('一个插件、四个 driver。对照 sy-records 四家，功能按同一套来。', 'wpsss'); ?></p>
+    <p class="section-desc"><?php echo esc_html__('国内走自家 REST。国外和火山 TOS 走自写 SigV4，不粘 SDK。', 'wpsss'); ?></p>
     <?php if ($adv) : ?>
     <form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>" id="wpsss-settings-form">
       <?php settings_fields('wpsss'); ?>
     <?php endif; ?>
-    <div class="choice-cards">
-      <?php foreach ($drivers as $id => $label) : ?>
-        <?php $on = $driver === $id; ?>
-        <label class="choice<?php echo $on ? ' is-on' : ''; ?>">
-          <?php if ($adv) : ?>
-            <input type="radio" name="<?php echo esc_attr($key); ?>[driver]" value="<?php echo esc_attr($id); ?>" <?php checked($on); ?> />
-          <?php else : ?>
-            <input type="radio" <?php echo $on ? 'checked' : ''; ?> disabled />
-          <?php endif; ?>
-          <span>
-            <div class="t"><?php echo esc_html($label); ?></div>
-            <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
-          </span>
-        </label>
-      <?php endforeach; ?>
-    </div>
+    <?php foreach ($groups as $gid => $items) : ?>
+      <p class="section-desc"><?php echo esc_html($group_label[$gid] ?? $gid); ?></p>
+      <div class="choice-cards">
+        <?php foreach ($items as $id => $label) : ?>
+          <?php $on = $driver === $id; ?>
+          <label class="choice<?php echo $on ? ' is-on' : ''; ?>">
+            <?php if ($adv) : ?>
+              <input type="radio" name="<?php echo esc_attr($key); ?>[driver]" value="<?php echo esc_attr($id); ?>" <?php checked($on); ?> />
+            <?php else : ?>
+              <input type="radio" <?php echo $on ? 'checked' : ''; ?> disabled />
+            <?php endif; ?>
+            <span>
+              <div class="t"><?php echo esc_html($label); ?></div>
+              <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
+            </span>
+          </label>
+        <?php endforeach; ?>
+      </div>
+    <?php endforeach; ?>
   </section>
 
   <?php if (!$adv) : ?>
@@ -99,8 +110,31 @@ $driver_help = [
     <h2 class="section-title"><?php echo esc_html__('桶与密钥', 'wpsss'); ?></h2>
     <p class="section-desc"><?php echo esc_html__('用子用户，只授这一只桶。不要填账号根密钥。', 'wpsss'); ?></p>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('桶名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('COS 填 name-appid。不要带厂商域名', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[bucket]" type="text" value="<?php echo esc_attr($opts['bucket']); ?>" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('四家各自的区域列表。和源站同区域才勾内网', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]"><?php foreach (Wpsss_Options::all_regions() as $group => $items) : ?><optgroup label="<?php echo esc_attr($drivers[$group] ?? $group); ?>"><?php foreach ($items as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?></select></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('APPID（COS）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('可选。桶名已含 -数字 时可空', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[app_id]" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('S3 兼容按预设填。R2 常用 auto。和源站同区域才勾内网', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]"><?php foreach (Wpsss_Options::all_regions() as $group => $items) : ?><optgroup label="<?php echo esc_attr($drivers[$group] ?? $group); ?>"><?php foreach ($items as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?></select></div></div>
+      <?php if ($s3_family) : ?>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('S3 预设', 'wpsss'); ?></div><div class="field-help"><?php echo $driver === Wpsss_Options::DRIVER_TOS ? esc_html__('火山 TOS 锁定 tos，走 SigV4。', 'wpsss') : esc_html__('改预设会带上默认 endpoint。密钥另填。', 'wpsss'); ?></div></div><div class="field-ctl">
+        <?php if ($driver === Wpsss_Options::DRIVER_TOS) : ?>
+          <input type="hidden" name="<?php echo esc_attr($key); ?>[s3_preset]" value="tos" />
+          <input type="text" value="<?php echo esc_attr(Wpsss_Options::s3_presets()['tos']); ?>" disabled />
+        <?php else : ?>
+        <select name="<?php echo esc_attr($key); ?>[s3_preset]">
+          <?php foreach (Wpsss_Options::s3_presets() as $id => $label) : ?>
+            <option value="<?php echo esc_attr($id); ?>"<?php selected($opts['s3_preset'], $id); ?>><?php echo esc_html($label); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
+      </div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('Endpoint', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('空着就按预设拼。R2 填账号到 APPID；AWS 可空。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[endpoint]" type="text" value="<?php echo esc_attr($opts['endpoint']); ?>" placeholder="https://tos-s3-cn-beijing.volces.com" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('Path-style', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('R2 / MinIO 默认开。AWS 虚拟主机默认关。', 'wpsss'); ?></div></div><div class="field-ctl">
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[force_path_style]" value="0" />
+        <div class="chk"><label><input type="checkbox" name="<?php echo esc_attr($key); ?>[force_path_style]" value="1" <?php checked($opts['force_path_style'], '1'); ?> /> <?php echo esc_html__('已开启', 'wpsss'); ?></label></div>
+      </div></div>
+      <?php else : ?>
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[s3_preset]" value="<?php echo esc_attr($opts['s3_preset']); ?>" />
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[endpoint]" value="<?php echo esc_attr($opts['endpoint']); ?>" />
+        <input type="hidden" name="<?php echo esc_attr($key); ?>[force_path_style]" value="<?php echo esc_attr($opts['force_path_style']); ?>" />
+      <?php endif; ?>
+      <div class="field"><div><div class="field-label"><?php echo $driver === Wpsss_Options::DRIVER_S3 && ($opts['s3_preset'] ?? '') === 'r2' ? esc_html__('R2 Account ID', 'wpsss') : esc_html__('APPID（COS / R2）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('COS 桶名已含 -数字 时可空。R2 用来拼 *.r2.cloudflarestorage.com', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[app_id]" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" /></div></div>
       <div class="field"><div><div class="field-label">AccessKey ID</div><div class="field-help"><?php echo esc_html__('子用户 / SecretId', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_id]" type="text" value="<?php echo esc_attr($opts['access_key_id']); ?>" autocomplete="off" /></div></div>
       <div class="field"><div><div class="field-label">AccessKey Secret</div><div class="field-help"><?php echo $view['secret_set'] ? esc_html__('已保存。留空保存时不改', 'wpsss') : esc_html__('不会出现在页面源码里', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_secret]" type="password" value="" autocomplete="new-password" /></div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('源站和桶在同一云厂商区域时再开', 'wpsss'); ?></div></div><div class="field-ctl">

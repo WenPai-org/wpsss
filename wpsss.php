@@ -2,8 +2,8 @@
 /**
  * Plugin Name: WPSSS
  * Plugin URI: https://feicode.com/WenPai-org/wpsss
- * Description: 文派对象存储。一个插件、四个 driver：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。自定义域名接 CyberCDN。
- * Version: 0.5.0
+ * Description: 文派对象存储。国内四家 + 火山 TOS + Amazon S3 兼容。自定义域名接 CyberCDN。
+ * Version: 0.6.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: 文派
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WPSSS_VERSION', '0.5.0');
+define('WPSSS_VERSION', '0.6.0');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
 
@@ -24,6 +24,7 @@ require_once WPSSS_DIR . 'includes/class-wpsss-oss-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-cos-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-kodo-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-obs-signer.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-s3-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-url.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-history.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-options.php';
@@ -32,6 +33,7 @@ require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-aliyun-oss.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-qcloud-cos.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-qiniu-kodo.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-huawei-obs.php';
+require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-s3-compat.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-offload.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-library.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-media.php';

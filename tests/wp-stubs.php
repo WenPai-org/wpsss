@@ -47,3 +47,8 @@ function sanitize_key($value)
     $value = strtolower((string) $value);
     return preg_replace('/[^a-z0-9_\-]/', '', $value) ?: '';
 }
+
+function wp_parse_url($url, $component = -1)
+{
+    return parse_url($url, $component);
+}

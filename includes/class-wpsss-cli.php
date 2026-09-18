@@ -101,7 +101,7 @@ final class Wpsss_CLI
      * [--use-internal=<value>]
      * : 1 走内网。
      * [--driver=<id>]
-     * : aliyun-oss / qcloud-cos / qiniu-kodo / huawei-obs。
+     * : aliyun-oss / qcloud-cos / qiniu-kodo / huawei-obs / volc-tos / s3-compat。
      * [--app-id=<id>]
      * : COS APPID，可选。
      * [--object-prefix=<path>]
@@ -114,6 +114,12 @@ final class Wpsss_CLI
      * : 1 原图保护。
      * [--rewrite-from=<url>]
      * : 额外改写来源。
+     * [--endpoint=<url>]
+     * : S3 兼容 endpoint。空着按预设拼。
+     * [--s3-preset=<id>]
+     * : aws / do / r2 / minio / wasabi / tos / bos / custom。
+     * [--force-path-style=<value>]
+     * : 1 走 path-style。R2 / MinIO 默认 1。
      * [--allow-no-local]
      * : 允许把 keep_local 写成 0。无人批不要用。
      *
@@ -152,6 +158,9 @@ final class Wpsss_CLI
             'image-style' => 'image_style',
             'origin-protect' => 'origin_protect',
             'rewrite-from' => 'rewrite_from',
+            'endpoint' => 'endpoint',
+            's3-preset' => 's3_preset',
+            'force-path-style' => 'force_path_style',
         ];
         foreach ($map as $flag => $key) {
             if (array_key_exists($flag, $assoc_args)) {

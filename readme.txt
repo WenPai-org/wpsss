@@ -4,11 +4,11 @@ Tags: oss, cdn, aliyun, offload
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
-文派对象存储。一个插件、四个 driver：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。
+文派对象存储。一个插件：国内四家 + 火山 TOS + Amazon S3 兼容：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。
 
 == Description ==
 

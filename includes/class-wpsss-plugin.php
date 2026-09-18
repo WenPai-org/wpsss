@@ -32,6 +32,8 @@ final class Wpsss_Plugin
         $this->register_driver(new Wpsss_Driver_Qcloud_Cos());
         $this->register_driver(new Wpsss_Driver_Qiniu_Kodo());
         $this->register_driver(new Wpsss_Driver_Huawei_Obs());
+        $this->register_driver(new Wpsss_Driver_S3_Compat('volc-tos', '火山 TOS'));
+        $this->register_driver(new Wpsss_Driver_S3_Compat());
         add_action('admin_init', [$this, 'register_settings']);
         $this->offload = new Wpsss_Offload($this);
         $this->library = new Wpsss_Library($this, $this->offload);

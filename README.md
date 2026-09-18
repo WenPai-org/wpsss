@@ -6,7 +6,7 @@
 |--|--|
 | 真源 | FeiCode 私有 [`WenPai-org/wpsss`](https://feicode.com/WenPai-org/wpsss)（`git.feicode.com:2222`） |
 | 工位 | wenpai `~/Projects/wpsss`（`wenpai-repo start wpsss`） |
-| 版本 | 0.5.0 |
+| 版本 | 0.6.0 |
 | 许可 | Apache-2.0（NOTICE 写明对照 sy-records） |
 
 **不是** Mac `~/Studio/wpsss`（腾讯云官方 COS/CDN 套件）。**不是** `wenpai-static-host`。**不是** 火山 ImageX。
