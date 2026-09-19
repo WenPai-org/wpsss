@@ -60,6 +60,10 @@ class Wpsss_Url
         if ($style[0] === '?' || $style[0] === '&') {
             return self::append_query($url, ltrim($style, '?&'));
         }
+        $qpos = strpos($url, '?');
+        if ($qpos !== false) {
+            return substr($url, 0, $qpos) . $style . substr($url, $qpos);
+        }
         return $url . $style;
     }
 
@@ -116,10 +120,7 @@ class Wpsss_Url
             if (!self::is_styleable($item)) {
                 continue;
             }
-            $styled = ($style[0] === '?' || $style[0] === '&')
-                ? self::append_query($item, ltrim($style, '?&'))
-                : $item . $style;
-            $text = str_replace($item, $styled, $text);
+            $text = str_replace($item, self::apply_style($item, ['image_style' => $style]), $text);
         }
         return str_replace($style . $style, $style, $text);
     }
@@ -274,9 +275,7 @@ class Wpsss_Url
                 continue;
             }
             if (strpos($url, $style) === false) {
-                $sources[$width]['url'] = ($style[0] === '?' || $style[0] === '&')
-                    ? self::append_query($url, ltrim($style, '?&'))
-                    : $url . $style;
+                $sources[$width]['url'] = self::apply_style($url, ['image_style' => $style]);
             }
         }
         return $sources;

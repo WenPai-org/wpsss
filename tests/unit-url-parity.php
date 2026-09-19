@@ -86,6 +86,14 @@ wpsss_assert(
     strpos(Wpsss_Url::apply_style('https://cdn.example.com/a.jpg', $cos_slim), 'imageMogr2/format/webp') !== false,
     'jpg may ci_slim'
 );
+$cos_signed_style = Wpsss_Url::apply_style(
+    'https://cdn.example.com/a.jpg?q-signature=abc',
+    ['image_style' => '!s', 'driver' => 'qcloud-cos']
+);
+wpsss_assert(
+    $cos_signed_style === 'https://cdn.example.com/a.jpg!s?q-signature=abc',
+    'cos style sits on path before signed query'
+);
 
 $text = Wpsss_Url::rewrite_text(
     '见 https://site.example/wp-content/uploads/2026/a.jpg 和 https://site.example/wp-content/uploads/2026/a.gif',
