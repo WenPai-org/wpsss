@@ -21,10 +21,14 @@ wpsss_assert(strpos($help, '强制下载') !== false, 'help 强制下载');
 wpsss_assert(strpos($help, '镜像回源') !== false, 'help 镜像回源');
 wpsss_assert(strpos($help, '主账号 APPID') !== false, 'help 主账号 APPID');
 wpsss_assert(strpos($help, '七牛') !== false, 'help 七牛');
+wpsss_assert(strpos($help, '默认 V4') !== false, 'help oss v4');
+wpsss_assert(strpos($help, 'RAM 角色') !== false, 'help ecs ram');
 
 $settings = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-settings.php');
 wpsss_assert(strpos($settings, '创建桶的主账号 APPID') !== false, 'settings COS AppId help');
 wpsss_assert(strpos($settings, '仅记录功能开关') === false, 'settings no 仅记录功能开关');
+wpsss_assert(strpos($settings, 'oss_signature') !== false, 'settings oss signature');
+wpsss_assert(strpos($settings, 'ECS 实例 RAM 角色') !== false, 'settings ram option');
 
 wpsss_assert(Wpsss_Ci::audit_text('hello', []) === 'pass', 'audit_text default pass');
 

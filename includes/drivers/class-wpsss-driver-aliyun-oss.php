@@ -18,10 +18,13 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
 
     public function is_configured(array $settings): bool
     {
-        return $settings['bucket'] !== ''
-            && $settings['region'] !== ''
-            && $settings['access_key_id'] !== ''
-            && $settings['access_key_secret'] !== '';
+        if ($settings['bucket'] === '' || $settings['region'] === '') {
+            return false;
+        }
+        if (($settings['oss_auth'] ?? 'ak') === 'ram') {
+            return true;
+        }
+        return $settings['access_key_id'] !== '' && $settings['access_key_secret'] !== '';
     }
 
     public function put_object(array $settings, string $object, string $absolute_path, string $mime)
@@ -124,7 +127,23 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
      */
     private function bucket_query(array $settings, string $subresource)
     {
+        $settings = $this->ready_settings($settings);
+        $url = Wpsss_Oss_Signer::object_url(Wpsss_Options::api_host($settings), '') . '?' . $subresource;
+        if (Wpsss_Options::oss_sign_version($settings) === 'v4') {
+            $headers = $this->v4_headers($settings, 'GET', '', '', [], [$subresource => '']);
+            $response = wp_remote_request($url, [
+                'method' => 'GET',
+                'headers' => $headers,
+                'timeout' => 30,
+                'redirection' => 0,
+            ]);
+            return $this->inspect_response($response, 'oss');
+        }
         $date = Wpsss_Oss_Signer::gmt_date();
+        $oss_headers = [];
+        if (($settings['security_token'] ?? '') !== '') {
+            $oss_headers['x-oss-security-token'] = (string) $settings['security_token'];
+        }
         $auth = Wpsss_Oss_Signer::authorization(
             $settings['access_key_id'],
             $settings['access_key_secret'],
@@ -134,18 +153,21 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
             $date,
             $settings['bucket'],
             '',
-            [],
+            $oss_headers,
             $subresource
         );
-        $url = Wpsss_Oss_Signer::object_url(Wpsss_Options::api_host($settings), '') . '?' . $subresource;
+        $headers = [
+            'Date' => $date,
+            'Authorization' => $auth,
+        ];
+        foreach ($oss_headers as $name => $value) {
+            $headers[$name] = $value;
+        }
         $response = wp_remote_request(
             $url,
             [
                 'method' => 'GET',
-                'headers' => [
-                    'Date' => $date,
-                    'Authorization' => $auth,
-                ],
+                'headers' => $headers,
                 'timeout' => 30,
                 'redirection' => 0,
             ]
@@ -189,32 +211,42 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
         array $oss_headers = []
     ) {
         $object = ltrim($object, '/');
-        $date = Wpsss_Oss_Signer::gmt_date();
+        $settings = $this->ready_settings($settings);
         $md5 = ($method === 'PUT') ? Wpsss_Oss_Signer::content_md5($body) : '';
-        $auth = Wpsss_Oss_Signer::authorization(
-            $settings['access_key_id'],
-            $settings['access_key_secret'],
-            $method,
-            $md5,
-            $mime,
-            $date,
-            $settings['bucket'],
-            $object,
-            $oss_headers
-        );
-
-        $headers = [
-            'Date' => $date,
-            'Authorization' => $auth,
-        ];
+        if (($settings['security_token'] ?? '') !== '') {
+            $oss_headers['x-oss-security-token'] = (string) $settings['security_token'];
+        }
         if ($md5 !== '') {
-            $headers['Content-MD5'] = $md5;
+            $oss_headers['Content-MD5'] = $md5;
         }
-        if ($mime !== '') {
-            $headers['Content-Type'] = $mime;
-        }
-        foreach ($oss_headers as $name => $value) {
-            $headers[$name] = $value;
+        if (Wpsss_Options::oss_sign_version($settings) === 'v4') {
+            $headers = $this->v4_headers($settings, $method, $object, $mime, $oss_headers, []);
+        } else {
+            $date = Wpsss_Oss_Signer::gmt_date();
+            $auth = Wpsss_Oss_Signer::authorization(
+                $settings['access_key_id'],
+                $settings['access_key_secret'],
+                $method,
+                $md5,
+                $mime,
+                $date,
+                $settings['bucket'],
+                $object,
+                $oss_headers
+            );
+            $headers = [
+                'Date' => $date,
+                'Authorization' => $auth,
+            ];
+            if ($md5 !== '') {
+                $headers['Content-MD5'] = $md5;
+            }
+            if ($mime !== '') {
+                $headers['Content-Type'] = $mime;
+            }
+            foreach ($oss_headers as $name => $value) {
+                $headers[$name] = $value;
+            }
         }
 
         $url = Wpsss_Oss_Signer::object_url(Wpsss_Options::api_host($settings), $object);
@@ -241,6 +273,56 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
         $raw = (string) wp_remote_retrieve_body($response);
         $message = $this->error_message($raw, $code);
         return new WP_Error('wpsss_oss_http', $message, ['status' => $code]);
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    private function ready_settings(array $settings): array
+    {
+        return class_exists('Wpsss_Oss_Ram') ? Wpsss_Oss_Ram::hydrate($settings) : $settings;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @param array<string, string> $oss_headers
+     * @param array<string, string> $query
+     * @return array<string, string>
+     */
+    private function v4_headers(
+        array $settings,
+        string $method,
+        string $object,
+        string $mime,
+        array $oss_headers,
+        array $query
+    ): array {
+        $host = (string) (parse_url(Wpsss_Options::api_host($settings), PHP_URL_HOST) ?: '');
+        $iso = Wpsss_Oss_Signer::iso_date();
+        $headers = [
+            'Host' => $host,
+            'x-oss-date' => $iso,
+            'x-oss-content-sha256' => Wpsss_Oss_Signer::UNSIGNED_PAYLOAD,
+        ];
+        if ($mime !== '') {
+            $headers['Content-Type'] = $mime;
+        }
+        foreach ($oss_headers as $name => $value) {
+            $headers[$name] = $value;
+        }
+        return Wpsss_Oss_Signer::v4_sign_headers(
+            (string) $settings['access_key_id'],
+            (string) $settings['access_key_secret'],
+            $method,
+            (string) $settings['bucket'],
+            $object,
+            Wpsss_Options::oss_sign_region($settings),
+            $iso,
+            $headers,
+            $query,
+            ['host']
+        );
     }
 
     private function error_message(string $body, int $code): string

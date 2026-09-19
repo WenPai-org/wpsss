@@ -53,6 +53,7 @@ if (!function_exists('wp_upload_dir')) {
     }
 }
 
+require dirname(__DIR__) . '/includes/class-wpsss-oss-signer.php';
 require dirname(__DIR__) . '/includes/class-wpsss-site.php';
 require dirname(__DIR__) . '/includes/class-wpsss-options.php';
 
@@ -98,6 +99,40 @@ $kept = Wpsss_Options::sanitize([
     'keep_local' => '1',
 ]);
 wpsss_assert($kept['origin_region'] === 'oss-cn-beijing', 'keeps origin_region when region is not accelerate');
+
+$GLOBALS['wpsss_options_store'] = [];
+$sig = Wpsss_Options::sanitize([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'mybucket',
+    'region' => 'oss-cn-hangzhou',
+    'keep_local' => '1',
+    'oss_signature' => 'v1',
+    'oss_auth' => 'ram',
+    'oss_ram_role' => 'wpsss-role',
+]);
+wpsss_assert($sig['oss_signature'] === 'v1', 'sanitize keeps oss v1');
+wpsss_assert($sig['oss_auth'] === 'ram', 'sanitize keeps ram auth');
+wpsss_assert($sig['oss_ram_role'] === 'wpsss-role', 'sanitize ram role');
+wpsss_assert(Wpsss_Options::oss_sign_version($sig) === 'v1', 'oss_sign_version v1');
+wpsss_assert(Wpsss_Options::oss_sign_region($sig) === 'cn-hangzhou', 'oss_sign_region strips prefix');
+$bad = Wpsss_Options::sanitize([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'mybucket',
+    'region' => 'oss-cn-hangzhou',
+    'keep_local' => '1',
+    'oss_signature' => 'v9',
+    'oss_auth' => 'oops',
+]);
+wpsss_assert($bad['oss_signature'] === 'v4', 'bad signature falls to v4');
+wpsss_assert($bad['oss_auth'] === 'ak', 'bad auth falls to ak');
+wpsss_assert(
+    in_array('实例 RAM 角色名为空时，会向 ECS 元数据询问；失败则无法进桶。', Wpsss_Options::runtime_warnings([
+        'driver' => 'aliyun-oss',
+        'oss_auth' => 'ram',
+        'oss_ram_role' => '',
+    ]), true),
+    'runtime_warnings ram empty role'
+);
 
 $GLOBALS['wpsss_options_store'] = [];
 $kodo_w = Wpsss_Options::runtime_warnings([

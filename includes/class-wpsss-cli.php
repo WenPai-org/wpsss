@@ -455,7 +455,11 @@ final class Wpsss_CLI
         } else {
             $oks[] = 'keep_local=1';
         }
-        if (($opts['access_key_id'] ?? '') === '' || ($opts['access_key_secret'] ?? '') === '') {
+        $ram = (($opts['driver'] ?? '') === 'aliyun-oss' || ($opts['driver'] ?? '') === '')
+            && (($opts['oss_auth'] ?? 'ak') === 'ram');
+        if ($ram) {
+            $oks[] = 'oss_auth=ram';
+        } elseif (($opts['access_key_id'] ?? '') === '' || ($opts['access_key_secret'] ?? '') === '') {
             $blockers[] = '密钥未齐。wp sss set --from-env';
         } else {
             $oks[] = '密钥已配置（不回显）';

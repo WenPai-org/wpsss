@@ -35,6 +35,7 @@ require dirname(__DIR__) . '/includes/class-wpsss-cos-signer.php';
 require dirname(__DIR__) . '/includes/class-wpsss-kodo-signer.php';
 require dirname(__DIR__) . '/includes/class-wpsss-obs-signer.php';
 require dirname(__DIR__) . '/includes/class-wpsss-options.php';
+require dirname(__DIR__) . '/includes/class-wpsss-oss-ram.php';
 require dirname(__DIR__) . '/includes/class-wpsss-url.php';
 
 $failed = 0;
@@ -250,6 +251,8 @@ $oss_styled = Wpsss_Url::serve_object_url(
     $sign_base + [
         'driver' => 'aliyun-oss',
         'image_style' => '?x-oss-process=style/blog',
+        'oss_signature' => 'v1',
+        'region' => 'oss-cn-hangzhou',
     ],
     'image/jpeg',
     1700000000
@@ -257,6 +260,20 @@ $oss_styled = Wpsss_Url::serve_object_url(
 wpsss_assert(strpos($oss_styled, 'x-oss-process=style') !== false, 'serve_object_url oss process');
 wpsss_assert(strpos($oss_styled, 'Signature=') !== false, 'serve_object_url oss still signed');
 wpsss_assert(strpos($oss_styled, '??') === false, 'serve_object_url no double question');
+$oss_v4 = Wpsss_Url::serve_object_url(
+    'https://cdn.example.com',
+    '2026/09/a.png',
+    $sign_base + [
+        'driver' => 'aliyun-oss',
+        'image_style' => '?x-oss-process=style/blog',
+        'oss_signature' => 'v4',
+        'region' => 'oss-cn-hangzhou',
+    ],
+    'image/jpeg',
+    1700000000
+);
+wpsss_assert(strpos($oss_v4, 'x-oss-signature-version=OSS4-HMAC-SHA256') !== false, 'serve_object_url oss v4');
+wpsss_assert(strpos($oss_v4, 'x-oss-process=style') !== false, 'serve_object_url oss v4 process');
 $oss_plain = Wpsss_Oss_Signer::signed_get_url(
     'https://cdn.example.com',
     'demo-bucket',

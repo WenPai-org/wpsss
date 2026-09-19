@@ -21,6 +21,7 @@ define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
 
 require_once WPSSS_DIR . 'includes/class-wpsss-oss-signer.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-oss-ram.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-cos-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-kodo-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-obs-signer.php';

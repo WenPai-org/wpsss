@@ -102,6 +102,9 @@ class Wpsss_Options
             'site_mode' => 'domestic',
             'url_access' => 'public',
             'signed_ttl' => '3600',
+            'oss_signature' => 'v4',
+            'oss_auth' => 'ak',
+            'oss_ram_role' => '',
             'setup_completed_at' => '',
         ];
     }
@@ -225,6 +228,9 @@ class Wpsss_Options
             'site_mode' => self::sanitize_site_mode($input['site_mode'] ?? $current['site_mode'] ?? 'domestic'),
             'url_access' => self::sanitize_url_access($input['url_access'] ?? $current['url_access'] ?? 'public'),
             'signed_ttl' => self::sanitize_signed_ttl($input['signed_ttl'] ?? $current['signed_ttl'] ?? '3600'),
+            'oss_signature' => self::sanitize_oss_signature($input['oss_signature'] ?? $current['oss_signature'] ?? 'v4'),
+            'oss_auth' => self::sanitize_oss_auth($input['oss_auth'] ?? $current['oss_auth'] ?? 'ak'),
+            'oss_ram_role' => sanitize_text_field($input['oss_ram_role'] ?? $current['oss_ram_role'] ?? ''),
             'setup_completed_at' => sanitize_text_field($input['setup_completed_at'] ?? $current['setup_completed_at'] ?? ''),
         ];
 
@@ -422,8 +428,39 @@ class Wpsss_Options
         if ((string) get_option('upload_url_path') === '.') {
             $warnings[] = 'upload_url_path 不能是「.」，删除远端会失败。';
         }
+        if ($driver === self::DRIVER_ALIYUN && ($opts['oss_auth'] ?? 'ak') === 'ram' && (string) ($opts['oss_ram_role'] ?? '') === '') {
+            $warnings[] = '实例 RAM 角色名为空时，会向 ECS 元数据询问；失败则无法进桶。';
+        }
 
         return $warnings;
+    }
+
+    public static function sanitize_oss_signature($value): string
+    {
+        $value = sanitize_key((string) $value);
+        return $value === 'v1' ? 'v1' : 'v4';
+    }
+
+    public static function sanitize_oss_auth($value): string
+    {
+        $value = sanitize_key((string) $value);
+        return $value === 'ram' ? 'ram' : 'ak';
+    }
+
+    public static function oss_sign_version(array $opts = []): string
+    {
+        $opts = $opts !== [] ? $opts : self::get();
+        return self::sanitize_oss_signature($opts['oss_signature'] ?? 'v4');
+    }
+
+    public static function oss_sign_region(array $opts = []): string
+    {
+        $opts = $opts !== [] ? $opts : self::get();
+        $region = (string) ($opts['region'] ?? '');
+        if (strpos($region, 'oss-accelerate') === 0) {
+            $region = (string) ($opts['origin_region'] ?? 'oss-cn-hangzhou');
+        }
+        return Wpsss_Oss_Signer::sign_region($region);
     }
 
     public static function uninstall_cleanup(): void

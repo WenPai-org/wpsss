@@ -263,6 +263,23 @@ $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'publi
         <input type="hidden" name="<?php echo esc_attr($key); ?>[use_internal]" value="<?php echo $opts['use_internal'] === '1' ? '1' : '0'; ?>" />
         <button type="button" class="toggle<?php echo $opts['use_internal'] === '1' ? ' on' : ''; ?> js-wpsss-flip" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo $opts['use_internal'] === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
       </div></div>
+      <?php if ($driver === Wpsss_Options::DRIVER_ALIYUN) : ?>
+      <?php $oss_signature = (($opts['oss_signature'] ?? 'v4') === 'v1') ? 'v1' : 'v4'; ?>
+      <?php $oss_auth = (($opts['oss_auth'] ?? 'ak') === 'ram') ? 'ram' : 'ak'; ?>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('签名版本', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('默认 V4。部分新区域只认 V4；旧对接可改回 V1。', 'wpsss'); ?></div></div><div class="field-ctl">
+        <select name="<?php echo esc_attr($key); ?>[oss_signature]">
+          <option value="v4"<?php selected($oss_signature, 'v4'); ?>><?php echo esc_html__('V4（推荐）', 'wpsss'); ?></option>
+          <option value="v1"<?php selected($oss_signature, 'v1'); ?>><?php echo esc_html__('V1', 'wpsss'); ?></option>
+        </select>
+      </div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('凭证', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('一般用 RAM 子用户密钥。源站在阿里云 ECS 且绑了角色时，可选实例角色，不必再填密钥。', 'wpsss'); ?></div></div><div class="field-ctl">
+        <select name="<?php echo esc_attr($key); ?>[oss_auth]">
+          <option value="ak"<?php selected($oss_auth, 'ak'); ?>><?php echo esc_html__('AccessKey', 'wpsss'); ?></option>
+          <option value="ram"<?php selected($oss_auth, 'ram'); ?>><?php echo esc_html__('ECS 实例 RAM 角色', 'wpsss'); ?></option>
+        </select>
+      </div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('RAM 角色名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('可留空，由实例元数据返回。临时密钥不会写入设置。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[oss_ram_role]" type="text" value="<?php echo esc_attr((string) ($opts['oss_ram_role'] ?? '')); ?>" autocomplete="off" /></div></div>
+      <?php endif; ?>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('自定义域名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('七牛云必填；请使用 HTTPS 地址。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[custom_domain]" type="text" value="<?php echo esc_attr($opts['custom_domain']); ?>" placeholder="https://static.example.com" /></div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('对象前缀 / 子目录', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('相当于对象路径前缀，如 media。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[object_prefix]" type="text" value="<?php echo esc_attr($opts['object_prefix']); ?>" /></div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('自动重命名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('上传时自动重命名，降低直链被猜测的风险。', 'wpsss'); ?></div></div><div class="field-ctl">

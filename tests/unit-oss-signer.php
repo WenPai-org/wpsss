@@ -98,6 +98,101 @@ wpsss_assert(strpos($signed_style, 'Signature=') !== false, 'signed get with pro
 wpsss_assert(strpos($signed_style, 'x-oss-process=') !== false, 'signed get with process query');
 wpsss_assert(strpos($signed_style, '??') === false, 'signed get with process single ?');
 
+wpsss_assert(Wpsss_Oss_Signer::sign_region('oss-cn-hangzhou') === 'cn-hangzhou', 'sign region strips oss-');
+wpsss_assert(Wpsss_Oss_Signer::sign_region('oss-accelerate') === 'cn-hangzhou', 'accelerate region fallback');
+wpsss_assert(Wpsss_Oss_Signer::sign_region('cn-shanghai') === 'cn-shanghai', 'bare region stays');
+
+$official_canonical = Wpsss_Oss_Signer::v4_canonical_request(
+    'PUT',
+    '/examplebucket/exampleobject',
+    '',
+    [
+        'content-disposition' => 'attachment',
+        'content-length' => '3',
+        'content-md5' => 'ICy5YqxZB1uWSwcVLSNLcA==',
+        'content-type' => 'text/plain',
+        'x-oss-content-sha256' => 'UNSIGNED-PAYLOAD',
+        'x-oss-date' => '20250411T064124Z',
+    ],
+    ['content-disposition', 'content-length']
+);
+wpsss_assert(
+    hash('sha256', $official_canonical) === 'c46d96390bdbc2d739ac9363293ae9d710b14e48081fcb22cd8ad54b63136eca',
+    'official v4 canonical hash'
+);
+$official_sts = Wpsss_Oss_Signer::v4_string_to_sign(
+    '20250411T064124Z',
+    '20250411/cn-hangzhou/oss/aliyun_v4_request',
+    $official_canonical
+);
+wpsss_assert(
+    strpos($official_sts, "OSS4-HMAC-SHA256\n20250411T064124Z\n") === 0,
+    'official v4 string-to-sign prefix'
+);
+
+$iso = '20250411T064124Z';
+$v4_headers = Wpsss_Oss_Signer::v4_sign_headers(
+    'testid',
+    'test-secret',
+    'PUT',
+    'demo-bucket',
+    '2026/09/hello.txt',
+    'cn-hangzhou',
+    $iso,
+    [
+        'Host' => 'demo-bucket.oss-cn-hangzhou.aliyuncs.com',
+        'Content-Type' => 'text/plain',
+        'x-oss-object-acl' => 'public-read',
+    ]
+);
+wpsss_assert(strpos($v4_headers['Authorization'], 'OSS4-HMAC-SHA256 Credential=testid/20250411/cn-hangzhou/oss/aliyun_v4_request') === 0, 'v4 auth prefix');
+wpsss_assert(strpos($v4_headers['Authorization'], 'AdditionalHeaders=host') !== false, 'v4 additional host');
+wpsss_assert(preg_match('/Signature=[0-9a-f]{64}$/', $v4_headers['Authorization']) === 1, 'v4 signature hex');
+$v4_headers2 = Wpsss_Oss_Signer::v4_sign_headers(
+    'testid',
+    'test-secret',
+    'PUT',
+    'demo-bucket',
+    '2026/09/hello.txt',
+    'cn-hangzhou',
+    $iso,
+    [
+        'Host' => 'demo-bucket.oss-cn-hangzhou.aliyuncs.com',
+        'Content-Type' => 'text/plain',
+        'x-oss-object-acl' => 'public-read',
+    ]
+);
+wpsss_assert($v4_headers['Authorization'] === $v4_headers2['Authorization'], 'v4 auth repeatable');
+
+$v4url = Wpsss_Oss_Signer::v4_signed_get_url(
+    'https://cdn.example.com',
+    'demo-bucket',
+    '2026/09/a.png',
+    'ak',
+    'sk',
+    'cn-hangzhou',
+    3600,
+    1700000000,
+    'style/blog'
+);
+$v4url2 = Wpsss_Oss_Signer::v4_signed_get_url(
+    'https://cdn.example.com',
+    'demo-bucket',
+    '2026/09/a.png',
+    'ak',
+    'sk',
+    'cn-hangzhou',
+    3600,
+    1700000000,
+    'style/blog'
+);
+wpsss_assert($v4url === $v4url2, 'v4 signed url repeatable');
+wpsss_assert(strpos($v4url, 'x-oss-signature-version=OSS4-HMAC-SHA256') !== false, 'v4 signed url version');
+wpsss_assert(strpos($v4url, 'x-oss-process=style') !== false, 'v4 signed url process');
+wpsss_assert(strpos($v4url, 'x-oss-signature=') !== false, 'v4 signed url signature');
+wpsss_assert(strpos($v4url, '??') === false, 'v4 signed url single ?');
+wpsss_assert(Wpsss_Oss_Signer::v4_canonical_query(['acl' => '']) === 'acl', 'v4 query name-only');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

@@ -139,19 +139,9 @@ class Wpsss_Url
             && ($opts['driver'] ?? '') === 'aliyun-oss'
             && $process !== ''
         ) {
-            $ak = (string) ($opts['access_key_id'] ?? '');
-            $sk = (string) ($opts['access_key_secret'] ?? '');
-            if ($ak !== '' && $sk !== '') {
-                return Wpsss_Oss_Signer::signed_get_url(
-                    $base,
-                    (string) ($opts['bucket'] ?? ''),
-                    $key,
-                    $ak,
-                    $sk,
-                    max(60, (int) ($opts['signed_ttl'] ?? 3600)),
-                    $now,
-                    $process
-                );
+            $signed = self::oss_signed_url($base, $key, $opts, $now, $process);
+            if ($signed !== Wpsss_Oss_Signer::object_url($base, $key)) {
+                return $signed;
             }
         }
         $url = self::sign_object_url($base, $key, $opts, $now);
@@ -179,11 +169,11 @@ class Wpsss_Url
         $ttl = max(60, (int) ($opts['signed_ttl'] ?? 3600));
         $ak = (string) ($opts['access_key_id'] ?? '');
         $sk = (string) ($opts['access_key_secret'] ?? '');
+        if ($driver === 'aliyun-oss') {
+            return self::oss_signed_url($base, $key, $opts, $now, '');
+        }
         if ($ak === '' || $sk === '') {
             return $url;
-        }
-        if ($driver === 'aliyun-oss') {
-            return Wpsss_Oss_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
         }
         if ($driver === 'qcloud-cos') {
             return Wpsss_Cos_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
@@ -211,6 +201,48 @@ class Wpsss_Url
             return $req['url'] . '?' . $qs;
         }
         return $url;
+    }
+
+    /**
+     * @param array<string, mixed> $opts
+     */
+    public static function oss_signed_url(string $base, string $key, array $opts, ?int $now = null, string $process = ''): string
+    {
+        $url = Wpsss_Oss_Signer::object_url($base, $key);
+        if (class_exists('Wpsss_Oss_Ram')) {
+            $opts = Wpsss_Oss_Ram::hydrate($opts);
+        }
+        $ak = (string) ($opts['access_key_id'] ?? '');
+        $sk = (string) ($opts['access_key_secret'] ?? '');
+        if ($ak === '' || $sk === '') {
+            return $url;
+        }
+        $ttl = max(60, (int) ($opts['signed_ttl'] ?? 3600));
+        $token = (string) ($opts['security_token'] ?? '');
+        if (class_exists('Wpsss_Options') && Wpsss_Options::oss_sign_version($opts) === 'v4') {
+            return Wpsss_Oss_Signer::v4_signed_get_url(
+                $base,
+                (string) ($opts['bucket'] ?? ''),
+                $key,
+                $ak,
+                $sk,
+                Wpsss_Options::oss_sign_region($opts),
+                $ttl,
+                $now,
+                $process,
+                $token
+            );
+        }
+        return Wpsss_Oss_Signer::signed_get_url(
+            $base,
+            (string) ($opts['bucket'] ?? ''),
+            $key,
+            $ak,
+            $sk,
+            $ttl,
+            $now,
+            $process
+        );
     }
 
     /**

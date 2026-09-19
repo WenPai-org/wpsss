@@ -16,6 +16,10 @@
 
 五路并行：URL/GIF/签名补 COS·KODO·OBS；改写翻页 + 序列化 walker；恢复 `pull_batch`；媒体库 JS / 原图保护 filter；`origin_region` / https endpoint / 卸载自有 `upload_url_path`；帮助 FAQ；`Wpsss_Ci` 挂评论（失败放行）。产品 `a59dfd6` 已推 FeiCode main。
 
+## 2026-09-19 22:10 - [Cursor] OSS V4 + ECS RAM
+
+阿里默认签名 V4（官方 canonical 哈希已锁）。高级设置可改回 V1。`oss_auth=ram` 时问 ECS 元数据取 STS，不落 options。未接 CyberCDN，未关 keep_local。
+
 ## 2026-09-19 22:00 - [Cursor] 缩略图键 + 签名样式
 
 `rewrite_url` 按 URL 文件名取对象键（thumb / original / intermediate 不再全回原图）。`serve_object_url` 把阿里 `x-oss-process` 写进签名串，避免 `??`。媒体库 JS 的 sizes 走同一条改写。未接 CyberCDN / V4 / RAM。
