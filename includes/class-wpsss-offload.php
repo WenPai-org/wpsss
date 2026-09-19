@@ -26,6 +26,8 @@ class Wpsss_Offload
         add_filter('wp_get_attachment_thumb_url', [$this, 'rewrite_url'], 30, 2);
         add_filter('wp_get_original_image_url', [$this, 'rewrite_url'], 30, 2);
         add_filter('image_get_intermediate_size', [$this, 'rewrite_intermediate'], 10, 3);
+        add_filter('image_downsize', [$this, 'rewrite_image_downsize'], 10, 3);
+        add_filter('wp_get_attachment_image_src', [$this, 'rewrite_image_src'], 30, 4);
         add_filter('wp_calculate_image_srcset', [$this, 'rewrite_srcset'], 10, 5);
         add_filter('the_content', [$this, 'rewrite_content'], 100);
         add_filter('the_excerpt', [$this, 'rewrite_content'], 100);
@@ -229,6 +231,81 @@ class Wpsss_Offload
             $data['url'] = $this->rewrite_url((string) $data['url'], (int) $post_id);
         }
         return $data;
+    }
+
+    /**
+     * WP image_downsize 用 wp_basename(全图 URL) 换尺寸文件名。
+     * 签名读的 query 会进 basename，整段被换成 150x150 后签名丢失，私有桶 403。
+     *
+     * @param mixed $out
+     * @param mixed $id
+     * @param mixed $size
+     * @return mixed
+     */
+    public function rewrite_image_downsize($out, $id, $size)
+    {
+        if ($out !== false) {
+            return $out;
+        }
+        if (!Wpsss_Library::is_offloaded((int) $id) || Wpsss_Options::public_base() === '') {
+            return false;
+        }
+        if (!function_exists('image_get_intermediate_size')) {
+            return false;
+        }
+        $intermediate = image_get_intermediate_size((int) $id, $size);
+        if (!is_array($intermediate) || empty($intermediate['url'])) {
+            return false;
+        }
+        return [
+            (string) $intermediate['url'],
+            isset($intermediate['width']) ? (int) $intermediate['width'] : 0,
+            isset($intermediate['height']) ? (int) $intermediate['height'] : 0,
+            true,
+        ];
+    }
+
+    /**
+     * 媒体库列表 / wp_get_attachment_image 走这里。核心 mime 图标不改写。
+     *
+     * @param mixed $image
+     * @param mixed $attachment_id
+     * @param mixed $size
+     * @param mixed $icon
+     * @return mixed
+     */
+    public function rewrite_image_src($image, $attachment_id, $size, $icon)
+    {
+        unset($size, $icon);
+        if (!is_array($image) || empty($image[0]) || !is_string($image[0])) {
+            return $image;
+        }
+        if (!self::url_is_ours($image[0])) {
+            return $image;
+        }
+        $image[0] = $this->rewrite_url($image[0], (int) $attachment_id);
+        return $image;
+    }
+
+    public static function url_is_ours(string $url): bool
+    {
+        if ($url === '' || strpos($url, '/wp-includes/images/media/') !== false) {
+            return false;
+        }
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        if ($host === '' || !class_exists('Wpsss_Options')) {
+            return false;
+        }
+        $base_host = (string) parse_url(Wpsss_Options::public_base(), PHP_URL_HOST);
+        if ($base_host !== '' && strcasecmp($host, $base_host) === 0) {
+            return true;
+        }
+        if (!function_exists('wp_upload_dir')) {
+            return false;
+        }
+        $uploads = wp_upload_dir();
+        $upload_base = rtrim((string) ($uploads['baseurl'] ?? ''), '/');
+        return $upload_base !== '' && strpos($url, $upload_base) === 0;
     }
 
     public static function safe_upload_url_path(string $value): string

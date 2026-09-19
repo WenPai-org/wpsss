@@ -106,12 +106,23 @@ $offload = new Wpsss_Offload(new Wpsss_Plugin());
 wpsss_assert($offload->rewrite_intermediate('nope', 1, 'thumb') === 'nope', 'intermediate non-array');
 $same = ['url' => 'http://local/a.jpg', 'file' => 'a.jpg'];
 wpsss_assert($offload->rewrite_intermediate($same, 1, 'medium') === $same, 'intermediate not offloaded');
+wpsss_assert($offload->rewrite_image_downsize(false, 1, 'thumbnail') === false, 'downsize not offloaded');
+wpsss_assert($offload->rewrite_image_downsize(['keep'], 1, 'thumbnail') === ['keep'], 'downsize passthrough');
+$icon = ['http://site.example/wp-includes/images/media/default.svg', 48, 64, false];
+wpsss_assert($offload->rewrite_image_src($icon, 1, [60, 60], true) === $icon, 'image_src skips core icon');
+wpsss_assert(Wpsss_Offload::url_is_ours('http://site.example/wp-includes/images/media/default.png') === false, 'core icon not ours');
+wpsss_assert(Wpsss_Offload::url_is_ours('') === false, 'empty url not ours');
+$signed_full = 'https://bucket.oss.example.com/2026/09/a.png?x-oss-signature=abc&x-oss-date=1';
+$eaten = str_replace(basename($signed_full), 'a-150x150.png', $signed_full);
+wpsss_assert($eaten === 'https://bucket.oss.example.com/2026/09/a-150x150.png', 'wp basename strip drops signature');
 
 $offload_src = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-offload.php');
 $media_src = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-media.php');
 wpsss_assert((bool) preg_match('/wp_get_original_image_url/', $offload_src), 'original image hook in Offload');
 wpsss_assert((bool) preg_match('/wp_get_attachment_thumb_url/', $offload_src), 'thumb url hook in Offload');
 wpsss_assert((bool) preg_match('/image_get_intermediate_size/', $offload_src), 'intermediate hook in Offload');
+wpsss_assert((bool) preg_match('/image_downsize/', $offload_src), 'image_downsize hook in Offload');
+wpsss_assert((bool) preg_match('/wp_get_attachment_image_src/', $offload_src), 'image_src hook in Offload');
 wpsss_assert((bool) preg_match('/wp_prepare_attachment_for_js/', $media_src), 'js hook in Media');
 
 if ($failed > 0) {
