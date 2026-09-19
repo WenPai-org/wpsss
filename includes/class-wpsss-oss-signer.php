@@ -29,7 +29,8 @@ class Wpsss_Oss_Signer
         string $date,
         string $bucket,
         string $object,
-        array $oss_headers = []
+        array $oss_headers = [],
+        string $subresource = ''
     ): string {
         $header_block = '';
         if ($oss_headers !== []) {
@@ -44,6 +45,9 @@ class Wpsss_Oss_Signer
         }
 
         $resource = '/' . $bucket . '/' . ltrim($object, '/');
+        if ($subresource !== '') {
+            $resource .= '?' . $subresource;
+        }
         return strtoupper($method) . "\n"
             . $content_md5 . "\n"
             . $content_type . "\n"
@@ -69,7 +73,8 @@ class Wpsss_Oss_Signer
         string $date,
         string $bucket,
         string $object,
-        array $oss_headers = []
+        array $oss_headers = [],
+        string $subresource = ''
     ): string {
         $canonical = self::canonical_string(
             $method,
@@ -78,7 +83,8 @@ class Wpsss_Oss_Signer
             $date,
             $bucket,
             $object,
-            $oss_headers
+            $oss_headers,
+            $subresource
         );
         return 'OSS ' . $access_key_id . ':' . self::signature($secret, $canonical);
     }

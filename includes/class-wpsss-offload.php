@@ -145,13 +145,13 @@ class Wpsss_Offload
         if ($key !== '') {
             update_post_meta($post_id, Wpsss_Library::META_KEY, $key);
         }
-        Wpsss_History::add('offload', '附件 ' . $post_id . ($key !== '' ? ' → ' . $key : ''));
+        Wpsss_History::add_offload($post_id, $key);
     }
 
     public function mark_failed(int $post_id, string $message): void
     {
         update_post_meta($post_id, Wpsss_Library::META_ERROR, $message);
-        Wpsss_History::add('fail', '附件 ' . $post_id . '：' . $message);
+        Wpsss_History::add_fail($post_id, $message);
     }
 
     public static function rewrite_urls_in_text(string $text, string $from_base, string $to_base): string
@@ -187,7 +187,7 @@ class Wpsss_Offload
         }
 
         $this->plugin->active_driver()->delete_objects(Wpsss_Options::get(), $keys);
-        Wpsss_History::add('delete', '附件 ' . $post_id . ' ×' . count($keys));
+        Wpsss_History::add_delete_attachment($post_id, count($keys));
     }
 
     public function rewrite_url(string $url, int $post_id): string
@@ -372,7 +372,7 @@ class Wpsss_Offload
             delete_post_meta($post_id, Wpsss_Library::META_KEY);
         }
         delete_post_meta($post_id, Wpsss_Library::META_ERROR);
-        Wpsss_History::add('pull', 'attachment=' . $post_id . ($delete_remote ? ' delete-remote' : ''));
+        Wpsss_History::add_pull($post_id, $delete_remote);
         return true;
     }
 

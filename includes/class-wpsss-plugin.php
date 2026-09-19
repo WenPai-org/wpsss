@@ -71,6 +71,11 @@ final class Wpsss_Plugin
         return $this->drivers[$id] ?? $this->drivers[Wpsss_Options::DRIVER_ALIYUN];
     }
 
+    public function driver(string $id): ?Wpsss_Driver
+    {
+        return $this->drivers[$id] ?? null;
+    }
+
     /**
      * @return array<string, Wpsss_Driver>
      */

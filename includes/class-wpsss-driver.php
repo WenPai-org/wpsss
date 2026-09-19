@@ -45,4 +45,12 @@ interface Wpsss_Driver
      * @return true|WP_Error
      */
     public function probe(array $settings);
+
+    /**
+     * 读这一只桶的区域和 ACL。不列全部桶。
+     *
+     * @param array<string, string> $settings
+     * @return array{region: string, url_access: string, app_id: string, custom_domain: string, notes: string[]}|WP_Error
+     */
+    public function inspect_bucket(array $settings);
 }

@@ -28,6 +28,7 @@ require_once WPSSS_DIR . 'includes/class-wpsss-s3-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-url.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-history.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-options.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-bucket-info.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-driver.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-aliyun-oss.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-qcloud-cos.php';

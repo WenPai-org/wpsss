@@ -63,7 +63,7 @@ final class Wpsss_Media
             echo '<span class="pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
             return;
         }
-        echo esc_html__('未进桶', 'wpsss');
+        echo '<span class="pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
     }
 
     /**
@@ -211,24 +211,40 @@ final class Wpsss_Media
         $key = (string) get_post_meta($id, Wpsss_Library::META_KEY, true);
         $url = wp_get_attachment_url($id);
         $err = Wpsss_Library::last_error($id);
-        echo '<p>' . esc_html($off ? __('已进桶', 'wpsss') : __('未进桶', 'wpsss')) . '</p>';
+        echo '<div class="wpsss-metabox">';
+        echo '<div class="wpsss-metabox-status">';
+        if ($off) {
+            echo '<span class="pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
+        } elseif ($err !== '') {
+            echo '<span class="pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
+        } else {
+            echo '<span class="pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
+        }
+        echo '</div>';
         if ($err !== '') {
-            echo '<p>' . esc_html($err) . '</p>';
+            echo '<p class="wpsss-metabox-meta">' . esc_html($err) . '</p>';
         }
         if ($key !== '') {
-            echo '<p><code>' . esc_html($key) . '</code></p>';
+            echo '<p class="wpsss-metabox-key"><code>' . esc_html(Wpsss_History::short_key($key)) . '</code></p>';
         }
         if (is_string($url) && $url !== '') {
-            echo '<p><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html__('打开地址', 'wpsss') . '</a></p>';
+            echo '<p class="wpsss-metabox-link"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html__('打开地址', 'wpsss') . '</a></p>';
         }
+        echo '<div class="wpsss-metabox-actions">';
         if ($off) {
-            return;
+            $pull = wp_nonce_url(
+                admin_url('admin-post.php?action=wpsss_pull_one&id=' . $id),
+                'wpsss_pull_one_' . $id
+            );
+            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+        } else {
+            $href = wp_nonce_url(
+                admin_url('admin-post.php?action=wpsss_offload_one&id=' . $id),
+                'wpsss_offload_one_' . $id
+            );
+            echo '<a class="btn btn-secondary" href="' . esc_url($href) . '">' . esc_html__('传到对象存储', 'wpsss') . '</a>';
         }
-        $href = wp_nonce_url(
-            admin_url('admin-post.php?action=wpsss_offload_one&id=' . $id),
-            'wpsss_offload_one_' . $id
-        );
-        echo '<p><a class="button" href="' . esc_url($href) . '">' . esc_html__('传到对象存储', 'wpsss') . '</a></p>';
+        echo '</div></div>';
     }
 
     public function admin_notices(): void
@@ -236,19 +252,42 @@ final class Wpsss_Media
         if (!is_admin()) {
             return;
         }
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        $id = is_object($screen) ? (string) $screen->id : '';
+        if (!in_array($id, ['upload', 'attachment'], true)) {
+            return;
+        }
         if (isset($_GET['wpsss_offload'])) {
             $ok = sanitize_key((string) $_GET['wpsss_offload']) === 'ok';
-            echo '<div class="notice notice-' . ($ok ? 'success' : 'error') . ' is-dismissible"><p>';
-            echo esc_html($ok ? __('已传到对象存储。', 'wpsss') : __('没传上去，看本地文件和桶权限。', 'wpsss'));
-            echo '</p></div>';
+            $this->render_flash(
+                $ok ? 'ok' : 'warn',
+                $ok ? __('已传到对象存储。', 'wpsss') : __('没传上去，看本地文件和桶权限。', 'wpsss')
+            );
+        }
+        if (isset($_GET['wpsss_pull'])) {
+            $ok = sanitize_key((string) $_GET['wpsss_pull']) === 'ok';
+            $this->render_flash(
+                $ok ? 'ok' : 'warn',
+                $ok ? __('已拉回本地。', 'wpsss') : __('没拉回来，看桶权限和本地磁盘。', 'wpsss')
+            );
         }
         if (!isset($_GET['wpsss_bulk_ok'])) {
             return;
         }
         $ok = (int) $_GET['wpsss_bulk_ok'];
         $fail = isset($_GET['wpsss_bulk_fail']) ? (int) $_GET['wpsss_bulk_fail'] : 0;
-        echo '<div class="notice notice-success is-dismissible"><p>';
-        echo esc_html(sprintf('批量补传：成功 %d，失败 %d。', $ok, $fail));
-        echo '</p></div>';
+        $this->render_flash(
+            $fail > 0 ? 'warn' : 'ok',
+            sprintf(__('批量操作：成功 %d，失败 %d。', 'wpsss'), $ok, $fail)
+        );
+    }
+
+    private function render_flash(string $kind, string $message): void
+    {
+        $cls = in_array($kind, ['ok', 'warn', 'info'], true) ? $kind : 'info';
+        echo '<div class="wpsss-flash notice ' . esc_attr($cls) . '">';
+        echo Wpsss_Icons::svg('info');
+        echo '<span>' . esc_html($message) . '</span>';
+        echo '</div>';
     }
 }

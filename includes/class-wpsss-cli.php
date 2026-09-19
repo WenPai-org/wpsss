@@ -504,6 +504,124 @@ final class Wpsss_CLI
         return '匿名读对象 HTTP ' . $code . '。200 才是访客能看。';
     }
 
+    /**
+     * 后台概览用的体检摘要（不回显密钥）。
+     *
+     * @param array<string, string> $opts
+     * @return array{
+     *   healthy: bool,
+     *   tone: string,
+     *   label: string,
+     *   blockers: string[],
+     *   warnings: string[],
+     *   oks: string[]
+     * }
+     */
+    public static function doctor_report(array $opts): array
+    {
+        $raw = self::doctor_findings(
+            $opts,
+            (string) get_option('upload_url_path', ''),
+            (string) get_option(Wpsss_Options::OWN_URL_FLAG, '')
+        );
+        $blockers = array_map([self::class, 'doctor_line_for_admin'], $raw['blockers']);
+        $warnings = array_map([self::class, 'doctor_line_for_admin'], $raw['warnings']);
+        $oks = array_map([self::class, 'doctor_line_for_admin'], $raw['oks']);
+
+        $sample = self::sample_offloaded_attachment_url();
+        if ($sample !== '') {
+            $code = self::anonymous_http_status($sample);
+            $access = (string) ($opts['url_access'] ?? 'public');
+            if (self::classify_anonymous_http($code, $access) === 'ok') {
+                if ($access === 'signed' && ($code === 403 || $code === 401)) {
+                    $oks[] = '匿名访问受限，符合签名访问设置';
+                } else {
+                    $oks[] = '样本对象可匿名访问（HTTP ' . $code . '）';
+                }
+            } else {
+                $warnings[] = self::anonymous_read_message_for_admin($code, $access);
+            }
+        }
+
+        $healthy = $blockers === [];
+        $tone = $healthy ? ($warnings === [] ? 'ok' : 'warn') : 'block';
+        if (!$healthy) {
+            $label = __('存在阻断项', 'wpsss');
+        } elseif ($warnings !== []) {
+            $label = __('有警告', 'wpsss');
+        } else {
+            $label = __('运行正常', 'wpsss');
+        }
+
+        return [
+            'healthy' => $healthy,
+            'tone' => $tone,
+            'label' => $label,
+            'blockers' => $blockers,
+            'warnings' => $warnings,
+            'oks' => $oks,
+        ];
+    }
+
+    public static function sample_offloaded_attachment_url(): string
+    {
+        $ids = get_posts([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'meta_key' => Wpsss_Library::META_OFFLOADED,
+            'meta_value' => '1',
+        ]);
+        if ($ids === []) {
+            return '';
+        }
+        $url = wp_get_attachment_url((int) $ids[0]);
+        return is_string($url) ? $url : '';
+    }
+
+    private static function doctor_line_for_admin(string $line): string
+    {
+        $map = [
+            'bucket 空。先 wp sss set --from-env' => '尚未填写存储桶名称',
+            'bucket=wenpai-wpsss-test' => '当前为测试桶 wenpai-wpsss-test',
+            'bucket 不是测试桶 wenpai-wpsss-test。生产须人批。' => '当前存储桶不是测试桶，生产环境须另行审批',
+            'keep_local=0。关掉须人批。' => '本地备份已关闭，须管理员批准',
+            'keep_local=1' => '本地备份已开启',
+            '密钥未齐。wp sss set --from-env' => '访问密钥尚未配置完整',
+            '密钥已配置（不回显）' => '访问密钥已保存',
+            'site_mode=domestic' => '站点场景：国内站',
+            'site_mode=crossborder' => '站点场景：跨境 · 外贸站',
+            'site_mode=mixed' => '站点场景：混合站',
+            'url_access=signed' => '对象访问：签名 URL',
+            '签名访问目前只支持阿里 OSS 与 S3 兼容 / TOS。' => '当前厂商暂不支持签名访问，请改用公开读或更换厂商',
+        ];
+        if (isset($map[$line])) {
+            return $map[$line];
+        }
+        if (strpos($line, 'site_mode=') === 0) {
+            return $line;
+        }
+        return $line;
+    }
+
+    private static function anonymous_read_message_for_admin(int $code, string $url_access): string
+    {
+        if ($url_access === 'signed') {
+            if ($code === 0) {
+                return '未能探测样本对象，请稍后在工具页测试连通';
+            }
+            return '样本对象匿名访问 HTTP ' . $code . '，请检查签名设置';
+        }
+        if ($code === 403 || $code === 401) {
+            return '样本对象禁止匿名访问（HTTP ' . $code . '）；公开读模式下前台图片可能无法显示';
+        }
+        if ($code === 0) {
+            return '未能探测样本对象，请稍后在工具页测试连通';
+        }
+        return '样本对象匿名访问 HTTP ' . $code . '，公开读通常应为 200';
+    }
+
     public static function anonymous_http_status(string $url): int
     {
         if ($url === '' || !function_exists('wp_remote_head')) {
@@ -524,19 +642,7 @@ final class Wpsss_CLI
 
     private function doctor_sample_public_url(): string
     {
-        $ids = get_posts([
-            'post_type' => 'attachment',
-            'post_status' => 'inherit',
-            'posts_per_page' => 1,
-            'fields' => 'ids',
-            'meta_key' => Wpsss_Library::META_OFFLOADED,
-            'meta_value' => '1',
-        ]);
-        if ($ids === []) {
-            return '';
-        }
-        $url = wp_get_attachment_url((int) $ids[0]);
-        return is_string($url) ? $url : '';
+        return self::sample_offloaded_attachment_url();
     }
 
     /**
@@ -573,7 +679,7 @@ final class Wpsss_CLI
         if (is_wp_error($result)) {
             WP_CLI::error($result->get_error_message());
         }
-        Wpsss_History::add('upload', $key);
+        Wpsss_History::add_object('upload', $key);
         WP_CLI::success('已上传 ' . $key);
     }
 
@@ -602,7 +708,7 @@ final class Wpsss_CLI
         if (is_wp_error($result)) {
             WP_CLI::error($result->get_error_message());
         }
-        Wpsss_History::add('delete', $key);
+        Wpsss_History::add_object('delete', $key);
         WP_CLI::success('已删除 ' . $key);
     }
 

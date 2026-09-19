@@ -112,6 +112,98 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
         return true;
     }
 
+    public function inspect_bucket(array $settings)
+    {
+        $loc = $this->bucket_query($settings, 'location=');
+        if (is_wp_error($loc)) {
+            $guess = Wpsss_Bucket_Info::region_from_error_data(is_array($loc->get_error_data()) ? $loc->get_error_data() : []);
+            if ($guess !== '' && $guess !== ($settings['region'] ?? '')) {
+                $settings['region'] = $guess;
+                $loc = $this->bucket_query($settings, 'location=');
+            }
+        }
+        if (is_wp_error($loc)) {
+            return $loc;
+        }
+        $info = Wpsss_Bucket_Info::blank();
+        $parsed = Wpsss_Bucket_Info::parse_location_xml($loc['body']);
+        if ($parsed === '') {
+            $parsed = Wpsss_Bucket_Info::region_from_headers($loc['headers']);
+        }
+        if ($parsed === '') {
+            $parsed = Wpsss_Bucket_Info::s3_empty_location_region();
+        }
+        $info['region'] = Wpsss_Bucket_Info::pick_known_region($parsed, Wpsss_Options::regions_for($this->id()));
+        $acl = $this->bucket_query($settings, 'acl=');
+        if (is_wp_error($acl)) {
+            $info['notes'][] = '已读取区域信息，请自行选择对象访问方式。';
+            return $info;
+        }
+        $info['url_access'] = Wpsss_Bucket_Info::parse_acl_xml($acl['body']);
+        if ($info['url_access'] === '') {
+            $info['notes'][] = '已连接存储桶，但无法判断公开或私有，请自行选择对象访问方式。';
+        }
+        return $info;
+    }
+
+    /**
+     * @return array{code: int, body: string, headers: array<string, string>}|WP_Error
+     */
+    private function bucket_query(array $settings, string $query)
+    {
+        $built = Wpsss_Options::s3_object_request($settings, '');
+        if ($built['url'] === '' || $built['host'] === '') {
+            return new WP_Error('wpsss_s3_host', 'S3 兼容缺少 endpoint / 区域，无法签名。');
+        }
+        $amz_date = Wpsss_S3_Signer::amz_date();
+        $payload_hash = Wpsss_S3_Signer::EMPTY_SHA256;
+        $region = Wpsss_Options::s3_signing_region($settings);
+        $headers = [
+            'host' => $built['host'],
+            'x-amz-content-sha256' => $payload_hash,
+            'x-amz-date' => $amz_date,
+        ];
+        $signed = Wpsss_S3_Signer::sign(
+            $settings['access_key_id'],
+            $settings['access_key_secret'],
+            'GET',
+            $built['canonical_uri'],
+            $query,
+            $headers,
+            $payload_hash,
+            $amz_date,
+            $region
+        );
+        $url = $built['url'] . (strpos($built['url'], '?') === false ? '?' : '&') . $query;
+        $response = wp_remote_request(
+            $url,
+            [
+                'method' => 'GET',
+                'headers' => [
+                    'Authorization' => $signed['authorization'],
+                    'x-amz-content-sha256' => $payload_hash,
+                    'x-amz-date' => $amz_date,
+                ],
+                'timeout' => 30,
+                'redirection' => 0,
+            ]
+        );
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        $body = (string) wp_remote_retrieve_body($response);
+        $flat = Wpsss_Bucket_Info::flatten_headers(wp_remote_retrieve_headers($response));
+        if ($code >= 200 && $code < 300) {
+            return ['code' => $code, 'body' => $body, 'headers' => $flat];
+        }
+        return new WP_Error('wpsss_s3_http', $this->error_message($body, $code), [
+            'status' => $code,
+            'headers' => $flat,
+            'body' => $body,
+        ]);
+    }
+
     /**
      * @param array<string, string> $extra
      * @return true|WP_Error

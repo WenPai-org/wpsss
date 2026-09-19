@@ -72,6 +72,18 @@ $auth_acl = Wpsss_Oss_Signer::authorization(
 );
 wpsss_assert($auth_acl === 'OSS testid:e6Zvqd+dZVmCKJmymanLVPurcro=', 'authorization with acl header');
 
+$canonical_loc = Wpsss_Oss_Signer::canonical_string(
+    'GET',
+    '',
+    '',
+    'Fri, 18 Sep 2026 08:00:00 GMT',
+    'demo-bucket',
+    '',
+    [],
+    'location'
+);
+wpsss_assert($canonical_loc === "GET\n\n\nFri, 18 Sep 2026 08:00:00 GMT\n/demo-bucket/?location", 'canonical location');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

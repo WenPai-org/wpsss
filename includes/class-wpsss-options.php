@@ -101,6 +101,7 @@ class Wpsss_Options
             'site_mode' => 'domestic',
             'url_access' => 'public',
             'signed_ttl' => '3600',
+            'setup_completed_at' => '',
         ];
     }
 
@@ -128,6 +129,11 @@ class Wpsss_Options
         $secret = isset($input['access_key_secret']) ? (string) $input['access_key_secret'] : '';
         if ($secret === '') {
             $secret = $current['access_key_secret'];
+        }
+
+        $access_key_id = isset($input['access_key_id']) ? sanitize_text_field((string) $input['access_key_id']) : '';
+        if ($access_key_id === '') {
+            $access_key_id = (string) $current['access_key_id'];
         }
 
         $custom = isset($input['custom_domain']) ? trim((string) $input['custom_domain']) : '';
@@ -187,7 +193,7 @@ class Wpsss_Options
             'driver' => $driver,
             'bucket' => sanitize_text_field($input['bucket'] ?? ''),
             'region' => sanitize_text_field($input['region'] ?? self::default_region($driver)),
-            'access_key_id' => sanitize_text_field($input['access_key_id'] ?? ''),
+            'access_key_id' => $access_key_id,
             'access_key_secret' => $secret,
             'app_id' => sanitize_text_field($input['app_id'] ?? ''),
             'custom_domain' => $custom,
@@ -208,10 +214,60 @@ class Wpsss_Options
             'site_mode' => self::sanitize_site_mode($input['site_mode'] ?? $current['site_mode'] ?? 'domestic'),
             'url_access' => self::sanitize_url_access($input['url_access'] ?? $current['url_access'] ?? 'public'),
             'signed_ttl' => self::sanitize_signed_ttl($input['signed_ttl'] ?? $current['signed_ttl'] ?? '3600'),
+            'setup_completed_at' => sanitize_text_field($input['setup_completed_at'] ?? $current['setup_completed_at'] ?? ''),
         ];
 
         self::sync_upload_url_path($out['custom_domain']);
         return $out;
+    }
+
+    /**
+     * @return array<int, array{t: string, d: string}>
+     */
+    public static function setup_done_rows(string $site_mode, array $opts): array
+    {
+        $rows = [
+            [
+                't' => '本地备份',
+                'd' => '上传后在服务器保留副本，便于回滚与拉回',
+            ],
+            [
+                't' => '缩略图同步',
+                'd' => '各尺寸附件一并上传至存储桶',
+            ],
+        ];
+
+        if ($site_mode === 'domestic') {
+            $rows[] = [
+                't' => '推荐国内云厂商',
+                'd' => '向导中优先展示 OSS、COS、KODO、OBS、TOS',
+            ];
+        } elseif ($site_mode === 'crossborder') {
+            $rows[] = [
+                't' => '推荐国际与兼容云',
+                'd' => 'S3 兼容与 GCS 排在前列，国内云仍可选',
+            ];
+        } else {
+            $rows[] = [
+                't' => '国内外厂商均可选',
+                'd' => '按存储桶实际所在区域选择',
+            ];
+        }
+
+        $access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
+        if ($access === 'signed') {
+            $rows[] = [
+                't' => '签名访问',
+                'd' => '私有桶通过带有效期的 URL 对外提供媒体',
+            ];
+        } else {
+            $rows[] = [
+                't' => '公开读',
+                'd' => '附件 URL 可直接访问，须桶策略允许匿名读取',
+            ];
+        }
+
+        return $rows;
     }
 
     public static function default_path_style(string $preset): string
@@ -633,15 +689,15 @@ class Wpsss_Options
         return [
             'domestic' => [
                 'label' => '国内站',
-                'help' => '服务器、访客、管理员都在中国大陆。推荐国内云。厂商若有海外区域，自己选即可。',
+                'help' => '站点与访客主要位于中国大陆',
             ],
             'crossborder' => [
                 'label' => '跨境 · 外贸站',
-                'help' => '服务器与访客在海外，管理员在中国大陆。推荐 S3 兼容。国内云仍可选。',
+                'help' => '站点在海外，管理方在国内',
             ],
             'mixed' => [
                 'label' => '混合站',
-                'help' => '服务器在海外，访客中外都有。两组厂商都列出，自己挑。',
+                'help' => '访客来源包含境内外',
             ],
         ];
     }

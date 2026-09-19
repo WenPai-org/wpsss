@@ -3,6 +3,7 @@ defined('ABSPATH') || exit;
 /** @var array<string, mixed> $view */
 $tab = (string) $view['tab'];
 $url = $view['url'];
+$wizard = $tab === 'setup';
 $tabs = [
     'overview' => ['概览', 'home'],
     'settings' => ['设置', 'equalizer'],
@@ -15,6 +16,7 @@ $tabs = [
       <span class="wpcy-mark"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
       <span class="wpcy-name"><?php echo esc_html__('文派对象存储', 'wpsss'); ?></span>
     </a>
+    <?php if (!$wizard) : ?>
     <nav class="wpcy-tabs" aria-label="<?php echo esc_attr__('文派对象存储', 'wpsss'); ?>">
       <?php foreach ($tabs as $id => $meta) : ?>
         <a class="wpcy-tab<?php echo $tab === $id ? ' is-active' : ''; ?>" href="<?php echo esc_url($url($id)); ?>">
@@ -23,8 +25,14 @@ $tabs = [
         </a>
       <?php endforeach; ?>
     </nav>
+    <?php else : ?>
+    <div class="wpsss-setup-exit-wrap">
+      <a class="btn btn-ghost wpsss-setup-exit" href="<?php echo esc_url($url('overview')); ?>"><?php echo Wpsss_Icons::svg('home'); ?><?php echo esc_html__('退出向导', 'wpsss'); ?></a>
+    </div>
+    <?php endif; ?>
     <div class="wpcy-head-right">
-      <a class="btn btn-ghost" href="https://wenpai.org" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('help'); ?><?php echo esc_html__('帮助', 'wpsss'); ?></a>
+      <a class="btn btn-ghost<?php echo $tab === 'help' ? ' is-active' : ''; ?>" href="<?php echo esc_url($url('help')); ?>"><?php echo Wpsss_Icons::svg('help'); ?><?php echo esc_html__('帮助', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="https://www.wenpai.org/support/" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('chat'); ?><?php echo esc_html__('反馈', 'wpsss'); ?></a>
     </div>
   </div>
 </div></div>
@@ -32,12 +40,12 @@ $tabs = [
   <?php
     $cls = 'info';
     if ($view['level'] === 'ok') {
-        $cls = 'info';
+        $cls = 'ok';
     } elseif ($view['level'] === 'error') {
         $cls = 'warn';
     }
     ?>
-  <div class="wpcy-wrap" style="padding-top:16px">
+  <div class="wpcy-wrap wpsss-notice-wrap">
     <div class="notice <?php echo esc_attr($cls); ?>">
       <?php echo Wpsss_Icons::svg('info'); ?>
       <span><?php echo esc_html((string) $view['notice']); ?></span>

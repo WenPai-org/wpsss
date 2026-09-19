@@ -19,7 +19,8 @@ class Wpsss_Obs_Signer
         string $date,
         string $bucket,
         string $object,
-        array $obs_headers = []
+        array $obs_headers = [],
+        string $subresource = ''
     ): string {
         $header_block = '';
         if ($obs_headers !== []) {
@@ -33,6 +34,9 @@ class Wpsss_Obs_Signer
             }
         }
         $resource = '/' . $bucket . '/' . ltrim($object, '/');
+        if ($subresource !== '') {
+            $resource .= '?' . $subresource;
+        }
         return strtoupper($method) . "\n"
             . $content_md5 . "\n"
             . $content_type . "\n"
@@ -53,7 +57,8 @@ class Wpsss_Obs_Signer
         string $date,
         string $bucket,
         string $object,
-        array $obs_headers = []
+        array $obs_headers = [],
+        string $subresource = ''
     ): string {
         $canonical = self::canonical_string(
             $method,
@@ -62,7 +67,8 @@ class Wpsss_Obs_Signer
             $date,
             $bucket,
             $object,
-            $obs_headers
+            $obs_headers,
+            $subresource
         );
         $sig = base64_encode(hash_hmac('sha1', $canonical, $secret, true));
         return 'OBS ' . $access_key_id . ':' . $sig;

@@ -136,6 +136,10 @@ $xb = Wpsss_Options::driver_groups_for_mode('crossborder', 'aliyun-oss');
 wpsss_assert(isset($xb['intl']['s3-compat']), 'crossborder leads with s3');
 wpsss_assert(isset($xb['cn']['aliyun-oss']), 'crossborder still lists aliyun');
 
+$GLOBALS['wpsss_options_store'][Wpsss_Options::OPTION_KEY] = $mode;
+$keep_id = Wpsss_Options::sanitize(array_merge($mode, ['access_key_id' => '']));
+wpsss_assert($keep_id['access_key_id'] === 'id', 'empty access_key_id keeps saved');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

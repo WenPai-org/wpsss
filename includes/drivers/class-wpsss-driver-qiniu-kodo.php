@@ -118,6 +118,113 @@ class Wpsss_Driver_Qiniu_Kodo implements Wpsss_Driver
         return $this->delete_objects($settings, [$object]);
     }
 
+    public function inspect_bucket(array $settings)
+    {
+        $path = '/v2/bucketInfo?bucket=' . rawurlencode((string) $settings['bucket']);
+        $auth = Wpsss_Kodo_Signer::qbox($settings['access_key_id'], $settings['access_key_secret'], $path);
+        $response = wp_remote_get(
+            'https://uc.qbox.me' . $path,
+            [
+                'headers' => [
+                    'Authorization' => $auth,
+                ],
+                'timeout' => 30,
+                'redirection' => 0,
+            ]
+        );
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        $raw = (string) wp_remote_retrieve_body($response);
+        $json = json_decode($raw, true);
+        if ($code < 200 || $code >= 300 || !is_array($json)) {
+            $err = is_array($json) && isset($json['error']) ? (string) $json['error'] : 'KODO 返回 HTTP ' . $code;
+            return new WP_Error('wpsss_kodo_http', $err, ['status' => $code, 'body' => $raw]);
+        }
+        $info = Wpsss_Bucket_Info::blank();
+        $region = (string) ($json['region'] ?? $json['zone'] ?? '');
+        $info['region'] = Wpsss_Bucket_Info::pick_known_region($region, Wpsss_Options::regions_for($this->id()));
+        if (isset($json['private'])) {
+            $info['url_access'] = ((int) $json['private'] === 1) ? 'signed' : 'public';
+        }
+        $domains = [];
+        if (isset($json['domains']) && is_array($json['domains'])) {
+            foreach ($json['domains'] as $domain) {
+                if (is_string($domain) && $domain !== '') {
+                    $domains[] = $domain;
+                }
+            }
+        }
+        if ($domains === []) {
+            $domains = $this->kodo_domains($settings);
+        }
+        $picked = $this->pick_kodo_domain($domains);
+        if ($picked !== '') {
+            $info['custom_domain'] = $picked;
+        } elseif ($domains !== []) {
+            $info['notes'][] = '检测到测试域名；对外访问仍须配置已备案的自定义域名。';
+        }
+        return $info;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function kodo_domains(array $settings): array
+    {
+        $path = '/v6/domain/list?tbl=' . rawurlencode((string) $settings['bucket']);
+        $auth = Wpsss_Kodo_Signer::qbox($settings['access_key_id'], $settings['access_key_secret'], $path);
+        $response = wp_remote_get(
+            'https://api.qiniu.com' . $path,
+            [
+                'headers' => [
+                    'Authorization' => $auth,
+                ],
+                'timeout' => 20,
+                'redirection' => 0,
+            ]
+        );
+        if (is_wp_error($response)) {
+            return [];
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        $json = json_decode((string) wp_remote_retrieve_body($response), true);
+        if ($code < 200 || $code >= 300 || !is_array($json)) {
+            return [];
+        }
+        $out = [];
+        foreach ($json as $domain) {
+            if (is_string($domain) && $domain !== '') {
+                $out[] = $domain;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * @param string[] $domains
+     */
+    private function pick_kodo_domain(array $domains): string
+    {
+        $skip = ['clouddn.com', 'qiniucdn.com', 'qnssl.com', 'qiniudn.com'];
+        foreach ($domains as $domain) {
+            $host = preg_replace('#^https?://#', '', $domain) ?: $domain;
+            $host = rtrim((string) $host, '/');
+            $is_test = false;
+            foreach ($skip as $suffix) {
+                if (substr($host, -strlen($suffix)) === $suffix) {
+                    $is_test = true;
+                    break;
+                }
+            }
+            if (!$is_test) {
+                return (strpos($host, '://') !== false) ? $host : ('https://' . $host);
+            }
+        }
+        return '';
+    }
+
     /**
      * @param array<string, string> $fields
      */

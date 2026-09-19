@@ -70,6 +70,87 @@ class Wpsss_Driver_Qcloud_Cos implements Wpsss_Driver
         return is_wp_error($delete) ? $delete : true;
     }
 
+    public function inspect_bucket(array $settings)
+    {
+        $info = Wpsss_Bucket_Info::blank();
+        $info['app_id'] = Wpsss_Bucket_Info::app_id_from_cos_bucket((string) ($settings['bucket'] ?? ''));
+        $loc = $this->bucket_query($settings, 'location');
+        if (is_wp_error($loc)) {
+            $guess = Wpsss_Bucket_Info::region_from_error_data(is_array($loc->get_error_data()) ? $loc->get_error_data() : []);
+            if ($guess !== '' && $guess !== ($settings['region'] ?? '')) {
+                $settings['region'] = $guess;
+                $loc = $this->bucket_query($settings, 'location');
+            }
+        }
+        if (is_wp_error($loc)) {
+            return $loc;
+        }
+        $info['region'] = Wpsss_Bucket_Info::pick_known_region(
+            Wpsss_Bucket_Info::parse_location_xml($loc['body']) ?: Wpsss_Bucket_Info::region_from_headers($loc['headers']),
+            Wpsss_Options::regions_for($this->id())
+        );
+        $acl = $this->bucket_query($settings, 'acl');
+        if (is_wp_error($acl)) {
+            $info['notes'][] = '已读取区域信息，请自行选择对象访问方式。';
+            return $info;
+        }
+        $info['url_access'] = Wpsss_Bucket_Info::parse_acl_xml($acl['body']);
+        if ($info['url_access'] === '') {
+            $info['notes'][] = '已连接存储桶，但无法判断公开或私有，请自行选择对象访问方式。';
+        }
+        return $info;
+    }
+
+    /**
+     * @return array{code: int, body: string, headers: array<string, string>}|WP_Error
+     */
+    private function bucket_query(array $settings, string $subresource)
+    {
+        $host = preg_replace('#^https?://#', '', Wpsss_Options::api_host($settings)) ?: '';
+        $headers = ['Host' => $host];
+        $params = [$subresource => ''];
+        $now = time();
+        $auth = Wpsss_Cos_Signer::authorization(
+            $settings['access_key_id'],
+            $settings['access_key_secret'],
+            'GET',
+            '',
+            $headers,
+            $params,
+            $now,
+            $now + 3600
+        );
+        $headers['Authorization'] = $auth;
+        $url = rtrim(Wpsss_Options::api_host($settings), '/') . '/?' . $subresource;
+        $response = wp_remote_request(
+            $url,
+            [
+                'method' => 'GET',
+                'headers' => $headers,
+                'timeout' => 30,
+                'redirection' => 0,
+            ]
+        );
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        $body = (string) wp_remote_retrieve_body($response);
+        $flat = Wpsss_Bucket_Info::flatten_headers(wp_remote_retrieve_headers($response));
+        if ($code >= 200 && $code < 300) {
+            return ['code' => $code, 'body' => $body, 'headers' => $flat];
+        }
+        $message = 'COS 返回 HTTP ' . $code;
+        if (preg_match('/<Code>([^<]+)<\/Code>/', $body, $c) && preg_match('/<Message>([^<]+)<\/Message>/', $body, $m)) {
+            $message = $c[1] . '：' . $m[1];
+        }
+        return new WP_Error('wpsss_cos_http', $message, [
+            'status' => $code,
+            'headers' => $flat,
+            'body' => $body,
+        ]);
+    }
+
     /**
      * @return true|WP_Error
      */

@@ -77,6 +77,17 @@ $obs = Wpsss_Obs_Signer::authorization(
     '2026/09/hello.txt'
 );
 wpsss_assert($obs === 'OBS testid:6gzjr5JR3rsI38e5BJcIRiRkI1o=', 'obs authorization');
+$obs_loc = Wpsss_Obs_Signer::canonical_string(
+    'GET',
+    '',
+    '',
+    'Fri, 18 Sep 2026 08:00:00 GMT',
+    'demo-bucket',
+    '',
+    [],
+    'acl'
+);
+wpsss_assert($obs_loc === "GET\n\n\nFri, 18 Sep 2026 08:00:00 GMT\n/demo-bucket/?acl", 'obs canonical acl');
 
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
