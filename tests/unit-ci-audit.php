@@ -22,6 +22,7 @@ wpsss_assert(strpos($help, '强制下载') !== false, 'help 强制下载');
 wpsss_assert(strpos($help, '镜像回源') !== false, 'help 镜像回源');
 wpsss_assert(strpos($help, '主账号 APPID') !== false, 'help 主账号 APPID');
 wpsss_assert(strpos($help, '七牛') !== false, 'help 七牛');
+wpsss_assert(strpos($help, '不限定厂商') !== false || strpos($help, '任意 CDN') !== false || strpos($help, '不是。插件只改对外主机名') !== false, 'help custom domain any cdn');
 wpsss_assert(strpos($help, '默认 V4') !== false, 'help oss v4');
 wpsss_assert(strpos($help, 'RAM 角色') !== false, 'help ecs ram');
 
@@ -30,6 +31,7 @@ wpsss_assert(strpos($settings, '创建桶的主账号 APPID') !== false, 'settin
 wpsss_assert(strpos($settings, '仅记录功能开关') === false, 'settings no 仅记录功能开关');
 wpsss_assert(strpos($settings, 'oss_signature') !== false, 'settings oss signature');
 wpsss_assert(strpos($settings, 'ECS 实例 RAM 角色') !== false, 'settings ram option');
+wpsss_assert(strpos($settings, '任意 CDN') !== false, 'settings custom domain any cdn');
 
 wpsss_assert(Wpsss_Ci::audit_text('hello', []) === 'pass', 'audit_text default pass');
 wpsss_assert(

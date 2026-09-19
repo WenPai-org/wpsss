@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WPSSS
  * Plugin URI: https://feicode.com/WenPai-org/wpsss
- * Description: 文派对象存储。国内四家 + TOS + S3 兼容 + GCS。自定义域名接 CyberCDN。
+ * Description: 文派对象存储。国内四家 + TOS + S3 兼容 + GCS。自定义域名可挂任意 CDN。
  * Version: 0.8.0
  * Requires at least: 6.0
  * Requires PHP: 7.4

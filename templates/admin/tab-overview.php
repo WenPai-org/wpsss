@@ -41,7 +41,7 @@ $stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : []
       <div class="eyebrow"><?php echo esc_html__('文派对象存储', 'wpsss'); ?></div>
       <h1><?php echo $on ? esc_html__('新媒体会进桶，旧页面不用搬。', 'wpsss') : esc_html__('还没有接桶。', 'wpsss'); ?></h1>
       <p><?php echo $on
-          ? esc_html__('HTML 仍在源站。自定义域名以后走 CyberCDN，不是整站上 OSS。', 'wpsss')
+          ? esc_html__('HTML 仍在源站。媒体可挂自己的 HTTPS 域名，任意 CDN 回源到桶即可。', 'wpsss')
           : esc_html__('先保存桶名和 RAM 密钥，再测连通。不要用生产桶。', 'wpsss'); ?></p>
       <div class="cta">
         <a class="btn btn-secondary" href="<?php echo esc_url($url('settings')); ?>"><?php echo esc_html__('查看设置', 'wpsss'); ?></a>

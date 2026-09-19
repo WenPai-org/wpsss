@@ -121,6 +121,8 @@ $on = (bool) $view['configured'];
         <dd><?php echo esc_html__('填创建存储桶的主账号 APPID，不是子账户的。桶名已含 APPID 时可留空。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('七牛为什么必须填自定义域名', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('KODO 默认域不能稳定给访客用。自定义域留空则对外地址为空，前台会裂图。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('自定义域名是不是只能接某一家 CDN', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('不是。插件只改对外主机名。阿里云 CDN、腾讯云 CDN、Cloudflare、自建边缘或 CyberCDN 都是在各自控制台把该域名指到桶或边缘，这里填同一个 HTTPS 地址。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('内容审核做了什么', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会请求万象文本审核；判定违规标为垃圾评论，疑似改待审。接口失败时放行并记日志，避免误杀。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('阿里签名 V1 和 V4 怎么选', 'wpsss'); ?></dt>
