@@ -16,6 +16,10 @@
 
 五路并行：URL/GIF/签名补 COS·KODO·OBS；改写翻页 + 序列化 walker；恢复 `pull_batch`；媒体库 JS / 原图保护 filter；`origin_region` / https endpoint / 卸载自有 `upload_url_path`；帮助 FAQ；`Wpsss_Ci` 挂评论（失败放行）。产品 `a59dfd6` 已推 FeiCode main。
 
+## 2026-09-19 22:20 - [Cursor] COS 万象文本审核 HTTP
+
+`Wpsss_Ci` 对评论走 `POST /text/auditing`（COS 签名，失败放行）。filter 仍可覆盖。未接监控图表。
+
 ## 2026-09-19 22:10 - [Cursor] OSS V4 + ECS RAM
 
 阿里默认签名 V4（官方 canonical 哈希已锁）。高级设置可改回 V1。`oss_auth=ram` 时问 ECS 元数据取 STS，不落 options。未接 CyberCDN，未关 keep_local。

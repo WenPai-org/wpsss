@@ -122,7 +122,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('七牛为什么必须填自定义域名', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('KODO 默认域不能稳定给访客用。自定义域留空则对外地址为空，前台会裂图。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('内容审核做了什么', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会先走文本检测；接口失败时放行并记日志，避免误杀。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会请求万象文本审核；判定违规标为垃圾评论，疑似改待审。接口失败时放行并记日志，避免误杀。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('阿里签名 V1 和 V4 怎么选', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('默认 V4。部分新区域只认 V4。若旧脚本或网关只认 V1，在高级设置改回即可。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('ECS 上能否不填 AccessKey', 'wpsss'); ?></dt>
