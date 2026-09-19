@@ -84,6 +84,20 @@ $canonical_loc = Wpsss_Oss_Signer::canonical_string(
 );
 wpsss_assert($canonical_loc === "GET\n\n\nFri, 18 Sep 2026 08:00:00 GMT\n/demo-bucket/?location", 'canonical location');
 
+$signed_style = Wpsss_Oss_Signer::signed_get_url(
+    'https://cdn.example.com',
+    'demo-bucket',
+    '2026/09/a.png',
+    'ak',
+    'sk',
+    3600,
+    1700000000,
+    'style/blog'
+);
+wpsss_assert(strpos($signed_style, 'Signature=') !== false, 'signed get with process has signature');
+wpsss_assert(strpos($signed_style, 'x-oss-process=') !== false, 'signed get with process query');
+wpsss_assert(strpos($signed_style, '??') === false, 'signed get with process single ?');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

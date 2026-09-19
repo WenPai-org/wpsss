@@ -79,7 +79,7 @@ class Wpsss_Offload
             return $metadata;
         }
 
-        $uploads = wp_upload_dir();
+        $uploads = $this->uploads();
         $basedir = (string) $uploads['basedir'];
         $primary = $basedir . '/' . ltrim((string) $metadata['file'], '/');
         $filesize = file_exists($primary) ? (string) filesize($primary) : '';
@@ -251,14 +251,44 @@ class Wpsss_Offload
             return $url;
         }
 
-        $key = $this->attachment_primary_key($post_id);
+        $primary = $this->attachment_primary_key($post_id);
+        $style = method_exists('Wpsss_Url', 'style_suffix') ? Wpsss_Url::style_suffix($opts) : '';
+        $key = self::object_key_for_url($url, $primary, $style);
         if ($key === '') {
             return $url;
         }
-        $next = Wpsss_Url::sign_object_url($base, $key, $opts);
-        $next = Wpsss_Url::apply_style($next, $opts);
-        $mime = (string) get_post_mime_type($post_id);
+        $mime = function_exists('get_post_mime_type') ? (string) get_post_mime_type($post_id) : '';
+        $next = method_exists('Wpsss_Url', 'serve_object_url')
+            ? Wpsss_Url::serve_object_url($base, $key, $opts, $mime)
+            : Wpsss_Url::sign_object_url($base, $key, $opts);
+        if (!method_exists('Wpsss_Url', 'serve_object_url')) {
+            $next = Wpsss_Url::apply_style($next, $opts, $mime);
+        }
         return Wpsss_Url::apply_preview($next, $mime, $opts);
+    }
+
+    /**
+     * 缩略图 / 原图 / 中间尺寸跟主文件同目录。空 URL 退回主对象键。
+     */
+    public static function object_key_for_url(string $url, string $primary_key, string $style = ''): string
+    {
+        if ($primary_key === '') {
+            return '';
+        }
+        $path = (string) (parse_url($url, PHP_URL_PATH) ?: '');
+        if ($path === '') {
+            return $primary_key;
+        }
+        $file = basename($path);
+        if ($file === '' || $file === '.' || $file === '/') {
+            return $primary_key;
+        }
+        if ($style !== '' && $style[0] !== '?' && $style[0] !== '&' && substr($file, -strlen($style)) === $style) {
+            $file = substr($file, 0, -strlen($style));
+        }
+        $dir = dirname(str_replace('\\', '/', $primary_key));
+        $prefix = ($dir === '.' || $dir === '') ? '' : $dir . '/';
+        return $prefix . $file;
     }
 
     /**
@@ -289,8 +319,13 @@ class Wpsss_Offload
             if (empty($source['url'])) {
                 continue;
             }
-            $file = wp_basename((string) $source['url']);
-            $sources[$width]['url'] = Wpsss_Url::sign_object_url($base, $dir . $file, $opts);
+            $key = self::object_key_for_url((string) $source['url'], $primary, Wpsss_Url::style_suffix($opts));
+            $sources[$width]['url'] = method_exists('Wpsss_Url', 'serve_object_url')
+                ? Wpsss_Url::serve_object_url($base, $key, $opts)
+                : Wpsss_Url::sign_object_url($base, $key !== '' ? $key : $dir . basename((string) parse_url((string) $source['url'], PHP_URL_PATH)), $opts);
+        }
+        if (method_exists('Wpsss_Url', 'serve_object_url')) {
+            return $sources;
         }
         $style = Wpsss_Url::should_protect_origin($opts) || Wpsss_Url::style_suffix($opts) !== ''
             ? Wpsss_Url::style_suffix($opts)
@@ -305,7 +340,7 @@ class Wpsss_Offload
         if ($to === '' || !$this->plugin->active_driver()->is_configured($opts)) {
             return $content;
         }
-        $uploads = wp_upload_dir();
+        $uploads = $this->uploads();
         $from = untrailingslashit((string) $uploads['baseurl']);
         $style = Wpsss_Url::style_suffix($opts);
         $content = Wpsss_Url::rewrite_text($content, $from, $to, $style);
@@ -327,7 +362,7 @@ class Wpsss_Offload
 
     private function is_under_uploads(string $path): bool
     {
-        $uploads = wp_upload_dir();
+        $uploads = $this->uploads();
         $basedir = wp_normalize_path((string) $uploads['basedir']);
         return strpos(wp_normalize_path($path), $basedir) === 0;
     }
@@ -394,7 +429,7 @@ class Wpsss_Offload
         if ($keys === []) {
             return new WP_Error('wpsss_no_key', '没有对象键，无法拉回。');
         }
-        $uploads = wp_upload_dir();
+        $uploads = $this->uploads();
         $basedir = (string) $uploads['basedir'];
         foreach ($keys as $key) {
             $rel = self::local_rel_from_object_key((string) $key, $opts);
@@ -472,7 +507,7 @@ class Wpsss_Offload
 
     private function object_key(string $absolute_path): string
     {
-        $uploads = wp_upload_dir();
+        $uploads = $this->uploads();
         $key = self::key_from_uploads($absolute_path, (string) $uploads['basedir']);
         if ($key === '') {
             return '';
@@ -512,6 +547,15 @@ class Wpsss_Offload
             return Wpsss_Options::apply_object_prefix((string) $key, $opts);
         }, $keys);
         return array_values(array_unique($keys));
+    }
+
+    /** @return array<string, mixed> */
+    private function uploads(): array
+    {
+        if (class_exists('Wpsss_Site') && method_exists('Wpsss_Site', 'uploads')) {
+            return Wpsss_Site::uploads();
+        }
+        return function_exists('wp_upload_dir') ? wp_upload_dir() : ['basedir' => '', 'baseurl' => ''];
     }
 
     private function attachment_primary_key(int $post_id): string

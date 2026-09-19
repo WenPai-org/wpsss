@@ -62,6 +62,34 @@ wpsss_assert(Wpsss_Offload::safe_upload_url_path('') === '', 'safe path empty');
 wpsss_assert(Wpsss_Offload::safe_upload_url_path('https://cdn.example.com/') === 'https://cdn.example.com', 'safe path https');
 wpsss_assert(Wpsss_Offload::safe_upload_url_path('https://cdn.example.com') === 'https://cdn.example.com', 'safe path https no slash');
 
+wpsss_assert(
+    Wpsss_Offload::object_key_for_url(
+        'https://site.example/wp-content/uploads/2026/09/a-150x150.jpg',
+        'wp/2026/09/a.jpg'
+    ) === 'wp/2026/09/a-150x150.jpg',
+    'thumb url keeps prefix and dir'
+);
+wpsss_assert(
+    Wpsss_Offload::object_key_for_url(
+        'https://site.example/wp-content/uploads/2026/09/a-original.jpg',
+        '2026/09/a.jpg'
+    ) === '2026/09/a-original.jpg',
+    'original image sibling key'
+);
+wpsss_assert(
+    Wpsss_Offload::object_key_for_url('', '2026/09/a.jpg') === '2026/09/a.jpg',
+    'empty url falls back to primary'
+);
+wpsss_assert(
+    Wpsss_Offload::object_key_for_url(
+        'https://cdn.example.com/2026/09/a-150x150.jpg!s',
+        '2026/09/a.jpg',
+        '!s'
+    ) === '2026/09/a-150x150.jpg',
+    'strips cos style delimiter from basename'
+);
+wpsss_assert(Wpsss_Offload::object_key_for_url('https://x/a.jpg', '') === '', 'empty primary stays empty');
+
 if (!function_exists('get_post_meta')) {
     function get_post_meta($post_id, $key, $single = false)
     {

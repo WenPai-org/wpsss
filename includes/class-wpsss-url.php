@@ -41,7 +41,7 @@ class Wpsss_Url
         return true;
     }
 
-    public static function apply_style(string $url, array $opts = []): string
+    public static function apply_style(string $url, array $opts = [], string $mime = ''): string
     {
         $opts = $opts !== [] ? $opts : Wpsss_Options::get();
         $style = self::style_suffix($opts);
@@ -51,11 +51,14 @@ class Wpsss_Url
         if (strpos($url, $style) !== false) {
             return $url;
         }
-        if (!self::is_styleable($url)) {
+        if (!self::is_styleable($url, $mime)) {
             return $url;
         }
         if (($opts['driver'] ?? '') === 'qcloud-cos' && ($opts['ci_slim'] ?? '0') === '1') {
             $url = self::append_query($url, 'imageMogr2/format/webp');
+        }
+        if ($style[0] === '?' || $style[0] === '&') {
+            return self::append_query($url, ltrim($style, '?&'));
         }
         return $url . $style;
     }
@@ -113,14 +116,58 @@ class Wpsss_Url
             if (!self::is_styleable($item)) {
                 continue;
             }
-            $text = str_replace($item, $item . $style, $text);
+            $styled = ($style[0] === '?' || $style[0] === '&')
+                ? self::append_query($item, ltrim($style, '?&'))
+                : $item . $style;
+            $text = str_replace($item, $styled, $text);
         }
         return str_replace($style . $style, $style, $text);
     }
 
     /**
-     * @param array<string, string> $opts
+     * 读地址：签名（如需）并按 mime 套样式。阿里签名读把 x-oss-process 写进签名串。
+     *
+     * @param array<string, mixed> $opts
      */
+    public static function serve_object_url(string $base, string $key, array $opts, string $mime = '', ?int $now = null): string
+    {
+        $unsigned = Wpsss_Oss_Signer::object_url($base, $key);
+        $style = self::is_styleable($unsigned, $mime) ? self::style_suffix($opts) : '';
+        $process = self::oss_process_param($style);
+        if (($opts['url_access'] ?? 'public') === 'signed'
+            && ($opts['driver'] ?? '') === 'aliyun-oss'
+            && $process !== ''
+        ) {
+            $ak = (string) ($opts['access_key_id'] ?? '');
+            $sk = (string) ($opts['access_key_secret'] ?? '');
+            if ($ak !== '' && $sk !== '') {
+                return Wpsss_Oss_Signer::signed_get_url(
+                    $base,
+                    (string) ($opts['bucket'] ?? ''),
+                    $key,
+                    $ak,
+                    $sk,
+                    max(60, (int) ($opts['signed_ttl'] ?? 3600)),
+                    $now,
+                    $process
+                );
+            }
+        }
+        $url = self::sign_object_url($base, $key, $opts, $now);
+        return $style === '' ? $url : self::apply_style($url, $opts, $mime);
+    }
+
+    public static function oss_process_param(string $style): string
+    {
+        if ($style === '') {
+            return '';
+        }
+        if (preg_match('/(?:^|[?&])x-oss-process=([^&]+)/', $style, $m)) {
+            return rawurldecode((string) $m[1]);
+        }
+        return '';
+    }
+
     public static function sign_object_url(string $base, string $key, array $opts, ?int $now = null): string
     {
         $url = Wpsss_Oss_Signer::object_url($base, $key);
@@ -200,7 +247,11 @@ class Wpsss_Url
                     $object = substr($object, strlen($prefix));
                 }
             }
-            $text = str_replace($item, self::sign_object_url($base, $object, $opts), $text);
+            $style = self::style_suffix($opts);
+            if ($style !== '' && $style[0] !== '?' && $style[0] !== '&' && substr($object, -strlen($style)) === $style) {
+                $object = substr($object, 0, -strlen($style));
+            }
+            $text = str_replace($item, self::serve_object_url($base, $object, $opts), $text);
         }
         return $text;
     }
@@ -223,7 +274,9 @@ class Wpsss_Url
                 continue;
             }
             if (strpos($url, $style) === false) {
-                $sources[$width]['url'] = $url . $style;
+                $sources[$width]['url'] = ($style[0] === '?' || $style[0] === '&')
+                    ? self::append_query($url, ltrim($style, '?&'))
+                    : $url . $style;
             }
         }
         return $sources;

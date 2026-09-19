@@ -65,6 +65,17 @@ wpsss_assert(
 );
 wpsss_assert(!Wpsss_Url::is_styleable('https://cdn.example.com/a.jpg', 'image/gif'), 'image/gif mime not styleable');
 wpsss_assert(!Wpsss_Url::is_styleable('', 'image/jpeg'), 'empty url not styleable');
+wpsss_assert(
+    Wpsss_Url::apply_style('https://cdn.example.com/a.bin', $opts, 'image/gif') === 'https://cdn.example.com/a.bin',
+    'gif mime skips style even without .gif'
+);
+$signed_then_style = Wpsss_Url::apply_style(
+    'https://cdn.example.com/a.jpg?OSSAccessKeyId=ak&Expires=1&Signature=x',
+    $opts
+);
+wpsss_assert(strpos($signed_then_style, '??') === false, 'style after query does not use second ?');
+wpsss_assert(strpos($signed_then_style, '&x-oss-process=style/blog') !== false, 'style joins signed query with &');
+wpsss_assert(Wpsss_Url::oss_process_param('?x-oss-process=style/blog') === 'style/blog', 'oss process from style');
 
 $cos_slim = ['image_style' => '!s', 'driver' => 'qcloud-cos', 'ci_slim' => '1'];
 wpsss_assert(
@@ -224,6 +235,42 @@ $obs_signed = Wpsss_Url::sign_object_url(
     1700000000
 );
 wpsss_assert(strpos($obs_signed, 'Signature=') !== false, 'sign_object_url obs');
+
+$oss_styled = Wpsss_Url::serve_object_url(
+    'https://cdn.example.com',
+    '2026/09/a.png',
+    $sign_base + [
+        'driver' => 'aliyun-oss',
+        'image_style' => '?x-oss-process=style/blog',
+    ],
+    'image/jpeg',
+    1700000000
+);
+wpsss_assert(strpos($oss_styled, 'x-oss-process=style') !== false, 'serve_object_url oss process');
+wpsss_assert(strpos($oss_styled, 'Signature=') !== false, 'serve_object_url oss still signed');
+wpsss_assert(strpos($oss_styled, '??') === false, 'serve_object_url no double question');
+$oss_plain = Wpsss_Oss_Signer::signed_get_url(
+    'https://cdn.example.com',
+    'demo-bucket',
+    '2026/09/a.png',
+    'ak',
+    'sk',
+    3600,
+    1700000000,
+    'style/blog'
+);
+$oss_plain2 = Wpsss_Oss_Signer::signed_get_url(
+    'https://cdn.example.com',
+    'demo-bucket',
+    '2026/09/a.png',
+    'ak',
+    'sk',
+    3600,
+    1700000000,
+    'style/blog'
+);
+wpsss_assert($oss_plain === $oss_plain2, 'oss signed process repeatable');
+wpsss_assert(strpos($oss_plain, 'x-oss-process=style%2Fblog') !== false || strpos($oss_plain, 'x-oss-process=style/blog') !== false, 'oss signed process query');
 
 $plain = Wpsss_Url::rewrite_maybe_serialized('see http://old/a.jpg', static function (string $text): string {
     return str_replace('http://old', 'http://new', $text);

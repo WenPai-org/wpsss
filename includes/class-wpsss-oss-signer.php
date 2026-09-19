@@ -96,17 +96,25 @@ class Wpsss_Oss_Signer
         string $access_key,
         string $secret,
         int $ttl = 3600,
-        ?int $now = null
+        ?int $now = null,
+        string $process = ''
     ): string {
         $object = ltrim($object, '/');
         $expires = ($now ?? time()) + max(60, $ttl);
-        $canonical = "GET\n\n\n" . $expires . "\n/" . $bucket . "/" . $object;
-        $query = [
-            'OSSAccessKeyId' => $access_key,
-            'Expires' => (string) $expires,
-            'Signature' => self::signature($secret, $canonical),
+        $resource = '/' . $bucket . '/' . $object;
+        if ($process !== '') {
+            $resource .= '?x-oss-process=' . $process;
+        }
+        $canonical = "GET\n\n\n" . $expires . "\n" . $resource;
+        $parts = [
+            'OSSAccessKeyId=' . rawurlencode($access_key),
+            'Expires=' . $expires,
         ];
-        return self::object_url($host, $object) . '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        if ($process !== '') {
+            $parts[] = 'x-oss-process=' . rawurlencode($process);
+        }
+        $parts[] = 'Signature=' . rawurlencode(self::signature($secret, $canonical));
+        return self::object_url($host, $object) . '?' . implode('&', $parts);
     }
 
     public static function object_url(string $host, string $object): string

@@ -51,11 +51,23 @@ final class Wpsss_Media
         if (!Wpsss_Library::is_offloaded($id)) {
             return $response;
         }
-        $url = $this->offload->rewrite_url((string) ($response['url'] ?? ''), $id);
-        if (method_exists('Wpsss_Url', 'rewrite_attachment_js')) {
-            $response = Wpsss_Url::rewrite_attachment_js($response, $url);
-        } else {
-            $response['url'] = $url;
+        $response['url'] = $this->offload->rewrite_url((string) ($response['url'] ?? ''), $id);
+        if (isset($response['sizes']) && is_array($response['sizes'])) {
+            foreach ($response['sizes'] as $size => $item) {
+                if (!is_array($item) || empty($item['url'])) {
+                    continue;
+                }
+                $response['sizes'][$size]['url'] = $this->offload->rewrite_url((string) $item['url'], $id);
+            }
+        }
+        if (isset($response['icon']) && is_string($response['icon']) && $response['icon'] !== ''
+            && method_exists('Wpsss_Url', 'rewrite_attachment_js')
+        ) {
+            $icon = Wpsss_Url::rewrite_attachment_js(
+                ['url' => $response['url'], 'icon' => $response['icon']],
+                $response['url']
+            );
+            $response['icon'] = $icon['icon'];
         }
         if (Wpsss_Options::get()['keep_local'] !== '1' && empty($response['filesizeInBytes'])) {
             $stored = (int) get_post_meta($id, '_wpsss_filesize', true);

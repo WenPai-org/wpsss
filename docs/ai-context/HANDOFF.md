@@ -12,9 +12,13 @@
 - **组织**：staging candidate，未 publish。
 - **未做（须人批）**：自定义域 + CyberCDN Zone、生产站、COS/KODO/OBS/TOS/GCS 实桶 probe、万象审核实打 CI、CDN 按 URL 清边缘、换桶迁移工具。
 
-## 2026-09-19 21:50 - [Cursor] sy-records 对齐全量（未 commit）
+## 2026-09-19 21:50 - [Cursor] sy-records 对齐全量
 
-五路并行：URL/GIF/签名补 COS·KODO·OBS；改写翻页 + 序列化 walker；恢复 `pull_batch`；媒体库 JS / 原图保护 filter；`origin_region` / https endpoint / 卸载自有 `upload_url_path`；帮助 FAQ；`Wpsss_Ci` 挂评论（失败放行）。`php tests/run.php` 全绿。未 commit、未推、未接 CyberCDN。万象审核未打真实 HTTP。
+五路并行：URL/GIF/签名补 COS·KODO·OBS；改写翻页 + 序列化 walker；恢复 `pull_batch`；媒体库 JS / 原图保护 filter；`origin_region` / https endpoint / 卸载自有 `upload_url_path`；帮助 FAQ；`Wpsss_Ci` 挂评论（失败放行）。产品 `a59dfd6` 已推 FeiCode main。
+
+## 2026-09-19 22:00 - [Cursor] 缩略图键 + 签名样式
+
+`rewrite_url` 按 URL 文件名取对象键（thumb / original / intermediate 不再全回原图）。`serve_object_url` 把阿里 `x-oss-process` 写进签名串，避免 `??`。媒体库 JS 的 sizes 走同一条改写。未接 CyberCDN / V4 / RAM。
 
 ## 建议下一刀（等人说再做）
 
