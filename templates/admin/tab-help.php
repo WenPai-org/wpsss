@@ -113,6 +113,16 @@ $on = (bool) $view['configured'];
         <dd><?php echo esc_html__('在工具页使用「改写文章中的媒体地址」，先预览命中数量，确认后再写入数据库。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('整站 HTML 会上传吗', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('不会。仅媒体库附件与相关对象进桶，页面 HTML 仍在 WordPress 源站。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('为什么点图片变成下载', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('阿里云 2019 年后默认域名常强制下载。请绑定 HTTPS 自定义域名，或使用签名访问。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('主题或其它插件自己传到 uploads，为什么没进桶', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('只拦 WordPress 媒体库钩子。第三方直传请在桶上开镜像回源到源站，或调用 wpsss_file_upload()。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('腾讯云 APPID 填谁的', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('填创建存储桶的主账号 APPID，不是子账户的。桶名已含 APPID 时可留空。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('七牛为什么必须填自定义域名', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('KODO 默认域不能稳定给访客用。自定义域留空则对外地址为空，前台会裂图。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('内容审核做了什么', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会先走文本检测；接口失败时放行并记日志，避免误杀。', 'wpsss'); ?></dd>
       </dl>
     </div>
   </details>

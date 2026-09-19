@@ -42,6 +42,7 @@ final class Wpsss_Plugin
         $this->offload->register();
         $this->library->register();
         (new Wpsss_Woo())->register();
+        (new Wpsss_Ci())->register();
     }
 
     public function offload(): Wpsss_Offload

@@ -100,4 +100,27 @@ class Wpsss_Cos_Signer
             . implode('&', $query) . "\n"
             . $header_block . "\n";
     }
+
+    public static function signed_get_url(
+        string $host,
+        string $bucket,
+        string $object,
+        string $ak,
+        string $sk,
+        int $ttl = 3600,
+        ?int $now = null
+    ): string {
+        $start = $now ?? time();
+        $end = $start + max(60, $ttl);
+        $path = '/' . ltrim($object, '/');
+        $host_header = $host;
+        if (stripos($host, 'http://') === 0 || stripos($host, 'https://') === 0) {
+            $host_header = (string) (parse_url($host, PHP_URL_HOST) ?: '');
+        } else {
+            $host_header = rtrim($host, '/');
+        }
+        $auth = self::authorization($ak, $sk, 'GET', $path, ['Host' => $host_header], [], $start, $end);
+        $parts = array_map('rawurlencode', explode('/', ltrim($object, '/')));
+        return rtrim($host, '/') . '/' . implode('/', $parts) . '?' . $auth;
+    }
 }

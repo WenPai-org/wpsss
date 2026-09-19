@@ -73,4 +73,25 @@ class Wpsss_Obs_Signer
         $sig = base64_encode(hash_hmac('sha1', $canonical, $secret, true));
         return 'OBS ' . $access_key_id . ':' . $sig;
     }
+
+    public static function signed_get_url(
+        string $host,
+        string $bucket,
+        string $object,
+        string $ak,
+        string $sk,
+        int $ttl = 3600,
+        ?int $now = null
+    ): string {
+        $object = ltrim($object, '/');
+        $expires = ($now ?? time()) + max(60, $ttl);
+        $canonical = "GET\n\n\n" . $expires . "\n/" . $bucket . "/" . $object;
+        $query = [
+            'AccessKeyId' => $ak,
+            'Expires' => (string) $expires,
+            'Signature' => base64_encode(hash_hmac('sha1', $canonical, $sk, true)),
+        ];
+        $url = rtrim($host, '/') . '/' . implode('/', array_map('rawurlencode', explode('/', $object)));
+        return $url . '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+    }
 }

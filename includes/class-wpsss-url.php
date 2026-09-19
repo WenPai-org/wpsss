@@ -25,6 +25,22 @@ class Wpsss_Url
         return ($opts['origin_protect'] ?? '0') === '1' && self::style_suffix($opts) !== '';
     }
 
+    public static function is_styleable(string $url, string $mime = ''): bool
+    {
+        if ($url === '') {
+            return false;
+        }
+        $path = (string) (parse_url($url, PHP_URL_PATH) ?: '');
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (in_array($ext, ['gif', 'svg'], true)) {
+            return false;
+        }
+        if ($mime === 'image/gif' || $mime === 'image/svg+xml') {
+            return false;
+        }
+        return true;
+    }
+
     public static function apply_style(string $url, array $opts = []): string
     {
         $opts = $opts !== [] ? $opts : Wpsss_Options::get();
@@ -33,6 +49,9 @@ class Wpsss_Url
             return $url;
         }
         if (strpos($url, $style) !== false) {
+            return $url;
+        }
+        if (!self::is_styleable($url)) {
             return $url;
         }
         if (($opts['driver'] ?? '') === 'qcloud-cos' && ($opts['ci_slim'] ?? '0') === '1') {
@@ -91,15 +110,14 @@ class Wpsss_Url
             if (strpos($item, $to) === false || strpos($item, $style) !== false) {
                 continue;
             }
+            if (!self::is_styleable($item)) {
+                continue;
+            }
             $text = str_replace($item, $item . $style, $text);
         }
         return str_replace($style . $style, $style, $text);
     }
 
-    /**
-     * @param array<int|string, array<string, mixed>> $sources
-     * @return array<int|string, array<string, mixed>>
-     */
     /**
      * @param array<string, string> $opts
      */
@@ -119,6 +137,15 @@ class Wpsss_Url
         if ($driver === 'aliyun-oss') {
             return Wpsss_Oss_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
         }
+        if ($driver === 'qcloud-cos') {
+            return Wpsss_Cos_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
+        }
+        if ($driver === 'qiniu-kodo') {
+            return Wpsss_Kodo_Signer::private_download_url($ak, $sk, Wpsss_Oss_Signer::object_url($base, $key), $ttl, $now);
+        }
+        if ($driver === 'huawei-obs') {
+            return Wpsss_Obs_Signer::signed_get_url($base, (string) $opts['bucket'], $key, $ak, $sk, $ttl, $now);
+        }
         if ($driver === 's3-compat' || $driver === 'volc-tos' || $driver === 'gcs') {
             $req = Wpsss_Options::s3_object_request($opts, $key);
             if ($req['url'] === '' || $req['host'] === '') {
@@ -127,14 +154,13 @@ class Wpsss_Url
             $qs = Wpsss_S3_Signer::sign_get_query(
                 $ak,
                 $sk,
-                $req['public_host'] !== '' ? $req['public_host'] : $req['host'],
+                $req['host'],
                 $req['canonical_uri'],
                 Wpsss_S3_Signer::amz_date($now),
                 Wpsss_Options::s3_signing_region($opts),
                 $ttl
             );
-            $signed_url = $req['public_url'] !== '' ? $req['public_url'] : $req['url'];
-            return $signed_url . '?' . $qs;
+            return $req['url'] . '?' . $qs;
         }
         return $url;
     }
@@ -155,7 +181,12 @@ class Wpsss_Url
             if (strpos($item, $base) !== 0) {
                 continue;
             }
-            if (strpos($item, 'Signature=') !== false || strpos($item, 'X-Amz-Signature=') !== false) {
+            if (
+                strpos($item, 'Signature=') !== false
+                || strpos($item, 'X-Amz-Signature=') !== false
+                || strpos($item, 'q-signature=') !== false
+                || strpos($item, 'token=') !== false
+            ) {
                 continue;
             }
             $path = (string) (wp_parse_url($item, PHP_URL_PATH) ?: '');
@@ -174,6 +205,10 @@ class Wpsss_Url
         return $text;
     }
 
+    /**
+     * @param array<int|string, array<string, mixed>> $sources
+     * @return array<int|string, array<string, mixed>>
+     */
     public static function style_srcset(array $sources, string $style): array
     {
         if ($style === '') {
@@ -184,10 +219,97 @@ class Wpsss_Url
                 continue;
             }
             $url = (string) $source['url'];
+            if (!self::is_styleable($url)) {
+                continue;
+            }
             if (strpos($url, $style) === false) {
                 $sources[$width]['url'] = $url . $style;
             }
         }
         return $sources;
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     * @return array<string, mixed>
+     */
+    public static function rewrite_attachment_js(array $response, string $url): array
+    {
+        $response['url'] = $url;
+        $dir = rtrim((string) dirname($url), '/');
+        if (isset($response['sizes']) && is_array($response['sizes'])) {
+            foreach ($response['sizes'] as $size => $meta) {
+                if (!is_array($meta) || empty($meta['url'])) {
+                    continue;
+                }
+                $response['sizes'][$size]['url'] = $dir . '/' . self::attachment_js_basename((string) $meta['url']);
+            }
+        }
+        if (isset($response['icon']) && is_string($response['icon']) && $response['icon'] !== '') {
+            if (self::icon_looks_like_attachment($response['icon'], $url)) {
+                $response['icon'] = $dir . '/' . self::attachment_js_basename($response['icon']);
+            }
+        }
+        return $response;
+    }
+
+    public static function rewrite_maybe_serialized(string $value, callable $rewriter): string
+    {
+        if (!is_serialized($value)) {
+            return $rewriter($value);
+        }
+        $data = @unserialize($value);
+        if ($data === false && $value !== serialize(false)) {
+            return $value;
+        }
+        return serialize(self::rewrite_serialized_walk($data, $rewriter));
+    }
+
+    /**
+     * @param mixed $data
+     * @return mixed
+     */
+    private static function rewrite_serialized_walk($data, callable $rewriter)
+    {
+        if (is_string($data)) {
+            return $rewriter($data);
+        }
+        if (is_array($data)) {
+            foreach ($data as $key => $item) {
+                $data[$key] = self::rewrite_serialized_walk($item, $rewriter);
+            }
+            return $data;
+        }
+        if (is_object($data) && get_class($data) === 'stdClass') {
+            foreach (get_object_vars($data) as $key => $item) {
+                $data->{$key} = self::rewrite_serialized_walk($item, $rewriter);
+            }
+            return $data;
+        }
+        return $data;
+    }
+
+    private static function attachment_js_basename(string $item): string
+    {
+        if (function_exists('wp_basename')) {
+            return wp_basename($item);
+        }
+        $path = (string) (parse_url($item, PHP_URL_PATH) ?: '');
+        $name = basename($path !== '' ? $path : $item);
+        $query = parse_url($item, PHP_URL_QUERY);
+        if (is_string($query) && $query !== '') {
+            $name .= '?' . $query;
+        }
+        return $name;
+    }
+
+    private static function icon_looks_like_attachment(string $icon, string $url): bool
+    {
+        if (strpos($icon, '/uploads/') !== false) {
+            return true;
+        }
+        $icon_host = parse_url($icon, PHP_URL_HOST);
+        $url_host = parse_url($url, PHP_URL_HOST);
+        return is_string($icon_host) && $icon_host !== '' && $icon_host === $url_host;
     }
 }

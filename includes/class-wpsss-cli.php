@@ -465,12 +465,14 @@ final class Wpsss_CLI
             $mode = 'domestic';
         }
         $oks[] = 'site_mode=' . $mode;
-        $driver = (string) ($opts['driver'] ?? 'aliyun-oss');
         if (($opts['url_access'] ?? 'public') === 'signed') {
-            if (!in_array($driver, ['aliyun-oss', 's3-compat', 'volc-tos', 'gcs'], true)) {
-                $warnings[] = '签名访问目前只支持阿里 OSS 与 S3 兼容 / TOS。';
-            } else {
-                $oks[] = 'url_access=signed';
+            $oks[] = 'url_access=signed';
+        }
+        if (method_exists('Wpsss_Options', 'runtime_warnings')) {
+            foreach (Wpsss_Options::runtime_warnings($opts) as $line) {
+                if ($line !== '' && !in_array($line, $warnings, true) && !in_array($line, $blockers, true)) {
+                    $warnings[] = $line;
+                }
             }
         }
         return [
@@ -594,7 +596,10 @@ final class Wpsss_CLI
             'site_mode=crossborder' => '站点场景：跨境 · 外贸站',
             'site_mode=mixed' => '站点场景：混合站',
             'url_access=signed' => '对象访问：签名 URL',
-            '签名访问目前只支持阿里 OSS 与 S3 兼容 / TOS。' => '当前厂商暂不支持签名访问，请改用公开读或更换厂商',
+            '七牛必须填写 HTTPS 自定义域名，默认域不能给访客用。' => '七牛须填写 HTTPS 自定义域名，否则前台没有对外地址',
+            '阿里默认域名 2019 年后常强制下载不预览。请配自定义域或改签名访问。' => '阿里默认域名常强制下载，请配自定义域或改签名访问',
+            'COS 的 APPID 是桶创建者的，不是子账户的。' => 'COS 的 APPID 须填桶主账号，不是子账户',
+            'upload_url_path 不能是「.」，删除远端会失败。' => '媒体地址前缀不能是「.」，否则删除远端会失败',
         ];
         if (isset($map[$line])) {
             return $map[$line];

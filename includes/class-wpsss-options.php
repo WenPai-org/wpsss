@@ -80,6 +80,7 @@ class Wpsss_Options
             'driver' => self::DRIVER_ALIYUN,
             'bucket' => '',
             'region' => 'oss-cn-hangzhou',
+            'origin_region' => '',
             'access_key_id' => '',
             'access_key_secret' => '',
             'app_id' => '',
@@ -144,6 +145,9 @@ class Wpsss_Options
 
         $endpoint = isset($input['endpoint']) ? trim((string) $input['endpoint']) : '';
         $endpoint = $endpoint !== '' ? untrailingslashit(esc_url_raw($endpoint)) : '';
+        if ($endpoint !== '' && stripos($endpoint, 'http://') === 0) {
+            $endpoint = 'https://' . substr($endpoint, 7);
+        }
 
         $keep = (isset($input['keep_local']) && (string) $input['keep_local'] === '1') ? '1' : '0';
         $allow_off = isset($input['_allow_no_local']) && (string) $input['_allow_no_local'] === '1';
@@ -189,10 +193,17 @@ class Wpsss_Options
         $prefix = isset($input['object_prefix']) ? trim((string) $input['object_prefix'], " \t/") : '';
         $prefix = sanitize_text_field($prefix);
 
+        $region = sanitize_text_field($input['region'] ?? self::default_region($driver));
+        $origin_region = sanitize_text_field($input['origin_region'] ?? $current['origin_region'] ?? '');
+        if (in_array($region, ['oss-accelerate', 'oss-accelerate-overseas'], true) && $origin_region === '') {
+            $origin_region = 'oss-cn-hangzhou';
+        }
+
         $out = [
             'driver' => $driver,
             'bucket' => sanitize_text_field($input['bucket'] ?? ''),
-            'region' => sanitize_text_field($input['region'] ?? self::default_region($driver)),
+            'region' => $region,
+            'origin_region' => $origin_region,
             'access_key_id' => $access_key_id,
             'access_key_secret' => $secret,
             'app_id' => sanitize_text_field($input['app_id'] ?? ''),
@@ -293,6 +304,9 @@ class Wpsss_Options
     {
         $owns = (string) get_option(self::OWN_URL_FLAG, '');
         $current_url = (string) get_option('upload_url_path', '');
+        if ($current_url === '.' && $owns === '1') {
+            $current_url = '';
+        }
 
         if ($custom_domain !== '') {
             if ($current_url === '' || $owns === '1' || $current_url === $custom_domain) {
@@ -371,9 +385,74 @@ class Wpsss_Options
             case self::DRIVER_GCS:
                 return self::s3_object_request($opts, '')['public_base'];
             default:
+                $api_region = (string) $region;
+                if (strpos($api_region, 'oss-accelerate') === 0) {
+                    $api_region = (string) ($opts['origin_region'] ?? '');
+                    if ($api_region === '') {
+                        $api_region = 'oss-cn-hangzhou';
+                    }
+                }
                 $suffix = $internal ? '-internal.aliyuncs.com' : '.aliyuncs.com';
-                return 'https://' . $bucket . '.' . $region . $suffix;
+                return 'https://' . $bucket . '.' . $api_region . $suffix;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $opts
+     * @return string[]
+     */
+    public static function runtime_warnings(array $opts): array
+    {
+        $warnings = [];
+        $driver = (string) ($opts['driver'] ?? '');
+        $custom = (string) ($opts['custom_domain'] ?? '');
+        $url_access = (string) ($opts['url_access'] ?? 'public');
+        $bucket = (string) ($opts['bucket'] ?? '');
+        $app_id = (string) ($opts['app_id'] ?? '');
+
+        if ($driver === self::DRIVER_KODO && $custom === '') {
+            $warnings[] = '七牛必须填写 HTTPS 自定义域名，默认域不能给访客用。';
+        }
+        if ($driver === self::DRIVER_ALIYUN && $custom === '' && $url_access !== 'signed') {
+            $warnings[] = '阿里默认域名 2019 年后常强制下载不预览。请配自定义域或改签名访问。';
+        }
+        if ($driver === self::DRIVER_COS && $app_id === '' && !preg_match('/-\d+/', $bucket)) {
+            $warnings[] = 'COS 的 APPID 是桶创建者的，不是子账户的。';
+        }
+        if ((string) get_option('upload_url_path') === '.') {
+            $warnings[] = 'upload_url_path 不能是「.」，删除远端会失败。';
+        }
+
+        return $warnings;
+    }
+
+    public static function uninstall_cleanup(): void
+    {
+        $clean = static function (): void {
+            if ((string) get_option(self::OWN_URL_FLAG, '') === '1') {
+                delete_option('upload_url_path');
+                delete_option(self::OWN_URL_FLAG);
+            }
+            delete_option(self::OPTION_KEY);
+            delete_option('wpsss_history');
+            if (function_exists('delete_metadata')) {
+                delete_metadata('post', 0, '_wpsss_offloaded', '', true);
+                delete_metadata('post', 0, '_wpsss_key', '', true);
+                delete_metadata('post', 0, '_wpsss_error', '', true);
+                delete_metadata('post', 0, '_wpsss_filesize', '', true);
+            }
+        };
+        if (function_exists('is_multisite') && is_multisite() && function_exists('get_sites')) {
+            foreach (get_sites(['number' => 0]) as $site) {
+                $id = (int) (is_object($site) ? ($site->blog_id ?? 0) : 0);
+                if ($id <= 0) {
+                    continue;
+                }
+                Wpsss_Site::with_blog($id, $clean);
+            }
+            return;
+        }
+        $clean();
     }
 
     /**

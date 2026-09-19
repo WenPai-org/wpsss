@@ -28,6 +28,8 @@ require_once WPSSS_DIR . 'includes/class-wpsss-s3-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-url.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-history.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-options.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-site.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-ci.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-bucket-info.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-driver.php';
 require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-aliyun-oss.php';
@@ -47,6 +49,16 @@ require_once WPSSS_DIR . 'includes/class-wpsss-cli.php';
 function wpsss(): Wpsss_Plugin
 {
     return Wpsss_Plugin::instance();
+}
+
+/**
+ * 第三方把文件放进 uploads 后，可调此函数进桶。
+ *
+ * @return true|WP_Error
+ */
+function wpsss_file_upload(string $absolute_path, string $mime = '')
+{
+    return wpsss()->offload()->put_local_file($absolute_path, $mime);
 }
 
 add_action('plugins_loaded', static function () {

@@ -90,9 +90,6 @@ final class Wpsss_Library
     /**
      * @return int[]
      */
-    /**
-     * @return int[]
-     */
     public function offloaded_ids(int $limit = 20): array
     {
         $ids = get_posts([
@@ -136,6 +133,9 @@ final class Wpsss_Library
         return compact('ok', 'fail', 'skip', 'errors');
     }
 
+    /**
+     * @return int[]
+     */
     public function pending_ids(int $limit = 20): array
     {
         $ids = get_posts([
@@ -214,69 +214,107 @@ final class Wpsss_Library
 
         global $wpdb;
         $like = '%' . $wpdb->esc_like($from) . '%';
-        $ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_status != %s AND (post_content LIKE %s OR post_excerpt LIKE %s) LIMIT 200",
-            'trash',
-            $like,
-            $like
-        ));
-        foreach ($ids as $post_id) {
-            $post = get_post((int) $post_id);
-            if (!$post instanceof WP_Post) {
-                continue;
+        $post_batch = 200;
+        $post_offset = 0;
+        do {
+            $ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE post_status != %s AND (post_content LIKE %s OR post_excerpt LIKE %s) LIMIT %d OFFSET %d",
+                'trash',
+                $like,
+                $like,
+                $post_batch,
+                $post_offset
+            ));
+            foreach ($ids as $post_id) {
+                $post = get_post((int) $post_id);
+                if (!$post instanceof WP_Post) {
+                    continue;
+                }
+                $scanned++;
+                $content = (string) $post->post_content;
+                $excerpt = (string) $post->post_excerpt;
+                foreach ($pairs as [$src, $dst]) {
+                    $content = Wpsss_Offload::rewrite_urls_in_text($content, $src, $dst);
+                    $excerpt = Wpsss_Offload::rewrite_urls_in_text($excerpt, $src, $dst);
+                }
+                if ($content === $post->post_content && $excerpt === $post->post_excerpt) {
+                    continue;
+                }
+                $changed++;
+                if (count($samples) < 5) {
+                    $samples[] = (string) $post->ID;
+                }
+                if ($apply) {
+                    wp_update_post([
+                        'ID' => $post->ID,
+                        'post_content' => $content,
+                        'post_excerpt' => $excerpt,
+                    ]);
+                }
             }
-            $scanned++;
-            $content = (string) $post->post_content;
-            $excerpt = (string) $post->post_excerpt;
-            foreach ($pairs as [$src, $dst]) {
-                $content = Wpsss_Offload::rewrite_urls_in_text($content, $src, $dst);
-                $excerpt = Wpsss_Offload::rewrite_urls_in_text($excerpt, $src, $dst);
-            }
-            if ($content === $post->post_content && $excerpt === $post->post_excerpt) {
-                continue;
-            }
-            $changed++;
-            if (count($samples) < 5) {
-                $samples[] = (string) $post->ID;
-            }
-            if ($apply) {
-                wp_update_post([
-                    'ID' => $post->ID,
-                    'post_content' => $content,
-                    'post_excerpt' => $excerpt,
-                ]);
-            }
-        }
+            $got_posts = count($ids);
+            $post_offset += $post_batch;
+        } while ($got_posts === $post_batch);
 
-        $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT meta_id, post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_value LIKE %s LIMIT 500",
-            $like
-        ));
-        foreach ($rows as $row) {
-            $value = (string) $row->meta_value;
-            if ($value === '' || is_serialized($value)) {
-                continue;
+        $meta_batch = 500;
+        $meta_offset = 0;
+        do {
+            $rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT meta_id, post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_value LIKE %s LIMIT %d OFFSET %d",
+                $like,
+                $meta_batch,
+                $meta_offset
+            ));
+            foreach ($rows as $row) {
+                $value = (string) $row->meta_value;
+                if ($value === '') {
+                    continue;
+                }
+                $next = $this->rewrite_value($value, $pairs);
+                if ($next === null) {
+                    continue;
+                }
+                $meta_scanned++;
+                if ($next === $value) {
+                    continue;
+                }
+                $meta_changed++;
+                if ($apply) {
+                    $wpdb->update(
+                        $wpdb->postmeta,
+                        ['meta_value' => $next],
+                        ['meta_id' => (int) $row->meta_id],
+                        ['%s'],
+                        ['%d']
+                    );
+                }
             }
-            $meta_scanned++;
-            $next = $value;
-            foreach ($pairs as [$src, $dst]) {
-                $next = Wpsss_Offload::rewrite_urls_in_text($next, $src, $dst);
-            }
-            if ($next === $value) {
-                continue;
-            }
-            $meta_changed++;
-            if ($apply) {
-                $wpdb->update(
-                    $wpdb->postmeta,
-                    ['meta_value' => $next],
-                    ['meta_id' => (int) $row->meta_id],
-                    ['%s'],
-                    ['%d']
-                );
-            }
-        }
+            $got_meta = count($rows);
+            $meta_offset += $meta_batch;
+        } while ($got_meta === $meta_batch);
 
         return compact('scanned', 'changed', 'samples', 'meta_scanned', 'meta_changed');
+    }
+
+    /**
+     * @param array<int, array{0: string, 1: string}> $pairs
+     */
+    private function rewrite_value(string $value, array $pairs): ?string
+    {
+        if (method_exists('Wpsss_Url', 'rewrite_maybe_serialized')) {
+            return Wpsss_Url::rewrite_maybe_serialized($value, function ($text) use ($pairs) {
+                foreach ($pairs as [$src, $dst]) {
+                    $text = Wpsss_Offload::rewrite_urls_in_text($text, $src, $dst);
+                }
+                return $text;
+            });
+        }
+        if (is_serialized($value)) {
+            return null;
+        }
+        foreach ($pairs as [$src, $dst]) {
+            $value = Wpsss_Offload::rewrite_urls_in_text($value, $src, $dst);
+        }
+        return $value;
     }
 }

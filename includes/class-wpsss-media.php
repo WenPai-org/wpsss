@@ -32,6 +32,38 @@ final class Wpsss_Media
         add_action('pre_get_posts', [$this, 'filter_query']);
         add_action('add_meta_boxes_attachment', [$this, 'add_metabox']);
         add_action('admin_notices', [$this, 'admin_notices']);
+        add_filter('wp_prepare_attachment_for_js', [$this, 'prepare_attachment_for_js'], 20, 3);
+    }
+
+    /**
+     * @param mixed $response
+     * @param mixed $attachment
+     * @param mixed $meta
+     * @return mixed
+     */
+    public function prepare_attachment_for_js($response, $attachment, $meta)
+    {
+        unset($meta);
+        if (!is_array($response)) {
+            return $response;
+        }
+        $id = is_object($attachment) ? (int) $attachment->ID : (int) $attachment;
+        if (!Wpsss_Library::is_offloaded($id)) {
+            return $response;
+        }
+        $url = $this->offload->rewrite_url((string) ($response['url'] ?? ''), $id);
+        if (method_exists('Wpsss_Url', 'rewrite_attachment_js')) {
+            $response = Wpsss_Url::rewrite_attachment_js($response, $url);
+        } else {
+            $response['url'] = $url;
+        }
+        if (Wpsss_Options::get()['keep_local'] !== '1' && empty($response['filesizeInBytes'])) {
+            $stored = (int) get_post_meta($id, '_wpsss_filesize', true);
+            if ($stored > 0) {
+                $response['filesizeInBytes'] = $stored;
+            }
+        }
+        return $response;
     }
 
     /**
