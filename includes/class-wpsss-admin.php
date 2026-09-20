@@ -139,6 +139,9 @@ final class Wpsss_Admin
             'stats' => $this->plugin->library()->stats(),
             'history' => Wpsss_History::all(),
             'rewrite' => get_transient($this->rewrite_transient_key()) ?: [],
+            'pull' => get_transient($this->pull_transient_key()) ?: [],
+            'pull_cursor' => (int) get_transient($this->pull_cursor_key()),
+            'offload_cursor' => (int) get_transient($this->offload_cursor_key()),
             'ops' => get_transient($this->ops_transient_key()) ?: [],
             'doctor' => ($configured && in_array($tab, ['overview', 'setup'], true)) ? Wpsss_CLI::doctor_report($opts) : [],
             'url' => [$this, 'url'],
@@ -206,10 +209,26 @@ final class Wpsss_Admin
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
             $this->redirect_tools('empty', '先保存桶名和密钥再补传。', 'daily');
         }
+        if (!empty($_POST['wpsss_offload_reset'])) {
+            delete_transient($this->offload_cursor_key());
+            $this->redirect_tools('ok', '已从头开始补传。', 'daily');
+        }
         $source = !empty($_POST['wpsss_retry']) ? 'failed' : 'pending';
-        $result = $this->plugin->library()->offload_batch(20, false, 0, $source);
+        $before = $source === 'failed' ? 0 : (int) get_transient($this->offload_cursor_key());
+        $result = $this->plugin->library()->offload_batch(20, false, 0, $source, $before);
+        if ($source !== 'failed') {
+            $cursor = (int) ($result['cursor'] ?? 0);
+            if ($cursor > 0) {
+                set_transient($this->offload_cursor_key(), $cursor, DAY_IN_SECONDS);
+            } else {
+                delete_transient($this->offload_cursor_key());
+            }
+        }
         $verb = $source === 'failed' ? '重试' : '补传';
         $msg = sprintf('%s完成：成功 %d，失败 %d，跳过 %d。', $verb, $result['ok'], $result['fail'], $result['skip']);
+        if ($source !== 'failed' && (int) ($result['cursor'] ?? 0) > 0) {
+            $msg .= sprintf(' 下一批从 ID <%d 接着。', (int) $result['cursor']);
+        }
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
         }
@@ -238,18 +257,73 @@ final class Wpsss_Admin
             wp_die(esc_html__('权限不足。', 'wpsss'));
         }
         check_admin_referer('wpsss_pull');
-        if (empty($_POST['wpsss_pull_confirm'])) {
-            $this->redirect_tools('error', '拉回须勾确认。', 'move');
-        }
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
             $this->redirect_tools('empty', '先保存桶名和密钥再拉回。', 'move');
         }
+        if (!empty($_POST['wpsss_pull_reset'])) {
+            delete_transient($this->pull_cursor_key());
+            $this->redirect_tools('ok', '已从头开始拉回。', 'move');
+        }
+        $apply = !empty($_POST['wpsss_pull_apply']);
+        $on_exist = Wpsss_Offload::sanitize_on_exist(isset($_POST['wpsss_pull_exist']) ? (string) wp_unslash($_POST['wpsss_pull_exist']) : 'skip');
         $delete = !empty($_POST['wpsss_pull_delete']);
-        if ($delete && empty($_POST['wpsss_pull_delete_confirm'])) {
+        $scope = (isset($_POST['wpsss_pull_scope']) && (string) wp_unslash($_POST['wpsss_pull_scope']) === 'one') ? 'one' : 'batch';
+        $only_id = ($scope === 'one' && isset($_POST['wpsss_pull_id'])) ? (int) $_POST['wpsss_pull_id'] : 0;
+        if ($scope === 'one' && $only_id <= 0) {
+            $this->redirect_tools('error', '指定一个时请填写媒体库编号。', 'move');
+        }
+        if ($apply && $on_exist !== 'skip' && empty($_POST['wpsss_pull_confirm'])) {
+            $this->redirect_tools('error', '拉回须勾确认。', 'move');
+        }
+        if ($apply && $delete && empty($_POST['wpsss_pull_delete_confirm'])) {
             $this->redirect_tools('error', '删除远端须再确认。', 'move');
         }
-        $result = $this->plugin->library()->pull_batch(20, false, 0, $delete);
-        $msg = sprintf('拉回完成：成功 %d，失败 %d，跳过 %d。', $result['ok'], $result['fail'], $result['skip']);
+        if ($delete && $on_exist === 'skip') {
+            $this->redirect_tools('error', '删桶不能只补缺失。请改用覆盖或旁路改名。', 'move');
+        }
+        $before = $only_id > 0 ? 0 : (int) get_transient($this->pull_cursor_key());
+        $result = $this->plugin->library()->pull_batch(20, !$apply, $only_id, $apply && $delete, $on_exist, $before);
+        if ($apply && $only_id === 0) {
+            $cursor = (int) ($result['cursor'] ?? 0);
+            if ($cursor > 0) {
+                set_transient($this->pull_cursor_key(), $cursor, DAY_IN_SECONDS);
+            } else {
+                delete_transient($this->pull_cursor_key());
+            }
+        }
+        set_transient($this->pull_transient_key(), [
+            'apply' => $apply,
+            'on_exist' => $on_exist,
+            'only_id' => $only_id,
+            'delete' => $apply && $delete,
+            'result' => $result,
+        ], 10 * MINUTE_IN_SECONDS);
+        $msg = $apply
+            ? sprintf(
+                '拉回完成：成功 %d 个附件，失败 %d；写入计划 %d，跳过 %d，旁路 %d。',
+                $result['ok'],
+                $result['fail'],
+                $result['missing'] + ($on_exist === 'skip' ? 0 : $result['exists']),
+                $result['skip'],
+                $result['renamed']
+            )
+            : sprintf(
+                '预览：将写入 %d 个文件，跳过 %d，旁路 %d；本地已有 %d，缺失 %d。',
+                $result['ok'],
+                $result['skip'],
+                $result['renamed'],
+                $result['exists'],
+                $result['missing']
+            );
+        if ((int) ($result['blocked'] ?? 0) > 0) {
+            $msg .= sprintf(' 前缀不符 %d。', (int) $result['blocked']);
+        }
+        if ($apply && !$delete) {
+            $msg .= ' 只写回了磁盘，前台仍走桶。要改地址请解除标记，或拉回并删除。';
+        }
+        if ($apply && $only_id === 0 && (int) ($result['cursor'] ?? 0) > 0) {
+            $msg .= sprintf(' 下一批从 ID <%d 接着。', (int) $result['cursor']);
+        }
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
         }
@@ -267,7 +341,7 @@ final class Wpsss_Admin
             wp_safe_redirect(admin_url('upload.php'));
             exit;
         }
-        $result = $this->plugin->library()->pull_batch(1, false, $id, false);
+        $result = $this->plugin->library()->pull_batch(1, false, $id, false, 'rename');
         $ok = $result['fail'] === 0 && $result['ok'] > 0;
         $this->redirect_media($id, 'wpsss_pull', $ok);
     }
@@ -298,12 +372,13 @@ final class Wpsss_Admin
         $this->redirect_tools(
             'ok',
             sprintf(
-                '%s：扫 %d 篇命中 %d，字段扫 %d 命中 %d。',
+                '%s：扫 %d 篇命中 %d，字段扫 %d 命中 %d。%s',
                 $verb,
                 $result['scanned'],
                 $result['changed'],
                 $result['meta_scanned'],
-                $result['meta_changed']
+                $result['meta_changed'],
+                $apply ? ' 会改正文、摘要和 post meta（含序列化）。不改 options / theme_mods / 磁盘 CSS。请清页面缓存和 CDN。' : ''
             ),
             'move'
         );
@@ -369,7 +444,7 @@ final class Wpsss_Admin
         if ($result['errors'] !== []) {
             $this->redirect_tools('error', $result['errors'][0], 'move');
         }
-        $this->redirect_tools('ok', sprintf('已解除 %d 个进桶标记，桶内对象未删除。', $result['ok']), 'move');
+        $this->redirect_tools('ok', sprintf('已解除 %d 个进桶标记，桶内对象未删除。前台可能改回本地，请清页面缓存。', $result['ok']), 'move');
     }
 
     public function handle_export(): void
@@ -599,6 +674,21 @@ final class Wpsss_Admin
     private function rewrite_transient_key(): string
     {
         return 'wpsss_rewrite_' . get_current_user_id();
+    }
+
+    private function pull_transient_key(): string
+    {
+        return 'wpsss_pull_' . get_current_user_id();
+    }
+
+    private function pull_cursor_key(): string
+    {
+        return 'wpsss_pull_cursor_' . get_current_user_id();
+    }
+
+    private function offload_cursor_key(): string
+    {
+        return 'wpsss_offload_cursor_' . get_current_user_id();
     }
 
     private function ops_transient_key(): string

@@ -90,39 +90,51 @@ final class Wpsss_Library
     /**
      * @return int[]
      */
-    public function offloaded_ids(int $limit = 20): array
+    public function offloaded_ids(int $limit = 20, int $before_id = 0): array
     {
-        $ids = get_posts([
+        return $this->query_ids([
             'post_type' => 'attachment',
             'post_status' => 'inherit',
             'posts_per_page' => $limit > 0 ? $limit : 20,
             'fields' => 'ids',
             'meta_key' => self::META_OFFLOADED,
             'meta_value' => '1',
-        ]);
-        return array_map('intval', $ids);
+        ], $before_id);
     }
 
     /**
-     * @return array{ok: int, fail: int, skip: int, errors: string[]}
+     * @return array{ok: int, fail: int, skip: int, renamed: int, missing: int, exists: int, blocked: int, cursor: int, errors: string[], on_exist: string, dry_run: bool}
      */
-    public function pull_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, bool $delete_remote = false): array
+    public function pull_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, bool $delete_remote = false, string $on_exist = 'skip', int $before_id = 0): array
     {
-        $ids = $only_id > 0 ? [$only_id] : $this->offloaded_ids($limit);
+        $on_exist = Wpsss_Offload::sanitize_on_exist($on_exist);
+        $ids = $only_id > 0 ? [$only_id] : $this->offloaded_ids($limit, $before_id);
         $ok = 0;
         $fail = 0;
         $skip = 0;
+        $renamed = 0;
+        $missing = 0;
+        $exists = 0;
+        $blocked = 0;
         $errors = [];
         foreach ($ids as $id) {
             if (!self::is_offloaded($id) && $only_id === 0) {
                 $skip++;
                 continue;
             }
+            $plan = method_exists($this->offload, 'plan_pull')
+                ? $this->offload->plan_pull($id, $on_exist)
+                : ['would_write' => 1, 'would_skip' => 0, 'would_rename' => 0, 'would_block' => 0, 'missing' => 0, 'exists' => 0];
+            $renamed += (int) ($plan['would_rename'] ?? 0);
+            $missing += (int) ($plan['missing'] ?? 0);
+            $exists += (int) ($plan['exists'] ?? 0);
+            $blocked += (int) ($plan['would_block'] ?? 0);
             if ($dry_run) {
-                $ok++;
+                $ok += (int) ($plan['would_write'] ?? 0);
+                $skip += (int) ($plan['would_skip'] ?? 0);
                 continue;
             }
-            $result = $this->offload->pull_attachment($id, $delete_remote);
+            $result = $this->offload->pull_attachment($id, $delete_remote, $on_exist);
             if (is_wp_error($result)) {
                 $fail++;
                 $errors[] = $id . ': ' . $result->get_error_message();
@@ -130,12 +142,10 @@ final class Wpsss_Library
             }
             $ok++;
         }
-        return compact('ok', 'fail', 'skip', 'errors');
+        $cursor = $ids === [] ? 0 : min($ids);
+        return compact('ok', 'fail', 'skip', 'renamed', 'missing', 'exists', 'blocked', 'cursor', 'errors', 'on_exist', 'dry_run');
     }
 
-    /**
-     * @return int[]
-     */
     /**
      * @return int[]
      */
@@ -152,9 +162,9 @@ final class Wpsss_Library
         return array_map('intval', $ids);
     }
 
-    public function pending_ids(int $limit = 20): array
+    public function pending_ids(int $limit = 20, int $before_id = 0): array
     {
-        $ids = get_posts([
+        return $this->query_ids([
             'post_type' => 'attachment',
             'post_status' => 'inherit',
             'posts_per_page' => $limit > 0 ? $limit : 20,
@@ -171,21 +181,20 @@ final class Wpsss_Library
                     'compare' => '!=',
                 ],
             ],
-        ]);
-        return array_map('intval', $ids);
+        ], $before_id);
     }
 
     /**
-     * @return array{ok: int, fail: int, skip: int, errors: string[]}
+     * @return array{ok: int, fail: int, skip: int, cursor: int, errors: string[]}
      */
-    public function offload_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, string $source = 'pending'): array
+    public function offload_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, string $source = 'pending', int $before_id = 0): array
     {
         if ($only_id > 0) {
             $ids = [$only_id];
         } elseif ($source === 'failed') {
             $ids = $this->failed_ids($limit);
         } else {
-            $ids = $this->pending_ids($limit);
+            $ids = $this->pending_ids($limit, $before_id);
         }
         $ok = 0;
         $fail = 0;
@@ -208,7 +217,35 @@ final class Wpsss_Library
             }
             $ok++;
         }
-        return compact('ok', 'fail', 'skip', 'errors');
+        $cursor = $ids === [] ? 0 : min($ids);
+        return compact('ok', 'fail', 'skip', 'cursor', 'errors');
+    }
+
+    /**
+     * @param array<string, mixed> $args
+     * @return int[]
+     */
+    private function query_ids(array $args, int $before_id = 0): array
+    {
+        $args['orderby'] = 'ID';
+        $args['order'] = 'DESC';
+        $where = null;
+        if ($before_id > 0 && function_exists('add_filter')) {
+            $where = static function (string $sql) use ($before_id): string {
+                global $wpdb;
+                if (!isset($wpdb) || !is_object($wpdb) || !method_exists($wpdb, 'prepare')) {
+                    return $sql;
+                }
+                $posts = isset($wpdb->posts) ? (string) $wpdb->posts : 'posts';
+                return $sql . $wpdb->prepare(' AND ' . $posts . '.ID < %d', $before_id);
+            };
+            add_filter('posts_where', $where);
+        }
+        $ids = get_posts($args);
+        if ($where !== null && function_exists('remove_filter')) {
+            remove_filter('posts_where', $where);
+        }
+        return array_map('intval', is_array($ids) ? $ids : []);
     }
 
     /**

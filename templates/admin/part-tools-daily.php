@@ -44,8 +44,19 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_offload'); ?>
       <div class="card-foot start">
-        <span class="meta"><?php echo $pending > 0 ? esc_html__('新上传的附件会自动进桶。', 'wpsss') : esc_html__('当前没有待补传的附件。', 'wpsss'); ?></span>
+        <span class="meta"><?php
+          if ((int) ($offload_cursor ?? 0) > 0) {
+              echo esc_html(sprintf('接着 ID <%d。新上传会自动进桶。', (int) $offload_cursor));
+          } elseif ($pending > 0) {
+              echo esc_html__('新上传的附件会自动进桶。', 'wpsss');
+          } else {
+              echo esc_html__('当前没有待补传的附件。', 'wpsss');
+          }
+        ?></span>
         <span class="wpsss-actions">
+          <?php if ((int) ($offload_cursor ?? 0) > 0) : ?>
+            <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1"><?php echo esc_html__('从头', 'wpsss'); ?></button>
+          <?php endif; ?>
           <button class="btn btn-secondary" type="submit" <?php disabled($pending <= 0); ?>><?php echo esc_html__('补传一批', 'wpsss'); ?></button>
         </span>
       </div>

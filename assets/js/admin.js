@@ -643,36 +643,146 @@
     if (!box || apply.length === 0) {
       return;
     }
-    var del = form.querySelector(".js-wpsss-pull-delete");
-    var delExtra = form.querySelector(".js-wpsss-pull-delete-confirm");
-    var delOk = form.querySelector('input[name="wpsss_pull_delete_confirm"]');
     function update() {
-      if (delExtra) {
-        delExtra.hidden = !(del && del.checked);
-      }
       var ok = box.checked;
-      if (del && del.checked && delOk && !delOk.checked) {
-        ok = false;
-      }
       form.classList.toggle("is-confirmed", ok);
       apply.forEach(function (btn) {
+        btn.disabled = !ok;
+      });
+    }
+    box.addEventListener("change", update);
+    update();
+  });
+
+  var pullForm = app.querySelector(".js-wpsss-pull-form");
+  if (pullForm) {
+    var pullApply = pullForm.querySelectorAll("[data-wpsss-need-apply]");
+    var pullBox = pullForm.querySelector('input[name="wpsss_pull_confirm"]');
+    var pullDel = pullForm.querySelector(".js-wpsss-pull-delete");
+    var pullGate = pullForm.querySelector(".js-wpsss-pull-gate");
+    var pullExtra = pullForm.querySelector(".js-wpsss-pull-delete-confirm");
+    var pullDelOk = pullForm.querySelector('input[name="wpsss_pull_delete_confirm"]');
+    var pullHint = pullForm.querySelector(".js-wpsss-pull-hint");
+    var pullConfirmText = pullForm.querySelector(".js-wpsss-pull-confirm-text");
+    var pullCopy = {
+      skip: {
+        hint: "服务器上没有的才从桶里取。已经有的文件原样留着。不改网页地址。",
+        confirm: "",
+        dialog: "",
+      },
+      rename: {
+        hint: "本地那份改名留底（原名-local-时间），再用桶里的文件占原来的名字。媒体库编号不变。",
+        confirm: "我确认把已有本地文件旁路改名后再写入",
+        dialog: "已有本地文件会改成 原名-local-时间，正式文件名仍按媒体库写入桶里那份。继续？",
+      },
+      overwrite: {
+        hint: "用桶里的文件直接换掉本地同名文件。换掉就没有回收站。",
+        confirm: "接受覆盖 uploads 里的同名文件",
+        dialog: "会覆盖 uploads 里的同名文件。覆盖前没有回收站。默认不删桶。继续？",
+      },
+    };
+    var pullOne = pullForm.querySelector(".js-wpsss-pull-one");
+    var pullId = pullForm.querySelector(".js-wpsss-pull-id");
+    var pullScopeHint = pullForm.querySelector(".js-wpsss-pull-scope-hint");
+    var pullGo = pullForm.querySelectorAll(".js-wpsss-pull-go");
+    function pullMode() {
+      var checked = pullForm.querySelector(".js-wpsss-pull-exist:checked");
+      return checked && checked.value ? checked.value : "skip";
+    }
+    function pullScope() {
+      var checked = pullForm.querySelector(".js-wpsss-pull-scope:checked");
+      return checked && checked.value === "one" ? "one" : "batch";
+    }
+    function updatePull() {
+      var mode = pullMode();
+      var scope = pullScope();
+      var row = pullCopy[mode] || pullCopy.skip;
+      pullForm.setAttribute("data-mode", mode);
+      pullForm.setAttribute("data-scope", scope);
+      pullForm.querySelectorAll(".wpsss-pull-seg label").forEach(function (label) {
+        var radio = label.querySelector("input");
+        label.classList.toggle("on", !!(radio && radio.checked));
+      });
+      if (pullScopeHint) {
+        pullScopeHint.textContent = scope === "one"
+          ? "只拉媒体库里的这一个。编号在「媒体 → 媒体库」点开文件后能看到，例如 128。"
+          : "已进桶的按编号从新到旧拉，一次最多 20 个。要继续就再点一次。";
+      }
+      if (pullOne) {
+        pullOne.hidden = scope !== "one";
+      }
+      if (pullId) {
+        pullId.disabled = scope !== "one";
+        if (scope !== "one") {
+          pullId.value = "";
+        }
+      }
+      if (pullHint) {
+        pullHint.textContent = row.hint;
+        pullHint.classList.toggle("is-warn", mode === "overwrite");
+      }
+      if (pullGate) {
+        pullGate.hidden = mode === "skip";
+      }
+      if (mode === "skip" && pullDel) {
+        pullDel.checked = false;
+        if (pullDelOk) {
+          pullDelOk.checked = false;
+        }
+      }
+      if (pullExtra) {
+        pullExtra.hidden = !(pullDel && pullDel.checked && mode !== "skip");
+      }
+      if (pullConfirmText) {
+        pullConfirmText.textContent = row.confirm;
+      }
+      var ok = mode === "skip" || !!(pullBox && pullBox.checked);
+      if (pullDel && pullDel.checked && pullDelOk && !pullDelOk.checked) {
+        ok = false;
+      }
+      if (scope === "one" && !(pullId && parseInt(pullId.value, 10) > 0)) {
+        ok = false;
+      }
+      pullForm.classList.toggle("is-confirmed", ok);
+      pullGo.forEach(function (btn) {
+        if (!btn.getAttribute("data-wpsss-need-apply")) {
+          btn.disabled = scope === "one" && !(pullId && parseInt(pullId.value, 10) > 0);
+        }
+      });
+      pullApply.forEach(function (btn) {
         btn.disabled = !ok;
         var label = btn.getAttribute("data-wpsss-label");
         var labelDelete = btn.getAttribute("data-wpsss-label-delete");
         if (label && labelDelete) {
-          btn.textContent = del && del.checked ? labelDelete : label;
+          btn.textContent = pullDel && pullDel.checked ? labelDelete : label;
+        }
+        if (row.dialog) {
+          btn.setAttribute("data-wpsss-confirm", row.dialog);
+        } else {
+          btn.removeAttribute("data-wpsss-confirm");
         }
       });
     }
-    box.addEventListener("change", update);
-    if (del) {
-      del.addEventListener("change", update);
+    if (pullBox) {
+      pullBox.addEventListener("change", updatePull);
     }
-    if (delOk) {
-      delOk.addEventListener("change", update);
+    if (pullDel) {
+      pullDel.addEventListener("change", updatePull);
     }
-    update();
-  });
+    if (pullDelOk) {
+      pullDelOk.addEventListener("change", updatePull);
+    }
+    pullForm.querySelectorAll(".js-wpsss-pull-exist").forEach(function (radio) {
+      radio.addEventListener("change", updatePull);
+    });
+    pullForm.querySelectorAll(".js-wpsss-pull-scope").forEach(function (radio) {
+      radio.addEventListener("change", updatePull);
+    });
+    if (pullId) {
+      pullId.addEventListener("input", updatePull);
+    }
+    updatePull();
+  }
 
   app.querySelectorAll("form").forEach(function (form) {
     form.addEventListener(

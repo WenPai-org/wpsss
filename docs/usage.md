@@ -10,7 +10,7 @@
 | 设置向导 | 4 步：站点场景 → 桶与密钥 → 已为你配置 → 完成/测试连通（`?page=wpsss&tab=setup`） |
 | 设置 · 简单 | 站点场景与常用开关；保存后即时生效 |
 | 设置 · 高级 | 云厂商、桶、区域、密钥、前缀、重命名、图片样式、原图保护、自定义域 |
-| 工具 | 页内三组：日常（连通、补传、记录）、排障（体检、诊断、抽检、清除失败）、迁移（拉回、改写、解除标记、导出；删桶先警示并要求本地核对） |
+| 工具 | 页内三组：日常（连通、补传可接着上次、记录）、排障（体检含前缀不对、诊断、抽检、清除失败）、迁移（拉回先选「下一批 / 指定一个」，再选本地已有时只补缺失 / 旁路改名 / 覆盖；只写盘不改前台；改写含序列化 post meta；删桶先警示） |
 | 帮助 | 快速开始、页面说明、常见问题与 WP-CLI 参考（插件内） |
 
 ## WP-CLI
@@ -23,7 +23,9 @@ wp sss set --from-env
 wp sss probe
 wp sss doctor
 wp sss offload --dry-run
-wp sss pull --dry-run
+wp sss pull --dry-run --on-exist=skip
+wp sss pull --before=100
+wp sss offload --before=100
 wp sss scan
 wp sss diagnose 128
 wp sss url <附件ID>

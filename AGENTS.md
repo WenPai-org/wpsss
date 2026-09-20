@@ -15,6 +15,8 @@
 - 工位 wenpai `~/Projects/wpsss`。Mac 有 leftover 座位时不要 Write `~/Projects/*`。
 - 测试只许桶 `wenpai-wpsss-test`。不要写爱可 / 文风 / w.org / 印迹桶。
 - 默认 `keep_local=1`。关掉须人批。
+- 拉回默认只写磁盘。进桶标记还在则网页地址仍是桶。工具页拆日常/排障/迁移；拉回先选下一批或指定一个。
+
 - 不装 wptea、不 JSON 改线上 `active_plugins`。生产装插件须 board + `#20`。
 - 插件只许软链进 `~/Studio`。禁止 `rsync --delete`。
 - 对照 sy-records Apache-2.0，不整仓粘贴 SDK。签名是 OSS REST V1。

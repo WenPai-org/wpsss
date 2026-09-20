@@ -205,10 +205,14 @@ final class Wpsss_CLI
      * [--dry-run]
      * : 只数不传。
      *
+     * [--before=<id>]
+     * : 只处理 ID 小于该值的附件，用于接着上一批。
+     *
      * ## EXAMPLES
      *
      *     wp sss offload --dry-run
      *     wp sss offload --limit=20
+     *     wp sss offload --before=100
      *
      * @when after_wp_load
      */
@@ -218,8 +222,9 @@ final class Wpsss_CLI
         $id = isset($assoc_args['id']) ? (int) $assoc_args['id'] : 0;
         $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
         $dry = !empty($assoc_args['dry-run']);
-        $result = wpsss()->library()->offload_batch($limit, $dry, $id);
-        WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip']);
+        $before = isset($assoc_args['before']) ? (int) $assoc_args['before'] : 0;
+        $result = wpsss()->library()->offload_batch($limit, $dry, $id, 'pending', $before);
+        WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip'] . ' cursor=' . (int) ($result['cursor'] ?? 0));
         foreach ($result['errors'] as $line) {
             WP_CLI::warning($line);
         }
@@ -243,13 +248,20 @@ final class Wpsss_CLI
      * [--dry-run]
      * : 只数不写。
      *
+     * [--on-exist=<mode>]
+     * : 本地已有时：skip（默认，只补缺失）、rename（旁路改名）、overwrite（覆盖）。
+     *
      * [--delete-remote]
-     * : 拉回后删桶里的副本，并清掉 offloaded 标记。须同时加 --yes。
+     * : 拉回后删桶里的副本，并清掉 offloaded 标记。须同时加 --yes，且不能与 skip 同用。
+     *
+     * [--before=<id>]
+     * : 只处理 ID 小于该值的已进桶附件，用于接着上一批。
      *
      * ## EXAMPLES
      *
      *     wp sss pull --dry-run
-     *     wp sss pull --id=12
+     *     wp sss pull --id=12 --on-exist=rename
+     *     wp sss pull --before=100
      *
      * @when after_wp_load
      */
@@ -260,11 +272,29 @@ final class Wpsss_CLI
         $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
         $dry = !empty($assoc_args['dry-run']);
         $delete = !empty($assoc_args['delete-remote']);
+        $on_exist = Wpsss_Offload::sanitize_on_exist(isset($assoc_args['on-exist']) ? (string) $assoc_args['on-exist'] : 'skip');
+        $before = isset($assoc_args['before']) ? (int) $assoc_args['before'] : 0;
         if ($delete && empty($assoc_args['yes']) && empty($assoc_args['dry-run'])) {
             WP_CLI::error('删除远端须加 --yes。');
         }
-        $result = wpsss()->library()->pull_batch($limit, $dry, $id, $delete);
-        WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip']);
+        if ($delete && $on_exist === 'skip') {
+            WP_CLI::error('删桶不能 --on-exist=skip。请用 rename 或 overwrite，并加 --yes。');
+        }
+        $result = wpsss()->library()->pull_batch($limit, $dry, $id, $delete, $on_exist, $before);
+        WP_CLI::log(
+            'ok=' . $result['ok']
+            . ' fail=' . $result['fail']
+            . ' skip=' . $result['skip']
+            . ' renamed=' . $result['renamed']
+            . ' missing=' . $result['missing']
+            . ' exists=' . $result['exists']
+            . ' blocked=' . (int) ($result['blocked'] ?? 0)
+            . ' cursor=' . (int) ($result['cursor'] ?? 0)
+            . ' on-exist=' . $on_exist
+        );
+        if (!$delete && !$dry) {
+            WP_CLI::log('只写回磁盘，前台仍走桶。要改地址请解除标记或 --delete-remote。');
+        }
         foreach ($result['errors'] as $line) {
             WP_CLI::warning($line);
         }

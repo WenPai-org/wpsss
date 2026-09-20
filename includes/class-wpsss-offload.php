@@ -590,11 +590,124 @@ class Wpsss_Offload
         return $key;
     }
 
+    public static function sanitize_on_exist(string $mode): string
+    {
+        return in_array($mode, ['skip', 'rename', 'overwrite'], true) ? $mode : 'skip';
+    }
+
+    public static function key_fits_current_prefix(string $key, array $opts = []): bool
+    {
+        $prefix = trim((string) ($opts['object_prefix'] ?? ''), '/');
+        $key = ltrim(str_replace('\\', '/', $key), '/');
+        if ($key === '' || $prefix === '') {
+            return true;
+        }
+        return $key === $prefix || strpos($key, $prefix . '/') === 0;
+    }
+
+    /**
+     * @param array<int, array{0: string, 1: string}> $moved sidecar => dest
+     */
+    public static function restore_sidecars(array $moved): void
+    {
+        foreach (array_reverse($moved) as $pair) {
+            $side = (string) ($pair[0] ?? '');
+            $dest = (string) ($pair[1] ?? '');
+            if ($side === '' || $dest === '' || !is_file($side) || is_file($dest)) {
+                continue;
+            }
+            @rename($side, $dest);
+        }
+    }
+
+    public static function sidecar_path(string $dest, string $stamp = ''): string
+    {
+        $info = pathinfo($dest);
+        $dir = (string) ($info['dirname'] ?? '.');
+        $name = (string) ($info['filename'] ?? 'file');
+        $ext = isset($info['extension']) && $info['extension'] !== '' ? '.' . $info['extension'] : '';
+        $stamp = $stamp !== '' ? $stamp : gmdate('Ymd-His');
+        $base = $dir . '/' . $name . '-local-' . $stamp . $ext;
+        $n = 2;
+        while (file_exists($base)) {
+            $base = $dir . '/' . $name . '-local-' . $stamp . '-' . $n . $ext;
+            $n++;
+        }
+        return $base;
+    }
+
+    public static function same_bytes(string $dest, string $body): bool
+    {
+        if (!is_file($dest)) {
+            return false;
+        }
+        $size = filesize($dest);
+        if ($size === false || $size !== strlen($body)) {
+            return false;
+        }
+        return hash_file('sha256', $dest) === hash('sha256', $body);
+    }
+
+    /**
+     * @return array{keys: int, missing: int, exists: int, would_write: int, would_skip: int, would_rename: int, would_block: int}
+     */
+    public function plan_pull(int $post_id, string $on_exist = 'skip'): array
+    {
+        $on_exist = self::sanitize_on_exist($on_exist);
+        $opts = Wpsss_Options::get();
+        $keys = $this->attachment_keys($post_id);
+        $basedir = (string) $this->uploads()['basedir'];
+        $missing = 0;
+        $exists = 0;
+        $write = 0;
+        $skip = 0;
+        $rename = 0;
+        $block = 0;
+        foreach ($keys as $key) {
+            if (!self::key_fits_current_prefix((string) $key, $opts)) {
+                $block++;
+                continue;
+            }
+            $rel = self::local_rel_from_object_key((string) $key, $opts);
+            if ($rel === '' || strpos($rel, '..') !== false) {
+                continue;
+            }
+            $dest = $basedir . '/' . $rel;
+            if (!is_file($dest)) {
+                $missing++;
+                $write++;
+                continue;
+            }
+            $exists++;
+            if ($on_exist === 'skip') {
+                $skip++;
+                continue;
+            }
+            $write++;
+            if ($on_exist === 'rename') {
+                $rename++;
+            }
+        }
+        return [
+            'keys' => count($keys),
+            'missing' => $missing,
+            'exists' => $exists,
+            'would_write' => $write,
+            'would_skip' => $skip,
+            'would_rename' => $rename,
+            'would_block' => $block,
+        ];
+    }
+
     /**
      * @return true|WP_Error
      */
-    public function pull_attachment(int $post_id, bool $delete_remote = false)
+    public function pull_attachment(int $post_id, bool $delete_remote = false, string $on_exist = 'skip')
     {
+        $on_exist = self::sanitize_on_exist($on_exist);
+        if ($delete_remote && $on_exist === 'skip') {
+            return new WP_Error('wpsss_pull_delete_mode', '删桶不能只补缺失。请改用覆盖或旁路改名，并先核对本地。');
+        }
         $opts = Wpsss_Options::get();
         $driver = $this->plugin->active_driver();
         if (!$driver->is_configured($opts)) {
@@ -606,20 +719,48 @@ class Wpsss_Offload
         }
         $uploads = $this->uploads();
         $basedir = (string) $uploads['basedir'];
+        $moved = [];
         foreach ($keys as $key) {
+            if (!self::key_fits_current_prefix((string) $key, $opts)) {
+                self::restore_sidecars($moved);
+                return new WP_Error('wpsss_prefix', '对象键对不上当前前缀，已停止，避免写到错误目录。');
+            }
             $rel = self::local_rel_from_object_key((string) $key, $opts);
             if ($rel === '' || strpos($rel, '..') !== false) {
+                self::restore_sidecars($moved);
                 return new WP_Error('wpsss_bad_key', '对象键不安全。');
             }
             $dest = $basedir . '/' . $rel;
             if (!wp_mkdir_p(dirname($dest))) {
+                self::restore_sidecars($moved);
                 return new WP_Error('wpsss_mkdir', '建不了本地目录。');
+            }
+            $exists = is_file($dest);
+            if ($exists && $on_exist === 'skip') {
+                continue;
             }
             $body = $driver->get_object($opts, (string) $key);
             if (is_wp_error($body)) {
+                self::restore_sidecars($moved);
                 return $body;
             }
+            if (!is_string($body)) {
+                self::restore_sidecars($moved);
+                return new WP_Error('wpsss_get', '读远端失败：' . $rel);
+            }
+            if ($exists && self::same_bytes($dest, $body)) {
+                continue;
+            }
+            if ($exists && $on_exist === 'rename') {
+                $side = self::sidecar_path($dest);
+                if (!@rename($dest, $side)) {
+                    self::restore_sidecars($moved);
+                    return new WP_Error('wpsss_rename', '挪不开本地文件：' . basename($dest));
+                }
+                $moved[] = [$side, $dest];
+            }
             if (file_put_contents($dest, $body) === false) {
+                self::restore_sidecars($moved);
                 return new WP_Error('wpsss_write', '写本地失败：' . $rel);
             }
         }

@@ -124,6 +124,57 @@ wpsss_assert((bool) preg_match('/image_get_intermediate_size/', $offload_src), '
 wpsss_assert((bool) preg_match('/image_downsize/', $offload_src), 'image_downsize hook in Offload');
 wpsss_assert((bool) preg_match('/wp_get_attachment_image_src/', $offload_src), 'image_src hook in Offload');
 wpsss_assert((bool) preg_match('/wp_prepare_attachment_for_js/', $media_src), 'js hook in Media');
+wpsss_assert((bool) preg_match('/widget_text/', $offload_src), 'widget_text hook');
+wpsss_assert((bool) preg_match('/widget_block_content/', $offload_src), 'widget_block hook');
+wpsss_assert((bool) preg_match('/term_description/', $offload_src), 'term_description hook');
+wpsss_assert((bool) preg_match('/the_content_feed/', $offload_src), 'feed hook');
+wpsss_assert((bool) preg_match('/rest_prepare_attachment/', $offload_src), 'rest attachment hook');
+
+wpsss_assert(Wpsss_Offload::should_put_path('/var/www/uploads/2026/09/a.jpg') === true, 'jpg allowed');
+wpsss_assert(Wpsss_Offload::should_put_path('/var/www/uploads/evil.php') === false, 'php denied');
+wpsss_assert(Wpsss_Offload::should_put_path('/var/www/uploads/.htaccess') === false, 'htaccess denied');
+wpsss_assert(Wpsss_Offload::is_denied_path('/var/www/uploads/x.php') === true, 'denied path php');
+wpsss_assert(Wpsss_Offload::should_put_path('/var/www/uploads/a.svg', ['exclude_ext' => 'svg,zip']) === false, 'exclude svg');
+wpsss_assert(Wpsss_Offload::should_put_path('/var/www/uploads/a.jpg', ['exclude_ext' => 'svg,zip']) === true, 'exclude does not hit jpg');
+wpsss_assert(Wpsss_Offload::is_denied_path('/var/www/uploads/a.svg') === false, 'svg not hard-denied');
+
+wpsss_assert(Wpsss_Offload::sanitize_on_exist('rename') === 'rename', 'sanitize rename');
+wpsss_assert(Wpsss_Offload::sanitize_on_exist('nope') === 'skip', 'sanitize fallback skip');
+$side = Wpsss_Offload::sidecar_path('/tmp/uploads/photo.jpg', '20260920-110000');
+wpsss_assert($side === '/tmp/uploads/photo-local-20260920-110000.jpg', 'sidecar timestamp name');
+$dir = sys_get_temp_dir() . '/wpsss-same-' . getmypid();
+if (!is_dir($dir)) {
+    mkdir($dir, 0777, true);
+}
+$same = $dir . '/a.jpg';
+file_put_contents($same, 'abc');
+wpsss_assert(Wpsss_Offload::same_bytes($same, 'abc') === true, 'same bytes match');
+wpsss_assert(Wpsss_Offload::same_bytes($same, 'abcd') === false, 'same bytes size mismatch');
+unlink($same);
+rmdir($dir);
+wpsss_assert(strpos($offload_src, 'sanitize_on_exist') !== false, 'pull has on-exist');
+wpsss_assert(strpos($offload_src, 'sidecar_path') !== false, 'pull has sidecar rename');
+wpsss_assert(strpos($offload_src, 'restore_sidecars') !== false, 'pull restores sidecar on fail');
+wpsss_assert(strpos($offload_src, 'key_fits_current_prefix') !== false, 'pull checks key prefix');
+wpsss_assert(strpos($offload_src, '删桶不能只补缺失') !== false, 'pull rejects delete+skip');
+wpsss_assert(Wpsss_Offload::key_fits_current_prefix('2026/09/a.jpg', []) === true, 'empty prefix always fits');
+wpsss_assert(Wpsss_Offload::key_fits_current_prefix('wp/2026/09/a.jpg', ['object_prefix' => 'wp']) === true, 'matching prefix fits');
+wpsss_assert(Wpsss_Offload::key_fits_current_prefix('2026/09/a.jpg', ['object_prefix' => 'wp']) === false, 'missing prefix blocked');
+$roll = sys_get_temp_dir() . '/wpsss-roll-' . getmypid();
+if (!is_dir($roll)) {
+    mkdir($roll, 0777, true);
+}
+$dest = $roll . '/photo.jpg';
+$side = $roll . '/photo-local.jpg';
+file_put_contents($side, 'old');
+Wpsss_Offload::restore_sidecars([[$side, $dest]]);
+wpsss_assert(is_file($dest) && !is_file($side) && file_get_contents($dest) === 'old', 'restore sidecar when dest gone');
+file_put_contents($side, 'older');
+Wpsss_Offload::restore_sidecars([[$side, $dest]]);
+wpsss_assert(is_file($dest) && file_get_contents($dest) === 'old' && is_file($side), 'restore skips if dest exists');
+unlink($dest);
+unlink($side);
+rmdir($roll);
 
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");

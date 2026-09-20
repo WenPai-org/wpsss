@@ -60,10 +60,11 @@ final class Wpsss_Ops
      * } $row
      * @return array<string, mixed>
      */
-    public static function classify_row(array $row, string $expected_host): array
+    public static function classify_row(array $row, string $expected_host, array $opts = []): array
     {
         $url = (string) ($row['url'] ?? '');
         $host = self::host_of($url);
+        $key = (string) ($row['key'] ?? '');
         $flags = [];
         if (!empty($row['offloaded']) && empty($row['local_exists'])) {
             $flags[] = 'local_missing';
@@ -76,6 +77,9 @@ final class Wpsss_Ops
         }
         if ((string) ($row['error'] ?? '') !== '') {
             $flags[] = 'failed';
+        }
+        if ($key !== '' && !empty($row['offloaded']) && class_exists('Wpsss_Offload') && method_exists('Wpsss_Offload', 'key_fits_current_prefix') && !Wpsss_Offload::key_fits_current_prefix($key, $opts)) {
+            $flags[] = 'prefix_mismatch';
         }
         return [
             'id' => (int) ($row['id'] ?? 0),
@@ -94,7 +98,8 @@ final class Wpsss_Ops
      *   local_missing: array<int, array<string, mixed>>,
      *   host_mismatch: array<int, array<string, mixed>>,
      *   http: array<int, array<string, mixed>>,
-     *   failed: array<int, array<string, mixed>>
+     *   failed: array<int, array<string, mixed>>,
+     *   prefix_mismatch: array<int, array<string, mixed>>
      * }
      */
     public function scan(int $limit = 40): array
@@ -116,6 +121,7 @@ final class Wpsss_Ops
             'host_mismatch' => [],
             'http' => [],
             'failed' => [],
+            'prefix_mismatch' => [],
         ];
         foreach (array_map('intval', $ids) as $id) {
             $file = get_attached_file($id);
@@ -130,7 +136,7 @@ final class Wpsss_Ops
                 'local_exists' => is_string($file) && $file !== '' && file_exists($file),
                 'url' => $url,
                 'error' => Wpsss_Library::last_error($id),
-            ], $expected);
+            ], $expected, $opts);
             $out['checked']++;
             foreach ($row['flags'] as $flag) {
                 if (isset($out[$flag]) && count($out[$flag]) < 12) {
@@ -177,14 +183,24 @@ final class Wpsss_Ops
             'expected_host' => $expected,
             'host_ok' => $expected === '' || $host === '' || $host === $expected,
             'http' => strpos($url, 'http://') === 0,
-            'notes' => self::diagnose_notes($found, $parsed['kind'], $host, $expected),
+            'notes' => self::diagnose_notes(
+                $found,
+                $parsed['kind'],
+                $host,
+                $expected,
+                is_string($file) && $file !== '' && file_exists($file),
+                $found && Wpsss_Library::is_offloaded($id),
+                $found ? (string) get_post_meta($id, Wpsss_Library::META_KEY, true) : '',
+                $opts
+            ),
         ];
     }
 
     /**
+     * @param array<string, string> $opts
      * @return string[]
      */
-    public static function diagnose_notes(bool $found, string $kind, string $host, string $expected): array
+    public static function diagnose_notes(bool $found, string $kind, string $host, string $expected, bool $local_exists = true, bool $offloaded = false, string $key = '', array $opts = []): array
     {
         $notes = [];
         if ($kind === 'empty') {
@@ -199,6 +215,15 @@ final class Wpsss_Ops
         }
         if ($found && $host === '' && $expected === '') {
             $notes[] = '当前没有对外地址。检查自定义域名或桶设置。';
+        }
+        if ($found && $offloaded && !$local_exists) {
+            $notes[] = '本地文件不在。到迁移用「只补缺失」拉回。';
+        }
+        if ($found && $offloaded && $local_exists) {
+            $notes[] = '拉回只写磁盘，前台仍走桶。要改地址请解除标记或拉回并删除。本地已有时可旁路改名。';
+        }
+        if ($found && $offloaded && $key !== '' && class_exists('Wpsss_Offload') && method_exists('Wpsss_Offload', 'key_fits_current_prefix') && !Wpsss_Offload::key_fits_current_prefix($key, $opts)) {
+            $notes[] = '对象键对不上当前前缀。换过桶或前缀后不要直接拉回。';
         }
         return $notes;
     }

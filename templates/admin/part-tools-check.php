@@ -11,25 +11,26 @@ defined('ABSPATH') || exit;
       <span class="tile"><?php echo Wpsss_Icons::svg('equalizer'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('媒体体检', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('只读扫描最近一批附件：本地缺失、对外主机不一致、http 明文、失败标记。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('只读扫描最近一批附件：本地缺失、对外主机不一致、http 明文、失败标记、前缀不对。', 'wpsss'); ?></p>
       </div>
     </div>
     <?php if ($scan !== []) : ?>
       <div class="notice info">
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html(sprintf(
-            '已检查 %d 个。本地缺失 %d，主机不一致 %d，http %d，失败 %d。',
+            '已检查 %d 个。本地缺失 %d，主机不一致 %d，http %d，失败 %d，前缀不对 %d。',
             (int) ($scan['checked'] ?? 0),
             count($scan['local_missing'] ?? []),
             count($scan['host_mismatch'] ?? []),
             count($scan['http'] ?? []),
-            count($scan['failed'] ?? [])
+            count($scan['failed'] ?? []),
+            count($scan['prefix_mismatch'] ?? [])
         )); ?></span>
       </div>
       <?php if (!empty($scan['expected_host'])) : ?>
         <p class="meta"><?php echo esc_html(sprintf('当前对外主机：%s', $scan['expected_host'])); ?></p>
       <?php endif; ?>
-      <?php foreach (['local_missing' => '本地文件不在', 'host_mismatch' => '对外主机不一致', 'http' => '仍是 http', 'failed' => '带失败标记'] as $flag => $label) : ?>
+      <?php foreach (['local_missing' => '本地文件不在', 'host_mismatch' => '对外主机不一致', 'http' => '仍是 http', 'failed' => '带失败标记', 'prefix_mismatch' => '对象键对不上前缀'] as $flag => $label) : ?>
         <?php $rows = isset($scan[$flag]) && is_array($scan[$flag]) ? $scan[$flag] : []; ?>
         <?php if ($rows === []) { continue; } ?>
         <ul class="wpsss-log">
@@ -41,6 +42,12 @@ defined('ABSPATH') || exit;
           <?php endforeach; ?>
         </ul>
       <?php endforeach; ?>
+      <?php if (!empty($scan['local_missing'])) : ?>
+        <p class="meta"><a href="<?php echo esc_url($url('tools', ['panel' => 'move'])); ?>"><?php echo esc_html__('到迁移用「只补缺失」拉回', 'wpsss'); ?></a></p>
+      <?php endif; ?>
+      <?php if (!empty($scan['prefix_mismatch'])) : ?>
+        <p class="meta"><?php echo esc_html__('前缀不对的附件不要直接拉回，先核对象键或改回原来的前缀。', 'wpsss'); ?></p>
+      <?php endif; ?>
     <?php endif; ?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_scan" />
@@ -93,6 +100,12 @@ defined('ABSPATH') || exit;
               (string) ($diagnose['key'] !== '' ? $diagnose['key'] : __('无', 'wpsss')),
               !empty($diagnose['http']) ? ' · http' : ''
           )); ?></p>
+          <?php if (!empty($diagnose['notes'])) : ?>
+            <p class="meta"><?php echo esc_html(implode(' ', $diagnose['notes'])); ?></p>
+          <?php endif; ?>
+          <?php if (!empty($diagnose['offloaded']) && empty($diagnose['local_exists'])) : ?>
+            <p class="meta"><a href="<?php echo esc_url($url('tools', ['panel' => 'move'])); ?>"><?php echo esc_html__('到迁移用「只补缺失」拉回', 'wpsss'); ?></a></p>
+          <?php endif; ?>
         <?php endif; ?>
       <?php endif; ?>
       <div class="card-foot start">

@@ -136,7 +136,17 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('哪些文件不会进桶', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('php、htaccess 等可执行文件始终拒绝。高级设置「不进桶的扩展名」可再排除 svg、zip 等。打开「远端已有则跳过」后，补传不会覆盖桶里已有对象。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('拉回会不会删掉桶里的文件', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认不会。勾选删除后会出现警示：桶里没有回收站。请先只拉回、在媒体库打开核对，并确认本地还有副本，再勾「本地已经打开核对过」。媒体库永久删除附件也会同时删桶，删除前会再问一次。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('默认不会。勾选删除后会出现警示：桶里没有回收站。请先只拉回、在媒体库打开核对，并确认本地还有副本，再勾「本地已经打开核对过」。删桶不能只补缺失。媒体库永久删除附件也会同时删桶，删除前会再问一次。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('本地已有同名文件时拉回会怎样', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('默认只补缺失。旁路改名会把本地文件改成 原名-local-时间，再写入桶里那份；媒体库文件名和桶键不变。覆盖会直接替换，覆盖前没有回收站。内容相同则不重复写盘。媒体库单条/批量拉回使用旁路改名。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('拉回是拉一批还是拉一个', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('「下一批」= 已进桶的从新到旧，一次最多 20 个，再点就继续。「指定一个」= 只拉媒体库里的那一个，编号在媒体库点开文件后能看到。以前页脚那个「附件 / 全部」就是这两件事，不是第四种拉回方式。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('拉回后前台地址会变吗', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('默认不变。拉回只写 uploads，进桶标记还在则 URL 仍是桶。要改回本地请解除标记，或拉回并删除桶内对象。改完清页面缓存。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('改写会动序列化字段吗', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('会改正文、摘要和 post meta（含序列化）。不改 options、theme_mods、磁盘上的 CSS。写完请清页面缓存和 CDN。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('换过桶或前缀再拉回会怎样', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('对象键对不上当前前缀时，插件会停住，避免写到错误目录。到排障看「前缀不对」，先核对象键或改回原来的前缀。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('前台裂图或地址还是旧主机', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('到工具 → 排障：用「诊断一条地址」看主机是否对得上，「媒体体检」扫本地缺失和 http 明文，「抽检远端」看桶里对象还在不在。文章里的旧地址到迁移里改写，先预览再写入。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('想停用插件但先不删桶', 'wpsss'); ?></dt>
@@ -161,7 +171,9 @@ wp sss doctor
 wp sss probe
 wp sss set --from-env
 wp sss offload --dry-run
-wp sss pull --dry-run
+wp sss pull --dry-run --on-exist=skip
+wp sss pull --before=100
+wp sss offload --before=100
 wp sss scan
 wp sss diagnose 128
 wp sss rewrite

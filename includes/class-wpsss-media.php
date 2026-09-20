@@ -124,7 +124,7 @@ final class Wpsss_Media
                 admin_url('admin-post.php?action=wpsss_pull_one&id=' . (int) $post->ID),
                 'wpsss_pull_one_' . (int) $post->ID
             );
-            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？已有同名文件会旁路改名成 原名-local-时间，再写入桶里那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             return $actions;
         }
         $url = wp_nonce_url(
@@ -155,7 +155,7 @@ final class Wpsss_Media
             $ok = 0;
             $fail = 0;
             foreach ($post_ids as $id) {
-                $result = $this->offload->pull_attachment((int) $id, false);
+                $result = $this->offload->pull_attachment((int) $id, false, 'rename');
                 if (is_wp_error($result)) {
                     $fail++;
                     continue;
@@ -281,7 +281,7 @@ final class Wpsss_Media
                 admin_url('admin-post.php?action=wpsss_pull_one&id=' . $id),
                 'wpsss_pull_one_' . $id
             );
-            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？已有同名文件会旁路改名成 原名-local-时间，再写入桶里那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             echo '<p class="wpsss-metabox-meta">' . esc_html__('从媒体库永久删除此附件时，桶内对象会一并删除。', 'wpsss') . '</p>';
         } else {
             $href = wp_nonce_url(

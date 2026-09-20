@@ -37,6 +37,7 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 | 签名 | `class-wpsss-*-signer.php` | OSS / COS q-sign / KODO / OBS。改完 `php tests/run.php` |
 | URL / 样式 | `class-wpsss-url.php` | 正文运行时改写、原图保护 |
 | 四家请求 | `drivers/class-wpsss-driver-*.php` | 已注册 OSS/COS/KODO/OBS |
+| 拉回 / 体检 / 诊断 | `class-wpsss-ops.php` + `part-tools-*.php` | 下一批/指定一个；写盘≠改地址；`wp sss pull --before=` |
 | CLI | `class-wpsss-cli.php` | 密钥不 echo |
 
 `Wpsss_Driver`：`id` `label` `is_configured` `put_object` `delete_objects` `probe`。

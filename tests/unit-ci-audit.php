@@ -24,6 +24,12 @@ wpsss_assert(strpos($help, '主账号 APPID') !== false, 'help 主账号 APPID')
 wpsss_assert(strpos($help, '七牛') !== false, 'help 七牛');
 wpsss_assert(strpos($help, '不限定厂商') !== false || strpos($help, '任意 CDN') !== false || strpos($help, '不是。插件只改对外主机名') !== false, 'help custom domain any cdn');
 wpsss_assert(strpos($help, '拉回会不会删掉桶里的文件') !== false, 'help pull delete confirm');
+wpsss_assert(strpos($help, '本地已有同名文件时拉回会怎样') !== false, 'help pull on-exist');
+wpsss_assert(strpos($help, '拉回是拉一批还是拉一个') !== false, 'help pull scope');
+wpsss_assert(strpos($help, '拉回后前台地址会变吗') !== false, 'help pull does not change url');
+wpsss_assert(strpos($help, '改写会动序列化字段吗') !== false, 'help rewrite serialized honesty');
+wpsss_assert(strpos($help, '换过桶或前缀再拉回会怎样') !== false, 'help prefix mismatch');
+wpsss_assert(strpos($help, '旁路改名') !== false, 'help pull rename');
 wpsss_assert(strpos($help, '没有回收站') !== false, 'help pull delete no trash');
 wpsss_assert(strpos($help, '诊断一条地址') !== false, 'help diagnose tool');
 wpsss_assert(strpos($help, '默认 V4') !== false, 'help oss v4');

@@ -258,8 +258,27 @@ if (!class_exists('Wpsss_Offload')) {
             return str_replace($from, $to, $text);
         }
 
-        public function pull_attachment(int $post_id, bool $delete_remote = false)
+        public static function sanitize_on_exist(string $mode): string
         {
+            return in_array($mode, ['skip', 'rename', 'overwrite'], true) ? $mode : 'skip';
+        }
+
+        public function plan_pull(int $post_id, string $on_exist = 'skip'): array
+        {
+            unset($post_id, $on_exist);
+            return [
+                'keys' => 1,
+                'missing' => 1,
+                'exists' => 0,
+                'would_write' => 1,
+                'would_skip' => 0,
+                'would_rename' => 0,
+            ];
+        }
+
+        public function pull_attachment(int $post_id, bool $delete_remote = false, string $on_exist = 'skip')
+        {
+            unset($post_id, $delete_remote, $on_exist);
             return true;
         }
     }
@@ -388,6 +407,8 @@ $GLOBALS['wpsss_postmeta'][11][Wpsss_Library::META_OFFLOADED] = '1';
 $pull = $lib->pull_batch(20, true);
 wpsss_assert($pull['ok'] === 1, 'pull_batch dry_run ok');
 wpsss_assert($pull['fail'] === 0 && $pull['skip'] === 0, 'pull_batch dry_run no fail/skip');
+wpsss_assert(($pull['cursor'] ?? 0) === 11, 'pull_batch cursor is min id');
+wpsss_assert(isset($pull['blocked']), 'pull_batch reports blocked');
 
 $ids = $lib->offloaded_ids(20);
 wpsss_assert($ids === [11], 'offloaded_ids returns stub ids');

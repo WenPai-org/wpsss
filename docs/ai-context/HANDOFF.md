@@ -2,6 +2,16 @@
 
 下一个 agent 从这里接着做。不要从零猜产品。
 
+## 现在（2026-09-20）
+
+- **0.8.0**，FeiCode `origin/main` 在推送本刀后更新（推前是 `4a4989c`）。
+- 工具页拆 **日常 / 排障 / 迁移**。拉回两问：**拉哪些**（下一批 / 指定一个）+ **本地已有时**（只补缺失 / 旁路改名 / 覆盖）。不要再做成「附件 / 全部」数字框。
+- **拉回只写磁盘**。进桶标记还在则网页地址仍是桶。要改地址：解除标记，或拉回并删除。
+- 旁路改名失败会把 sidecar 搬回正式名。对象键对不上当前前缀则停。改写会动正文、摘要、post meta（含序列化）；不改 options / theme_mods / 磁盘 CSS。
+- 补传/拉回按 ID 倒序续跑，可「从头」。CLI：`wp sss pull --before=` / `wp sss offload --before=`。
+- 沙箱 Mac Studio `:8895`。测试桶 `wenpai-wpsss-test`。茶馆试点已装：`keep_local=1`，`custom_domain=https://m.wptea.com`，桶 `wenpai-wpsss-wptea`，**不要写** `upload_url_path`。本刀未 overlay tea，除非人再批。
+- leftover 座位（wenpai 墨图爱可等）**不要 vm-return**。Mac 不要 Write `~/Projects/*`。
+
 ## 现在（2026-09-19）
 
 - **0.8.0**（`28d6c9a`）：国内 OSS/COS/KODO/OBS + 火山 TOS + S3 兼容 + GCS HMAC 卡。自写 REST / SigV4，不粘 SDK。
@@ -28,13 +38,17 @@
 
 `rewrite_url` 按 URL 文件名取对象键（thumb / original / intermediate 不再全回原图）。`serve_object_url` 把阿里 `x-oss-process` 写进签名串，避免 `??`。媒体库 JS 的 sizes 走同一条改写。未接 CyberCDN / V4 / RAM。
 
+## 2026-09-20 - [Cursor] 拉回运营坑 + 范围拆开
+
+人批：完整任务计划后做，再核验；「附件 / 全部」看不懂。计划 `.specs/F-pull-ops-pits.md`（linuxjoy SoT）。写盘≠改地址、sidecar 回滚、前缀闸、改写诚实、Woo 删桶句、批次续跑。拉回 UI 改成「下一批 / 指定一个」。Studio 已点验。茶馆未再 overlay。
+
 ## 建议下一刀（等人说再做）
 
-1. 自定义域 + 现成 CyberCDN Zone
+1. 人批后再 overlay 茶馆（回退点仍是 `wpsss.bak-20260920-1126`）
 2. COS/KODO/OBS 等测试桶 probe
-3. CDN 按 URL 清边缘（工具页占位接真 API）
+3. CDN 按 URL 清边缘（不做桶孤儿 GC）
 
-不要装 wptea。不要 JSON 改 `active_plugins`。
+默认不要新装 wptea。茶馆试点已经在。不要 JSON 改 `active_plugins`。
 
 ## 会话里已经否决
 
