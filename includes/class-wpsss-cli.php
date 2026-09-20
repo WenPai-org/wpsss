@@ -180,7 +180,7 @@ final class Wpsss_CLI
         if (isset($incoming['keep_local']) && (string) $incoming['keep_local'] === '0'
             && !self::can_turn_off_keep_local($assoc_args)
         ) {
-            WP_CLI::error('关 keep_local 须人批。确认后加 --allow-no-local。');
+            WP_CLI::error('关闭本地备份须管理员批准。确认后加 --allow-no-local。');
         }
         if (self::can_turn_off_keep_local($assoc_args)) {
             $incoming['_allow_no_local'] = '1';
@@ -229,7 +229,7 @@ final class Wpsss_CLI
             WP_CLI::warning($line);
         }
         if ($result['fail'] > 0) {
-            WP_CLI::error('有附件没传上去。');
+            WP_CLI::error('仍有附件未上传成功。');
         }
         WP_CLI::success($dry ? 'dry-run 结束。' : '补传结束。');
     }
@@ -299,7 +299,7 @@ final class Wpsss_CLI
             WP_CLI::warning($line);
         }
         if ($result['fail'] > 0) {
-            WP_CLI::error('有附件没拉回来。');
+            WP_CLI::error('仍有附件未拉回成功。');
         }
         WP_CLI::success($dry ? 'dry-run 结束。' : '拉回结束。');
     }
@@ -481,10 +481,10 @@ final class Wpsss_CLI
         } elseif ($bucket === 'wenpai-wpsss-test') {
             $oks[] = 'bucket=wenpai-wpsss-test';
         } else {
-            $warnings[] = 'bucket 不是测试桶 wenpai-wpsss-test。生产须人批。';
+            $warnings[] = 'bucket 不是测试桶 wenpai-wpsss-test。生产须另行审批。';
         }
         if (($opts['keep_local'] ?? '') !== '1') {
-            $blockers[] = 'keep_local=0。关掉须人批。';
+            $blockers[] = 'keep_local=0。关闭须管理员批准。';
         } else {
             $oks[] = 'keep_local=1';
         }
@@ -535,7 +535,7 @@ final class Wpsss_CLI
     public static function anonymous_read_message(int $code): string
     {
         if ($code === 403 || $code === 401) {
-            return '匿名读不到对象（HTTP ' . $code . '）。公开读会裂图。可改「签名访问」，或开桶公共读 / 自定义域。';
+            return '匿名无法读取对象（HTTP ' . $code . '）。公开读模式下前台图片可能无法显示。可改用「签名访问」，或开启桶公共读 / 配置自定义域名。';
         }
         if ($code === 0) {
             return '匿名探测没返回状态。不能当可读。';
@@ -624,8 +624,8 @@ final class Wpsss_CLI
         $map = [
             'bucket 空。先 wp sss set --from-env' => '尚未填写存储桶名称',
             'bucket=wenpai-wpsss-test' => '当前为测试桶 wenpai-wpsss-test',
-            'bucket 不是测试桶 wenpai-wpsss-test。生产须人批。' => '当前存储桶不是测试桶，生产环境须另行审批',
-            'keep_local=0。关掉须人批。' => '本地备份已关闭，须管理员批准',
+            'bucket 不是测试桶 wenpai-wpsss-test。生产须另行审批。' => '当前存储桶不是测试桶，生产环境须另行审批',
+            'keep_local=0。关闭须管理员批准。' => '本地备份已关闭，须管理员批准',
             'keep_local=1' => '本地备份已开启',
             '密钥未齐。wp sss set --from-env' => '访问密钥尚未配置完整',
             '密钥已配置（不回显）' => '访问密钥已保存',

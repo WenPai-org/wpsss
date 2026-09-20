@@ -120,7 +120,7 @@ defined('ABSPATH') || exit;
       <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('抽检远端对象', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('对已进桶的附件做 HEAD。库里有标记但桶里 404，多半是人手删过对象或换过桶。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('对已进桶的附件执行 HEAD 请求。库中有标记但桶内返回 404，通常是对象已被手动删除或更换过存储桶。', 'wpsss'); ?></p>
       </div>
     </div>
     <?php if ($head !== []) : ?>

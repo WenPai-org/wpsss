@@ -107,7 +107,7 @@ $exist_modes = [
       <div class="wpsss-caution js-wpsss-pull-delete-confirm wpsss-gate-extra" hidden>
         <div class="notice bad">
           <?php echo Wpsss_Icons::svg('info'); ?>
-          <span><strong><?php echo esc_html__('桶里没有回收站。', 'wpsss'); ?></strong> <?php echo esc_html__('对象存储控制台通常也找不回来。文章、缩略图、付费下载若还指向桶地址，会立刻裂图。', 'wpsss'); ?><?php echo class_exists('WooCommerce', false) ? ' ' . esc_html__('Woo 付费下载若仍打桶，删桶等于动货款。', 'wpsss') : ''; ?></span>
+          <span><strong><?php echo esc_html__('桶里没有回收站。', 'wpsss'); ?></strong> <?php echo esc_html__('对象存储控制台通常也无法恢复。文章、缩略图、付费下载若仍指向桶地址，删除后前台图片将立即无法显示。', 'wpsss'); ?><?php echo class_exists('WooCommerce', false) ? ' ' . esc_html__('Woo 付费下载若仍指向桶地址，删除对象将影响订单交付。', 'wpsss') : ''; ?></span>
         </div>
         <p class="wpsss-backup-note"><?php echo esc_html__('先做完这三步，再勾下面：', 'wpsss'); ?></p>
         <ol class="wpsss-backup-steps">
@@ -213,16 +213,16 @@ $exist_modes = [
         <span><?php echo esc_html__('只去掉插件标记，不删桶。前台可能改回本地 uploads 地址。改完请清页面缓存。', 'wpsss'); ?></span>
       </div>
       <p class="wpsss-backup-note"><?php echo $keep_on
-          ? esc_html__('备份：本地备份开着，前台多半改回 uploads。先确认本地文件还在。', 'wpsss')
-          : esc_html__('备份：本地备份已关。解除后前台可能裂图。先拉回，或确认本地还有文件。', 'wpsss'); ?></p>
+          ? esc_html__('备份：本地备份已开启，前台通常会改回 uploads 地址。请先确认本地文件仍在。', 'wpsss')
+          : esc_html__('备份：本地备份已关闭。解除后若本地无文件，前台图片可能无法显示。请先拉回，或确认本地仍有副本。', 'wpsss'); ?></p>
       <div class="chk wpsss-gate">
         <label><input type="checkbox" name="wpsss_release_confirm" value="1" /> <?php echo $keep_on
             ? esc_html__('我明白前台会改回本地地址', 'wpsss')
-            : esc_html__('我确认本地还有文件，或接受前台可能裂图', 'wpsss'); ?></label>
+            : esc_html__('我确认本地仍有文件，或接受前台图片可能无法显示', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('每批最多 20 个。此操作不删桶。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不删桶。若本地没有文件，前台可能裂图。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不删桶。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
       </div>
     </form>
   </section>

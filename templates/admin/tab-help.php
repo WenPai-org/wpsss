@@ -124,7 +124,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('腾讯云 APPID 填谁的', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('填创建存储桶的主账号 APPID，不是子账户的。桶名已含 APPID 时可留空。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('七牛为什么必须填自定义域名', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('KODO 默认域不能稳定给访客用。自定义域留空则对外地址为空，前台会裂图。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('KODO 默认域不能稳定给访客用。自定义域留空则对外地址为空，前台图片可能无法显示。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('自定义域名是不是只能接某一家 CDN', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('不是。插件只改对外主机名。阿里云 CDN、腾讯云 CDN、Cloudflare、自建边缘或 CyberCDN 都是在各自控制台把该域名指到桶或边缘，这里填同一个 HTTPS 地址。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('内容审核做了什么', 'wpsss'); ?></dt>
@@ -147,7 +147,7 @@ $on = (bool) $view['configured'];
         <dd><?php echo esc_html__('会改正文、摘要和 post meta（含序列化）。不改 options、theme_mods、磁盘上的 CSS。写完请清页面缓存和 CDN。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('换过桶或前缀再拉回会怎样', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('对象键对不上当前前缀时，插件会停住，避免写到错误目录。到排障看「前缀不对」，先核对象键或改回原来的前缀。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('前台裂图或地址还是旧主机', 'wpsss'); ?></dt>
+        <dt><?php echo esc_html__('前台图片无法显示或地址仍是旧主机', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('到工具 → 排障：用「诊断一条地址」看主机是否对得上，「媒体体检」扫本地缺失和 http 明文，「抽检远端」看桶里对象还在不在。文章里的旧地址到迁移里改写，先预览再写入。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('想停用插件但先不删桶', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('用「解除进桶标记」。插件不再改写这些附件，对象仍留在桶里。卸载插件才会清掉本机选项。', 'wpsss'); ?></dd>
@@ -188,12 +188,12 @@ wp sss delete &lt;对象键&gt; --yes</code></pre>
       <span class="tile"><?php echo Wpsss_Icons::svg('chat'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('需要更多帮助', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('产品文档与工单支持在文派官网。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
       </div>
     </div>
     <div class="card-foot start">
-      <a class="btn btn-secondary" href="https://www.wenpai.org/" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('文派官网', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="https://www.wenpai.org/support/" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
+      <a class="btn btn-secondary" href="<?php echo esc_url(WPSSS_PRODUCT_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('产品官网', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
     </div>
   </section>
 </div>

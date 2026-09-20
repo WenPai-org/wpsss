@@ -273,7 +273,7 @@ final class Wpsss_Admin
             $this->redirect_tools('error', '指定一个时请填写媒体库编号。', 'move');
         }
         if ($apply && $on_exist !== 'skip' && empty($_POST['wpsss_pull_confirm'])) {
-            $this->redirect_tools('error', '拉回须勾确认。', 'move');
+            $this->redirect_tools('error', '请先勾选确认项。', 'move');
         }
         if ($apply && $delete && empty($_POST['wpsss_pull_delete_confirm'])) {
             $this->redirect_tools('error', '删除远端须再确认。', 'move');
@@ -354,7 +354,7 @@ final class Wpsss_Admin
         check_admin_referer('wpsss_rewrite');
         $apply = !empty($_POST['wpsss_rewrite_apply']);
         if ($apply && empty($_POST['wpsss_rewrite_confirm'])) {
-            $this->redirect_tools('error', '写进文章须勾确认。', 'move');
+            $this->redirect_tools('error', '写入数据库前请先勾选确认项。', 'move');
         }
         $from = isset($_POST['wpsss_rewrite_from']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_from'])) : '';
         $to = isset($_POST['wpsss_rewrite_to']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_to'])) : '';
@@ -425,7 +425,7 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_clear_errors');
         if (empty($_POST['wpsss_clear_confirm'])) {
-            $this->redirect_tools('error', '清除失败标记须勾确认。', 'check');
+            $this->redirect_tools('error', '清除失败标记前请先勾选确认项。', 'check');
         }
         $result = (new Wpsss_Ops($this->plugin))->clear_errors(50);
         $this->redirect_tools('ok', sprintf('已清除 %d 条失败标记。', $result['ok']), 'check');
@@ -438,7 +438,7 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_release');
         if (empty($_POST['wpsss_release_confirm'])) {
-            $this->redirect_tools('error', '解除标记须勾确认。', 'move');
+            $this->redirect_tools('error', '解除标记前请先勾选确认项。', 'move');
         }
         $result = (new Wpsss_Ops($this->plugin))->release_flags(20, true);
         if ($result['errors'] !== []) {
@@ -519,7 +519,7 @@ final class Wpsss_Admin
             wp_safe_redirect($this->url('settings', [
                 'mode' => 'simple',
                 'wpsss_level' => 'error',
-                'wpsss_notice' => '关掉本地备份须人批。',
+                'wpsss_notice' => '关闭本地备份须管理员批准。',
             ]));
             exit;
         }

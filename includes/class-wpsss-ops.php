@@ -280,7 +280,7 @@ final class Wpsss_Ops
     public function release_flags(int $limit, bool $confirm): array
     {
         if (!$confirm) {
-            return ['ok' => 0, 'skip' => 0, 'errors' => ['解除标记须勾确认。']];
+            return ['ok' => 0, 'skip' => 0, 'errors' => ['解除标记前请先勾选确认项。']];
         }
         $ids = $this->plugin->library()->offloaded_ids($limit > 0 ? min($limit, 40) : 20);
         $ok = 0;

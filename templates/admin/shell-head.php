@@ -32,7 +32,7 @@ $tabs = [
     <?php endif; ?>
     <div class="wpcy-head-right">
       <a class="btn btn-ghost<?php echo $tab === 'help' ? ' is-active' : ''; ?>" href="<?php echo esc_url($url('help')); ?>"><?php echo Wpsss_Icons::svg('help'); ?><?php echo esc_html__('帮助', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="https://www.wenpai.org/support/" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('chat'); ?><?php echo esc_html__('反馈', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('chat'); ?><?php echo esc_html__('反馈', 'wpsss'); ?></a>
     </div>
   </div>
 </div></div>

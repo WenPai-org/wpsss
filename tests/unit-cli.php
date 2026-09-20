@@ -67,7 +67,7 @@ wpsss_assert(Wpsss_CLI::classify_anonymous_http(200) === 'ok', 'anon 200 is ok')
 wpsss_assert(Wpsss_CLI::classify_anonymous_http(403) === 'warn', 'anon 403 is warn');
 wpsss_assert(Wpsss_CLI::classify_anonymous_http(0) === 'warn', 'anon 0 is warn');
 wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '403') !== false, 'anon message names 403');
-wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '裂图') !== false, 'anon message says broken image');
+wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '图片可能无法显示') !== false, 'anon message says broken image');
 wpsss_assert(Wpsss_CLI::classify_anonymous_http(403, 'signed') === 'ok', 'signed 403 is ok');
 
 if ($failed > 0) {

@@ -307,14 +307,14 @@ final class Wpsss_Media
             $ok = sanitize_key((string) $_GET['wpsss_offload']) === 'ok';
             $this->render_flash(
                 $ok ? 'ok' : 'warn',
-                $ok ? __('已传到对象存储。', 'wpsss') : __('没传上去，看本地文件和桶权限。', 'wpsss')
+                $ok ? __('已传到对象存储。', 'wpsss') : __('上传失败，请检查本地文件与桶权限。', 'wpsss')
             );
         }
         if (isset($_GET['wpsss_pull'])) {
             $ok = sanitize_key((string) $_GET['wpsss_pull']) === 'ok';
             $this->render_flash(
                 $ok ? 'ok' : 'warn',
-                $ok ? __('已拉回本地。', 'wpsss') : __('没拉回来，看桶权限和本地磁盘。', 'wpsss')
+                $ok ? __('已拉回本地。', 'wpsss') : __('拉回失败，请检查桶权限与本地磁盘。', 'wpsss')
             );
         }
         if (!isset($_GET['wpsss_bulk_ok'])) {

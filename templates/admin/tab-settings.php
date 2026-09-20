@@ -173,7 +173,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
         <?php if ($opts['custom_domain'] !== '') : ?>
           <span class="scope"><?php echo esc_html($opts['custom_domain']); ?></span>
         <?php else : ?>
-          <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('去填写', 'wpsss'); ?></a>
+          <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
         <?php endif; ?>
       </div>
     </div>
@@ -219,7 +219,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
         <div class="t"><?php echo esc_html__('对象访问', 'wpsss'); ?></div>
         <div class="d"><?php echo $url_access === 'signed'
             ? esc_html__('前台使用带时效的签名地址，适合私有桶', 'wpsss')
-            : esc_html__('依赖存储桶匿名可读；禁止匿名时前台会裂图', 'wpsss'); ?></div>
+            : esc_html__('依赖存储桶匿名可读；禁止匿名访问时前台图片可能无法显示', 'wpsss'); ?></div>
       </div>
       <div class="r">
         <form class="wpsss-toggle-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
