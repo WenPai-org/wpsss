@@ -279,6 +279,51 @@ wpsss_assert($GLOBALS['wpsss_switch_log'] === [2, 3], 'uninstall multisite switc
 wpsss_assert($GLOBALS['wpsss_restore_count'] === 2, 'uninstall multisite restores each site');
 wpsss_assert(!array_key_exists(Wpsss_Options::OPTION_KEY, $GLOBALS['wpsss_options_store']), 'uninstall multisite drops options');
 
+wpsss_assert(Wpsss_Options::sanitize_exclude_ext(' .SVG, zip; EXE php ') === 'svg,zip,exe,php', 'sanitize exclude_ext');
+wpsss_assert(Wpsss_Options::sanitize_exclude_ext('../etc') === '', 'sanitize exclude_ext drops path');
+wpsss_assert(Wpsss_Options::sanitize_cache_control('public, max-age=3600') === 'public, max-age=3600', 'sanitize cache_control ok');
+wpsss_assert(Wpsss_Options::sanitize_cache_control('no-store; script') === '', 'sanitize cache_control rejects junk');
+wpsss_assert(Wpsss_Options::object_cache_control(['url_access' => 'signed']) === 'private, max-age=3600', 'cache_control signed default');
+wpsss_assert(Wpsss_Options::object_cache_control(['url_access' => 'public', 'cache_control' => 'max-age=60']) === 'max-age=60', 'cache_control custom wins');
+
+$pack = Wpsss_Options::export_public([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'demo',
+    'access_key_id' => 'AKIAEXAMPLE',
+    'access_key_secret' => 'secret',
+    'oss_ram_role' => 'role',
+]);
+wpsss_assert($pack['plugin'] === 'wpsss', 'export names plugin');
+wpsss_assert(!isset($pack['options']['access_key_secret']), 'export drops secret');
+wpsss_assert(!isset($pack['options']['access_key_id']), 'export drops access key');
+wpsss_assert(!isset($pack['options']['oss_ram_role']), 'export drops ram role');
+wpsss_assert(($pack['options']['bucket'] ?? '') === 'demo', 'export keeps bucket');
+
+$GLOBALS['wpsss_options_store'] = [];
+$extra = Wpsss_Options::sanitize([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'mybucket',
+    'region' => 'oss-cn-hangzhou',
+    'keep_local' => '1',
+    'exclude_ext' => 'SVG, zip',
+    'skip_exist' => '1',
+    'cache_control' => 'public, max-age=86400',
+]);
+wpsss_assert($extra['exclude_ext'] === 'svg,zip', 'sanitize stores exclude_ext');
+wpsss_assert($extra['skip_exist'] === '1', 'sanitize stores skip_exist');
+wpsss_assert($extra['cache_control'] === 'public, max-age=86400', 'sanitize stores cache_control');
+
+$ui = Wpsss_Options::admin_ui([
+    'driver' => 'aliyun-oss',
+    'site_mode' => 'domestic',
+    'region' => 'oss-cn-hangzhou',
+    'bucket' => 'demo',
+]);
+wpsss_assert(($ui['savedDriver'] ?? '') === 'aliyun-oss', 'admin_ui saved driver');
+wpsss_assert(isset($ui['regions']['qcloud-cos']['cn']['ap-guangzhou']), 'admin_ui has COS regions');
+wpsss_assert(($ui['groupOrder']['domestic'] ?? []) === ['cn'], 'admin_ui domestic hides intl first');
+wpsss_assert(in_array('volc-tos', $ui['s3Family'] ?? [], true), 'admin_ui TOS is s3 family');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);
