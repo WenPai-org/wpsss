@@ -22,6 +22,12 @@ final class Wpsss_Admin
         add_action('admin_post_wpsss_probe', [$this, 'handle_probe']);
         add_action('admin_post_wpsss_offload', [$this, 'handle_offload']);
         add_action('admin_post_wpsss_offload_one', [$this, 'handle_offload_one']);
+        add_action('admin_post_wpsss_export', [$this, 'handle_export']);
+        add_action('admin_post_wpsss_scan', [$this, 'handle_scan']);
+        add_action('admin_post_wpsss_diagnose', [$this, 'handle_diagnose']);
+        add_action('admin_post_wpsss_headcheck', [$this, 'handle_headcheck']);
+        add_action('admin_post_wpsss_clear_errors', [$this, 'handle_clear_errors']);
+        add_action('admin_post_wpsss_release', [$this, 'handle_release']);
         add_action('admin_post_wpsss_rewrite', [$this, 'handle_rewrite']);
         add_action('admin_post_wpsss_pull', [$this, 'handle_pull']);
         add_action('admin_post_wpsss_pull_one', [$this, 'handle_pull_one']);
@@ -63,13 +69,17 @@ final class Wpsss_Admin
         $base = plugin_dir_url(WPSSS_FILE);
         wp_enqueue_style('wpsss-e', $base . 'assets/css/e.css', [], (string) filemtime(WPSSS_DIR . 'assets/css/e.css'));
         wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', ['wpsss-e'], (string) filemtime(WPSSS_DIR . 'assets/css/admin.css'));
+        wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', [], (string) filemtime(WPSSS_DIR . 'assets/js/admin.js'), true);
+        $ui = [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'inspectNonce' => wp_create_nonce('wpsss_inspect'),
+        ];
         if ($this->is_screen()) {
-            wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', [], (string) filemtime(WPSSS_DIR . 'assets/js/admin.js'), true);
-            wp_localize_script('wpsss-admin', 'wpsssAdmin', [
-                'ajaxUrl' => admin_url('admin-ajax.php'),
-                'inspectNonce' => wp_create_nonce('wpsss_inspect'),
-            ]);
+            $ui = array_merge($ui, Wpsss_Options::admin_ui(Wpsss_Options::get()));
+        } else {
+            $ui['copy'] = Wpsss_Options::admin_ui(Wpsss_Options::get())['copy'] ?? [];
         }
+        wp_localize_script('wpsss-admin', 'wpsssAdmin', $ui);
     }
 
     public function register_menu(): void
@@ -118,6 +128,7 @@ final class Wpsss_Admin
         $view = [
             'tab' => $tab,
             'mode' => $mode,
+            'panel' => $this->tools_panel(),
             'opts' => $opts,
             'driver' => $driver,
             'configured' => $configured,
@@ -128,6 +139,7 @@ final class Wpsss_Admin
             'stats' => $this->plugin->library()->stats(),
             'history' => Wpsss_History::all(),
             'rewrite' => get_transient($this->rewrite_transient_key()) ?: [],
+            'ops' => get_transient($this->ops_transient_key()) ?: [],
             'doctor' => ($configured && in_array($tab, ['overview', 'setup'], true)) ? Wpsss_CLI::doctor_report($opts) : [],
             'url' => [$this, 'url'],
             'setup_step' => $tab === 'setup' ? $this->setup_step() : 0,
@@ -170,7 +182,7 @@ final class Wpsss_Admin
         $settings = Wpsss_Options::get();
         $driver = $this->plugin->active_driver();
         if (!$driver->is_configured($settings)) {
-            $this->redirect('tools', 'empty', '先保存桶名和密钥再测。');
+            $this->redirect_tools('empty', '先保存桶名和密钥再测。', 'daily');
         }
 
         $result = $driver->probe($settings);
@@ -178,7 +190,7 @@ final class Wpsss_Admin
         if (!in_array($return_tab, ['tools', 'setup'], true)) {
             $return_tab = 'tools';
         }
-        $extra = $return_tab === 'setup' ? ['step' => '4'] : [];
+        $extra = $return_tab === 'setup' ? ['step' => '4'] : ['panel' => $this->tools_panel_from_request('daily')];
         if (is_wp_error($result)) {
             $this->redirect($return_tab, 'error', $result->get_error_message(), $extra);
         }
@@ -192,14 +204,16 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_offload');
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            $this->redirect('tools', 'empty', '先保存桶名和密钥再补传。');
+            $this->redirect_tools('empty', '先保存桶名和密钥再补传。', 'daily');
         }
-        $result = $this->plugin->library()->offload_batch(20, false, 0);
-        $msg = sprintf('补传完成：成功 %d，失败 %d，跳过 %d。', $result['ok'], $result['fail'], $result['skip']);
+        $source = !empty($_POST['wpsss_retry']) ? 'failed' : 'pending';
+        $result = $this->plugin->library()->offload_batch(20, false, 0, $source);
+        $verb = $source === 'failed' ? '重试' : '补传';
+        $msg = sprintf('%s完成：成功 %d，失败 %d，跳过 %d。', $verb, $result['ok'], $result['fail'], $result['skip']);
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
         }
-        $this->redirect('tools', $result['fail'] > 0 ? 'error' : 'ok', $msg);
+        $this->redirect_tools($result['fail'] > 0 ? 'error' : 'ok', $msg, 'daily');
     }
 
     public function handle_offload_one(): void
@@ -225,18 +239,21 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_pull');
         if (empty($_POST['wpsss_pull_confirm'])) {
-            $this->redirect('tools', 'error', '拉回须勾确认。');
+            $this->redirect_tools('error', '拉回须勾确认。', 'move');
         }
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            $this->redirect('tools', 'empty', '先保存桶名和密钥再拉回。');
+            $this->redirect_tools('empty', '先保存桶名和密钥再拉回。', 'move');
         }
         $delete = !empty($_POST['wpsss_pull_delete']);
+        if ($delete && empty($_POST['wpsss_pull_delete_confirm'])) {
+            $this->redirect_tools('error', '删除远端须再确认。', 'move');
+        }
         $result = $this->plugin->library()->pull_batch(20, false, 0, $delete);
         $msg = sprintf('拉回完成：成功 %d，失败 %d，跳过 %d。', $result['ok'], $result['fail'], $result['skip']);
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
         }
-        $this->redirect('tools', $result['fail'] > 0 ? 'error' : 'ok', $msg);
+        $this->redirect_tools($result['fail'] > 0 ? 'error' : 'ok', $msg, 'move');
     }
 
     public function handle_pull_one(): void
@@ -263,12 +280,12 @@ final class Wpsss_Admin
         check_admin_referer('wpsss_rewrite');
         $apply = !empty($_POST['wpsss_rewrite_apply']);
         if ($apply && empty($_POST['wpsss_rewrite_confirm'])) {
-            $this->redirect('tools', 'error', '写进文章须勾确认。');
+            $this->redirect_tools('error', '写进文章须勾确认。', 'move');
         }
         $from = isset($_POST['wpsss_rewrite_from']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_from'])) : '';
         $to = isset($_POST['wpsss_rewrite_to']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_to'])) : '';
         if ($from === '') {
-            $this->redirect('tools', 'error', '请填写要替换的来源地址。');
+            $this->redirect_tools('error', '请填写要替换的来源地址。', 'move');
         }
         $result = $this->plugin->library()->rewrite_posts($apply, $from, $to);
         set_transient($this->rewrite_transient_key(), [
@@ -278,8 +295,7 @@ final class Wpsss_Admin
             'result' => $result,
         ], 10 * MINUTE_IN_SECONDS);
         $verb = $apply ? '已改写' : '预览';
-        $this->redirect(
-            'tools',
+        $this->redirect_tools(
             'ok',
             sprintf(
                 '%s：扫 %d 篇命中 %d，字段扫 %d 命中 %d。',
@@ -288,8 +304,89 @@ final class Wpsss_Admin
                 $result['changed'],
                 $result['meta_scanned'],
                 $result['meta_changed']
-            )
+            ),
+            'move'
         );
+    }
+
+    public function handle_scan(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_scan');
+        $this->store_ops(['scan' => (new Wpsss_Ops($this->plugin))->scan(40)]);
+        $this->redirect_tools('ok', '已扫描最近一批附件。', 'check');
+    }
+
+    public function handle_diagnose(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_diagnose');
+        $input = isset($_POST['wpsss_diagnose']) ? sanitize_text_field(wp_unslash((string) $_POST['wpsss_diagnose'])) : '';
+        $this->store_ops(['diagnose' => (new Wpsss_Ops($this->plugin))->diagnose($input)]);
+        $this->redirect_tools('ok', '已诊断该地址。', 'check');
+    }
+
+    public function handle_headcheck(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_headcheck');
+        if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+            $this->redirect_tools('empty', '先保存桶名和密钥再抽检。', 'check');
+        }
+        $this->store_ops(['head' => (new Wpsss_Ops($this->plugin))->head_check(10)]);
+        $this->redirect_tools('ok', '已抽检远端对象。', 'check');
+    }
+
+    public function handle_clear_errors(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_clear_errors');
+        if (empty($_POST['wpsss_clear_confirm'])) {
+            $this->redirect_tools('error', '清除失败标记须勾确认。', 'check');
+        }
+        $result = (new Wpsss_Ops($this->plugin))->clear_errors(50);
+        $this->redirect_tools('ok', sprintf('已清除 %d 条失败标记。', $result['ok']), 'check');
+    }
+
+    public function handle_release(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_release');
+        if (empty($_POST['wpsss_release_confirm'])) {
+            $this->redirect_tools('error', '解除标记须勾确认。', 'move');
+        }
+        $result = (new Wpsss_Ops($this->plugin))->release_flags(20, true);
+        if ($result['errors'] !== []) {
+            $this->redirect_tools('error', $result['errors'][0], 'move');
+        }
+        $this->redirect_tools('ok', sprintf('已解除 %d 个进桶标记，桶内对象未删除。', $result['ok']), 'move');
+    }
+
+    public function handle_export(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('权限不足。', 'wpsss'));
+        }
+        check_admin_referer('wpsss_export');
+        $payload = wp_json_encode(Wpsss_Options::export_public(), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if (!is_string($payload) || $payload === '') {
+            $this->redirect_tools('error', '导出失败。', 'move');
+        }
+        nocache_headers();
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="wpsss-settings.json"');
+        echo $payload;
+        exit;
     }
 
     public function handle_inspect(): void
@@ -475,9 +572,48 @@ final class Wpsss_Admin
         return $mode === 'advanced' ? 'advanced' : 'simple';
     }
 
+    private function sanitize_tools_panel(string $panel): string
+    {
+        return in_array($panel, ['daily', 'check', 'move'], true) ? $panel : 'daily';
+    }
+
+    private function tools_panel(): string
+    {
+        $panel = isset($_GET['panel']) ? sanitize_key((string) $_GET['panel']) : 'daily';
+        return $this->sanitize_tools_panel($panel);
+    }
+
+    private function tools_panel_from_request(string $fallback): string
+    {
+        if (isset($_POST['wpsss_tools_panel'])) {
+            return $this->sanitize_tools_panel(sanitize_key((string) wp_unslash($_POST['wpsss_tools_panel'])));
+        }
+        return $this->sanitize_tools_panel($fallback);
+    }
+
+    private function redirect_tools(string $level, string $notice, string $fallback = 'daily'): void
+    {
+        $this->redirect('tools', $level, $notice, ['panel' => $this->tools_panel_from_request($fallback)]);
+    }
+
     private function rewrite_transient_key(): string
     {
         return 'wpsss_rewrite_' . get_current_user_id();
+    }
+
+    private function ops_transient_key(): string
+    {
+        return 'wpsss_ops_' . get_current_user_id();
+    }
+
+    /**
+     * @param array<string, mixed> $chunk
+     */
+    private function store_ops(array $chunk): void
+    {
+        $cur = get_transient($this->ops_transient_key());
+        $cur = is_array($cur) ? $cur : [];
+        set_transient($this->ops_transient_key(), array_merge($cur, $chunk), 10 * MINUTE_IN_SECONDS);
     }
 
     /**

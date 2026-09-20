@@ -29,7 +29,7 @@ $on = (bool) $view['configured'];
     <li>
       <strong><?php echo esc_html__('测试连通', 'wpsss'); ?></strong>
       <span><?php echo esc_html__('在工具页写入并删除探测对象，确认密钥与权限正确。', 'wpsss'); ?></span>
-      <a class="btn btn-secondary" href="<?php echo esc_url($url('tools')); ?>"><?php echo esc_html__('前往工具', 'wpsss'); ?></a>
+      <a class="btn btn-secondary" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('前往工具', 'wpsss'); ?></a>
     </li>
     <li>
       <strong><?php echo esc_html__('上传媒体', 'wpsss'); ?></strong>
@@ -62,7 +62,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('设置 · 高级', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('云厂商、桶名、区域、密钥、对象前缀、图片样式等完整选项。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('工具', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('测试连通、补传已有附件、拉回本地、改写文章中的媒体地址与同步记录。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('工具页分日常、排障、迁移三组。日常：连通、补传、同步记录。排障：体检、诊断、抽检、清除失败标记。迁移：拉回、改写、解除标记、导出。高危操作须勾选并弹窗确认。', 'wpsss'); ?></dd>
       </dl>
     </div>
   </details>
@@ -112,9 +112,9 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('本地备份是什么', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('开启后，文件进桶的同时保留服务器 uploads 目录中的副本，便于回滚与插件兼容。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('已有附件如何进桶', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('在工具页使用「补传已有附件」，或在媒体库对单个附件操作。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('在工具 → 日常使用「补传已有附件」，或在媒体库对单个附件操作。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('文章里仍是旧的 uploads 地址', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('在工具页使用「改写文章中的媒体地址」，先预览命中数量，确认后再写入数据库。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('在工具 → 迁移使用「改写文章中的媒体地址」，先预览命中数量，确认后再写入数据库。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('整站 HTML 会上传吗', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('不会。仅媒体库附件与相关对象进桶，页面 HTML 仍在 WordPress 源站。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('为什么点图片变成下载', 'wpsss'); ?></dt>
@@ -133,6 +133,16 @@ $on = (bool) $view['configured'];
         <dd><?php echo esc_html__('默认 V4。部分新区域只认 V4。若旧脚本或网关只认 V1，在高级设置改回即可。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('ECS 上能否不填 AccessKey', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('源站在阿里云 ECS 且实例绑了 RAM 角色时，高级设置选「ECS 实例 RAM 角色」。插件向实例元数据取临时密钥，不写入设置页。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('哪些文件不会进桶', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('php、htaccess 等可执行文件始终拒绝。高级设置「不进桶的扩展名」可再排除 svg、zip 等。打开「远端已有则跳过」后，补传不会覆盖桶里已有对象。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('拉回会不会删掉桶里的文件', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('默认不会。须先勾选确认，再勾选「永久删除桶内对象」并第二次确认。媒体库单条拉回只写回本地。从媒体库永久删除附件时，桶内对象会一并删除，删除前会再问一次。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('前台裂图或地址还是旧主机', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('到工具 → 排障：用「诊断一条地址」看主机是否对得上，「媒体体检」扫本地缺失和 http 明文，「抽检远端」看桶里对象还在不在。文章里的旧地址到迁移里改写，先预览再写入。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('想停用插件但先不删桶', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('用「解除进桶标记」。插件不再改写这些附件，对象仍留在桶里。卸载插件才会清掉本机选项。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('文章以外的地址会改吗', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('会。小工具、分类描述、评论、RSS 与附件 REST 接口里的媒体地址，也会按当前对外地址改写。工具页整站改写仍须填写来源地址。', 'wpsss'); ?></dd>
       </dl>
     </div>
   </details>
@@ -152,8 +162,11 @@ wp sss probe
 wp sss set --from-env
 wp sss offload --dry-run
 wp sss pull --dry-run
+wp sss scan
+wp sss diagnose 128
 wp sss rewrite
-wp sss url &lt;附件ID&gt;</code></pre>
+wp sss url &lt;附件ID&gt;
+wp sss delete &lt;对象键&gt; --yes</code></pre>
       <p class="wpsss-help-note"><?php echo esc_html__('密钥请通过环境文件或安全渠道配置，不要在命令行中明文传递。', 'wpsss'); ?></p>
     </div>
   </details>

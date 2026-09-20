@@ -136,6 +136,22 @@ final class Wpsss_Library
     /**
      * @return int[]
      */
+    /**
+     * @return int[]
+     */
+    public function failed_ids(int $limit = 20): array
+    {
+        $ids = get_posts([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => $limit > 0 ? $limit : 20,
+            'fields' => 'ids',
+            'meta_key' => self::META_ERROR,
+            'meta_compare' => 'EXISTS',
+        ]);
+        return array_map('intval', $ids);
+    }
+
     public function pending_ids(int $limit = 20): array
     {
         $ids = get_posts([
@@ -162,9 +178,15 @@ final class Wpsss_Library
     /**
      * @return array{ok: int, fail: int, skip: int, errors: string[]}
      */
-    public function offload_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0): array
+    public function offload_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, string $source = 'pending'): array
     {
-        $ids = $only_id > 0 ? [$only_id] : $this->pending_ids($limit);
+        if ($only_id > 0) {
+            $ids = [$only_id];
+        } elseif ($source === 'failed') {
+            $ids = $this->failed_ids($limit);
+        } else {
+            $ids = $this->pending_ids($limit);
+        }
         $ok = 0;
         $fail = 0;
         $skip = 0;

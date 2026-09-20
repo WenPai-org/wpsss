@@ -244,7 +244,7 @@ final class Wpsss_CLI
      * : 只数不写。
      *
      * [--delete-remote]
-     * : 拉回后删桶里的副本，并清掉 offloaded 标记。
+     * : 拉回后删桶里的副本，并清掉 offloaded 标记。须同时加 --yes。
      *
      * ## EXAMPLES
      *
@@ -260,6 +260,9 @@ final class Wpsss_CLI
         $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
         $dry = !empty($assoc_args['dry-run']);
         $delete = !empty($assoc_args['delete-remote']);
+        if ($delete && empty($assoc_args['yes']) && empty($assoc_args['dry-run'])) {
+            WP_CLI::error('删除远端须加 --yes。');
+        }
         $result = wpsss()->library()->pull_batch($limit, $dry, $id, $delete);
         WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip']);
         foreach ($result['errors'] as $line) {
@@ -693,6 +696,48 @@ final class Wpsss_CLI
     }
 
     /**
+     * 只读扫描最近一批附件。
+     *
+     * ## OPTIONS
+     *
+     * [--limit=<n>]
+     * : 默认 40。
+     *
+     * @when after_wp_load
+     */
+    public function scan(array $args, array $assoc_args): void
+    {
+        unset($args);
+        $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 40;
+        $report = (new Wpsss_Ops(wpsss()))->scan($limit);
+        WP_CLI::log('checked=' . $report['checked'] . ' host=' . $report['expected_host']);
+        WP_CLI::log('local_missing=' . count($report['local_missing']));
+        WP_CLI::log('host_mismatch=' . count($report['host_mismatch']));
+        WP_CLI::log('http=' . count($report['http']));
+        WP_CLI::log('failed=' . count($report['failed']));
+        WP_CLI::success('scan 结束。');
+    }
+
+    /**
+     * 诊断一条附件 ID 或 URL。
+     *
+     * ## OPTIONS
+     *
+     * <input>
+     * : 附件 ID 或完整 URL。
+     *
+     * @when after_wp_load
+     */
+    public function diagnose(array $args, array $assoc_args): void
+    {
+        unset($assoc_args);
+        $input = isset($args[0]) ? (string) $args[0] : '';
+        $row = (new Wpsss_Ops(wpsss()))->diagnose($input);
+        WP_CLI::log(wp_json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        WP_CLI::success($row['found'] ? '已定位附件。' : '没有对应附件。');
+    }
+
+    /**
      * 按对象键删除。
      *
      * ## OPTIONS
@@ -700,18 +745,23 @@ final class Wpsss_CLI
      * <key>
      * : 对象键。
      *
+     * [--yes]
+     * : 确认删除。
+     *
      * ## EXAMPLES
      *
-     *     wp sss delete manual/a.png
+     *     wp sss delete manual/a.png --yes
      *
      * @when after_wp_load
      */
     public function delete(array $args, array $assoc_args): void
     {
-        unset($assoc_args);
         $key = isset($args[0]) ? ltrim((string) $args[0], '/') : '';
         if ($key === '') {
             WP_CLI::error('要对象键。');
+        }
+        if (empty($assoc_args['yes'])) {
+            WP_CLI::error('删除对象须加 --yes。');
         }
         $result = wpsss()->active_driver()->delete_objects(Wpsss_Options::get(), [$key]);
         if (is_wp_error($result)) {

@@ -32,6 +32,60 @@ class Wpsss_Offload
         add_filter('the_content', [$this, 'rewrite_content'], 100);
         add_filter('the_excerpt', [$this, 'rewrite_content'], 100);
         add_filter('post_thumbnail_html', [$this, 'rewrite_content'], 100);
+        add_filter('widget_text', [$this, 'rewrite_content'], 100);
+        add_filter('widget_block_content', [$this, 'rewrite_content'], 100);
+        add_filter('term_description', [$this, 'rewrite_content'], 100);
+        add_filter('the_content_feed', [$this, 'rewrite_content'], 100);
+        add_filter('the_excerpt_rss', [$this, 'rewrite_content'], 100);
+        add_filter('comment_text', [$this, 'rewrite_content'], 100);
+        add_filter('rest_prepare_attachment', [$this, 'rewrite_rest_attachment'], 20, 3);
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function denied_extensions(): array
+    {
+        return ['php', 'phtml', 'phar', 'php3', 'php4', 'php5', 'php7', 'php8', 'pht', 'phps', 'htaccess', 'asp', 'aspx', 'jsp', 'cgi'];
+    }
+
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function should_put_path(string $path, array $opts = []): bool
+    {
+        $base = strtolower(basename($path));
+        if ($base === '.htaccess' || $base === 'htaccess') {
+            return false;
+        }
+        $ext = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
+        if ($ext === '') {
+            return true;
+        }
+        if (in_array($ext, self::denied_extensions(), true)) {
+            return false;
+        }
+        $skip = [];
+        if (class_exists('Wpsss_Options') && method_exists('Wpsss_Options', 'sanitize_exclude_ext')) {
+            $skip = explode(',', Wpsss_Options::sanitize_exclude_ext((string) ($opts['exclude_ext'] ?? '')));
+            $skip = array_values(array_filter($skip, static function ($item) {
+                return $item !== '';
+            }));
+        }
+        return !in_array($ext, $skip, true);
+    }
+
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function is_denied_path(string $path): bool
+    {
+        $base = strtolower(basename($path));
+        if ($base === '.htaccess' || $base === 'htaccess') {
+            return true;
+        }
+        $ext = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
+        return $ext !== '' && in_array($ext, self::denied_extensions(), true);
     }
 
     public function rename_file(string $filename): string
@@ -110,7 +164,7 @@ class Wpsss_Offload
                     update_post_meta((int) $attachment_id, '_wpsss_filesize', $filesize);
                 }
                 $this->mark_offloaded((int) $attachment_id, $this->object_key($primary));
-            } else {
+            } elseif ($ok->get_error_code() !== 'wpsss_skip_type') {
                 $this->mark_failed((int) $attachment_id, $ok->get_error_message());
             }
         }
@@ -140,6 +194,9 @@ class Wpsss_Offload
         }
         $put = $this->put_local_file($file, (string) (get_post_mime_type($post_id) ?: ''));
         if (is_wp_error($put)) {
+            if ($put->get_error_code() === 'wpsss_skip_type') {
+                return true;
+            }
             $this->mark_failed($post_id, $put->get_error_message());
             return $put;
         }
@@ -428,6 +485,36 @@ class Wpsss_Offload
         return Wpsss_Url::sign_rewritten_text($content, $to, $opts);
     }
 
+    /**
+     * @param mixed $response
+     * @param mixed $post
+     * @param mixed $request
+     * @return mixed
+     */
+    public function rewrite_rest_attachment($response, $post, $request)
+    {
+        unset($request);
+        if (!is_object($response) || !method_exists($response, 'get_data') || !method_exists($response, 'set_data')) {
+            return $response;
+        }
+        $data = $response->get_data();
+        if (!is_array($data)) {
+            return $response;
+        }
+        $id = is_object($post) && isset($post->ID) ? (int) $post->ID : (int) ($data['id'] ?? 0);
+        if ($id <= 0 || !Wpsss_Library::is_offloaded($id)) {
+            return $response;
+        }
+        if (!empty($data['source_url'])) {
+            $data['source_url'] = $this->rewrite_url((string) $data['source_url'], $id);
+        }
+        if (isset($data['guid']) && is_array($data['guid']) && !empty($data['guid']['rendered'])) {
+            $data['guid']['rendered'] = $this->rewrite_url((string) $data['guid']['rendered'], $id);
+        }
+        $response->set_data($data);
+        return $response;
+    }
+
     private function should_offload(): bool
     {
         if (!empty($_SERVER['REQUEST_URI']) && substr_count((string) $_SERVER['REQUEST_URI'], '/update.php') > 0) {
@@ -458,12 +545,23 @@ class Wpsss_Offload
         if ($key === '') {
             return new WP_Error('wpsss_bad_key', '不在 uploads 下，跳过。');
         }
+        $opts = Wpsss_Options::get();
+        if (!self::should_put_path($absolute_path, $opts)) {
+            $code = self::is_denied_path($absolute_path) ? 'wpsss_denied' : 'wpsss_skip_type';
+            return new WP_Error($code, '此类文件不进桶。');
+        }
+        if (($opts['skip_exist'] ?? '0') === '1') {
+            $head = $this->plugin->active_driver()->head_object($opts, $key);
+            if (!is_wp_error($head)) {
+                return true;
+            }
+        }
         if ($mime === '') {
             $mime = (string) (wp_check_filetype($absolute_path)['type'] ?? 'application/octet-stream');
         }
 
         $result = $this->plugin->active_driver()->put_object(
-            Wpsss_Options::get(),
+            $opts,
             $key,
             $absolute_path,
             $mime

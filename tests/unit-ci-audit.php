@@ -23,6 +23,8 @@ wpsss_assert(strpos($help, '镜像回源') !== false, 'help 镜像回源');
 wpsss_assert(strpos($help, '主账号 APPID') !== false, 'help 主账号 APPID');
 wpsss_assert(strpos($help, '七牛') !== false, 'help 七牛');
 wpsss_assert(strpos($help, '不限定厂商') !== false || strpos($help, '任意 CDN') !== false || strpos($help, '不是。插件只改对外主机名') !== false, 'help custom domain any cdn');
+wpsss_assert(strpos($help, '拉回会不会删掉桶里的文件') !== false, 'help pull delete confirm');
+wpsss_assert(strpos($help, '诊断一条地址') !== false, 'help diagnose tool');
 wpsss_assert(strpos($help, '默认 V4') !== false, 'help oss v4');
 wpsss_assert(strpos($help, 'RAM 角色') !== false, 'help ecs ram');
 
@@ -32,6 +34,16 @@ wpsss_assert(strpos($settings, '仅记录功能开关') === false, 'settings no 
 wpsss_assert(strpos($settings, 'oss_signature') !== false, 'settings oss signature');
 wpsss_assert(strpos($settings, 'ECS 实例 RAM 角色') !== false, 'settings ram option');
 wpsss_assert(strpos($settings, '任意 CDN') !== false, 'settings custom domain any cdn');
+wpsss_assert(strpos($settings, 'data-wpsss-preview') === false, 'settings no preview reload');
+wpsss_assert(strpos($settings, 'data-wpsss-disclose="site_mode"') !== false, 'settings disclose scene');
+wpsss_assert(strpos($settings, 'data-wpsss-disclose="driver"') !== false, 'settings disclose driver');
+wpsss_assert(strpos($settings, '国内云') !== false && strpos($settings, '国际与兼容云') !== false, 'settings both vendor groups');
+
+$admin_js = (string) file_get_contents(dirname(__DIR__) . '/assets/js/admin.js');
+wpsss_assert(strpos($admin_js, 'wpsss-fields') === false, 'admin.js no jump to 桶与密钥');
+wpsss_assert(strpos($admin_js, 'previewTo') === false, 'admin.js no previewTo reload');
+wpsss_assert(strpos($admin_js, 'function applyDriver') !== false, 'admin.js applyDriver in place');
+wpsss_assert(strpos($admin_js, 'addEventListener("change"') !== false, 'admin.js disclose on change');
 
 wpsss_assert(Wpsss_Ci::audit_text('hello', []) === 'pass', 'audit_text default pass');
 wpsss_assert(

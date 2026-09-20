@@ -41,6 +41,7 @@ require_once WPSSS_DIR . 'includes/drivers/class-wpsss-driver-s3-compat.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-offload.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-woo.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-library.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-ops.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-media.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-icons.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-admin.php';

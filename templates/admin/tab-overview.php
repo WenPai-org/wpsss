@@ -37,7 +37,7 @@ $pending = (int) ($stats['pending'] ?? 0);
 <?php else : ?>
 <section class="card">
   <h2 class="section-title"><?php echo esc_html__('运行状态', 'wpsss'); ?></h2>
-  <div class="simple-row">
+  <div class="simple-row is-static">
     <div class="tile ok"><?php echo Wpsss_Icons::vendor($opts['driver']); ?></div>
     <div>
       <div class="t"><?php echo esc_html__('存储桶', 'wpsss'); ?></div>
@@ -45,12 +45,12 @@ $pending = (int) ($stats['pending'] ?? 0);
     </div>
     <div class="r"><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span></div>
   </div>
-  <div class="simple-row">
+  <div class="simple-row is-static">
     <div class="tile"><?php echo Wpsss_Icons::svg('external'); ?></div>
     <div>
       <div class="t"><?php echo esc_html__('对外地址', 'wpsss'); ?></div>
       <?php if ($public_base !== '') : ?>
-        <div class="d"><?php echo esc_html($public_base); ?></div>
+        <div class="d is-url"><?php echo esc_html($public_base); ?></div>
       <?php elseif (!$custom) : ?>
         <div class="d"><?php echo esc_html__('未设置自定义域名时使用存储桶默认域名', 'wpsss'); ?></div>
       <?php endif; ?>
@@ -62,7 +62,7 @@ $pending = (int) ($stats['pending'] ?? 0);
       <?php endif; ?>
     </div>
   </div>
-  <div class="simple-row">
+  <div class="simple-row is-static">
     <div class="tile<?php echo $keep ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('plug'); ?></div>
     <div>
       <div class="t"><?php echo esc_html__('本地备份', 'wpsss'); ?></div>
@@ -73,7 +73,7 @@ $pending = (int) ($stats['pending'] ?? 0);
     <div class="r"><span class="pill<?php echo $keep ? ' ok' : ' warn'; ?>"><?php echo $keep ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></span></div>
   </div>
   <?php if ($stats !== []) : ?>
-  <div class="simple-row">
+  <div class="simple-row is-static">
     <div class="tile<?php echo $pending === 0 ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('server'); ?></div>
     <div>
       <div class="t"><?php echo esc_html__('媒体库附件', 'wpsss'); ?></div>
@@ -87,7 +87,7 @@ $pending = (int) ($stats['pending'] ?? 0);
     </div>
     <div class="r">
       <?php if ($pending > 0) : ?>
-        <a class="btn btn-ghost" href="<?php echo esc_url($url('tools')); ?>"><?php echo esc_html__('补传', 'wpsss'); ?></a>
+        <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('补传', 'wpsss'); ?></a>
       <?php endif; ?>
     </div>
   </div>
@@ -96,7 +96,7 @@ $pending = (int) ($stats['pending'] ?? 0);
     <span class="meta"><?php echo esc_html__('开关与密钥在设置里。', 'wpsss'); ?></span>
     <span class="wpsss-actions">
       <a class="btn btn-secondary" href="<?php echo esc_url($url('settings')); ?>"><?php echo esc_html__('设置', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="<?php echo esc_url($url('tools')); ?>"><?php echo esc_html__('测试连通', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('测试连通', 'wpsss'); ?></a>
     </span>
   </div>
 </section>

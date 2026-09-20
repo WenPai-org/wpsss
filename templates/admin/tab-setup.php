@@ -238,7 +238,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
         <?php wp_nonce_field('wpsss_probe'); ?>
         <button class="btn btn-secondary" type="submit"><?php echo esc_html__('测试连通', 'wpsss'); ?></button>
       </form>
-      <a class="btn btn-ghost" href="<?php echo esc_url($url('tools')); ?>"><?php echo esc_html__('打开工具页', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('打开工具页', 'wpsss'); ?></a>
     </div>
   <?php endif; ?>
 </div>

@@ -104,7 +104,7 @@ final class Wpsss_Media
             return;
         }
         if (Wpsss_Library::is_offloaded($post_id)) {
-            echo '<span class="pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
+            echo '<span class="pill ok" data-wpsss-offloaded="1">' . esc_html__('已进桶', 'wpsss') . '</span>';
             return;
         }
         echo '<span class="pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
@@ -124,7 +124,7 @@ final class Wpsss_Media
                 admin_url('admin-post.php?action=wpsss_pull_one&id=' . (int) $post->ID),
                 'wpsss_pull_one_' . (int) $post->ID
             );
-            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             return $actions;
         }
         $url = wp_nonce_url(
@@ -273,6 +273,7 @@ final class Wpsss_Media
         }
         if (is_string($url) && $url !== '') {
             echo '<p class="wpsss-metabox-link"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html__('打开地址', 'wpsss') . '</a></p>';
+            echo '<p class="wpsss-metabox-url"><code>' . esc_html($url) . '</code></p>';
         }
         echo '<div class="wpsss-metabox-actions">';
         if ($off) {
@@ -280,7 +281,8 @@ final class Wpsss_Media
                 admin_url('admin-post.php?action=wpsss_pull_one&id=' . $id),
                 'wpsss_pull_one_' . $id
             );
-            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            echo '<p class="wpsss-metabox-meta">' . esc_html__('从媒体库永久删除此附件时，桶内对象会一并删除。', 'wpsss') . '</p>';
         } else {
             $href = wp_nonce_url(
                 admin_url('admin-post.php?action=wpsss_offload_one&id=' . $id),

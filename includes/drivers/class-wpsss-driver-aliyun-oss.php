@@ -40,6 +40,10 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
 
         $mime = $mime !== '' ? $mime : 'application/octet-stream';
         $acl = ['x-oss-object-acl' => 'public-read'];
+        $cc = class_exists('Wpsss_Options') ? Wpsss_Options::object_cache_control($settings) : '';
+        if ($cc !== '') {
+            $acl['Cache-Control'] = $cc;
+        }
         $result = $this->request($settings, 'PUT', $object, $body, $mime, $acl);
         if (!is_wp_error($result)) {
             return $result;
@@ -50,7 +54,11 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
             return $result;
         }
 
-        return $this->request($settings, 'PUT', $object, $body, $mime);
+        $plain = [];
+        if ($cc !== '') {
+            $plain['Cache-Control'] = $cc;
+        }
+        return $this->request($settings, 'PUT', $object, $body, $mime, $plain);
     }
 
     public function delete_objects(array $settings, array $objects)

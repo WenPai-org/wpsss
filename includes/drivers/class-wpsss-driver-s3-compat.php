@@ -70,10 +70,10 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
      */
     private function put_headers(array $settings): array
     {
-        if (($settings['url_access'] ?? 'public') === 'signed') {
-            return ['Cache-Control' => 'private, max-age=3600'];
-        }
-        return ['Cache-Control' => 'public, max-age=2592000'];
+        $cc = class_exists('Wpsss_Options')
+            ? Wpsss_Options::object_cache_control($settings)
+            : ((($settings['url_access'] ?? 'public') === 'signed') ? 'private, max-age=3600' : 'public, max-age=2592000');
+        return $cc !== '' ? ['Cache-Control' => $cc] : [];
     }
 
     public function delete_objects(array $settings, array $objects)

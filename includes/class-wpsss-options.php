@@ -106,6 +106,9 @@ class Wpsss_Options
             'oss_auth' => 'ak',
             'oss_ram_role' => '',
             'setup_completed_at' => '',
+            'exclude_ext' => '',
+            'skip_exist' => '0',
+            'cache_control' => '',
         ];
     }
 
@@ -232,6 +235,11 @@ class Wpsss_Options
             'oss_auth' => self::sanitize_oss_auth($input['oss_auth'] ?? $current['oss_auth'] ?? 'ak'),
             'oss_ram_role' => sanitize_text_field($input['oss_ram_role'] ?? $current['oss_ram_role'] ?? ''),
             'setup_completed_at' => sanitize_text_field($input['setup_completed_at'] ?? $current['setup_completed_at'] ?? ''),
+            'exclude_ext' => self::sanitize_exclude_ext($input['exclude_ext'] ?? $current['exclude_ext'] ?? ''),
+            'skip_exist' => array_key_exists('skip_exist', $input)
+                ? (((string) $input['skip_exist'] === '1') ? '1' : '0')
+                : (((string) ($current['skip_exist'] ?? '0') === '1') ? '1' : '0'),
+            'cache_control' => self::sanitize_cache_control($input['cache_control'] ?? $current['cache_control'] ?? ''),
         ];
 
         self::sync_upload_url_path($out['custom_domain']);
@@ -841,6 +849,58 @@ class Wpsss_Options
         return (string) $ttl;
     }
 
+    public static function sanitize_exclude_ext($value): string
+    {
+        $parts = preg_split('/[\s,;]+/', strtolower((string) $value)) ?: [];
+        $out = [];
+        foreach ($parts as $ext) {
+            $ext = ltrim(trim($ext), '.');
+            if ($ext !== '' && preg_match('/^[a-z0-9]{1,10}$/', $ext)) {
+                $out[] = $ext;
+            }
+        }
+        return implode(',', array_values(array_unique($out)));
+    }
+
+    public static function sanitize_cache_control($value): string
+    {
+        $value = trim((string) $value);
+        if ($value === '' || !preg_match('/^[A-Za-z0-9,=\s\-]+$/', $value)) {
+            return '';
+        }
+        return substr($value, 0, 120);
+    }
+
+    /**
+     * @param array<string, string> $opts
+     */
+    public static function object_cache_control(array $opts): string
+    {
+        $raw = trim((string) ($opts['cache_control'] ?? ''));
+        if ($raw !== '') {
+            return $raw;
+        }
+        return (($opts['url_access'] ?? 'public') === 'signed')
+            ? 'private, max-age=3600'
+            : 'public, max-age=2592000';
+    }
+
+    /**
+     * @param array<string, string> $opts
+     * @return array<string, mixed>
+     */
+    public static function export_public(array $opts = []): array
+    {
+        $opts = $opts === [] ? self::get() : array_merge(self::defaults(), $opts);
+        unset($opts['access_key_id'], $opts['access_key_secret'], $opts['oss_ram_role']);
+        return [
+            'plugin' => 'wpsss',
+            'version' => defined('WPSSS_VERSION') ? WPSSS_VERSION : '',
+            'exported_at' => gmdate('c'),
+            'options' => $opts,
+        ];
+    }
+
     public static function supports_signed_get(string $driver): bool
     {
         return $driver === self::DRIVER_ALIYUN || self::is_s3_family($driver);
@@ -906,5 +966,105 @@ class Wpsss_Options
             }
         }
         return ['cn' => $cn, 'overseas' => $overseas];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function driver_help(): array
+    {
+        return [
+            self::DRIVER_ALIYUN => '国内站点常用',
+            self::DRIVER_COS => '适合已有腾讯云 COS 桶',
+            self::DRIVER_KODO => '对外访问须配置自定义域名',
+            self::DRIVER_OBS => '适合已有华为云 OBS 桶',
+            self::DRIVER_TOS => '适合已有火山引擎 TOS 桶',
+            self::DRIVER_S3 => '兼容 AWS、Cloudflare R2、MinIO',
+            self::DRIVER_GCS => '适合 Google Cloud 存储桶',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function bucket_help(): array
+    {
+        return [
+            self::DRIVER_ALIYUN => '仅填写桶名，不含域名后缀',
+            self::DRIVER_COS => '格式 name-APPID',
+            self::DRIVER_KODO => '仅填写空间名称',
+            self::DRIVER_OBS => '仅填写桶名',
+            self::DRIVER_TOS => '仅填写桶名',
+            self::DRIVER_S3 => '仅填写桶名，Endpoint 另填',
+            self::DRIVER_GCS => '仅填写桶名，Endpoint 另填',
+        ];
+    }
+
+    /**
+     * 设置页点选后的就地披露，不整页重载。
+     *
+     * @param array<string, string> $opts
+     * @return array<string, mixed>
+     */
+    public static function admin_ui(array $opts): array
+    {
+        $regions = [];
+        $defaults = [];
+        foreach (array_keys(self::driver_ids()) as $id) {
+            $regions[$id] = self::grouped_regions($id);
+            $defaults[$id] = self::default_region($id);
+        }
+        $s3_family = [];
+        foreach (array_keys(self::driver_ids()) as $id) {
+            if (self::is_s3_family($id)) {
+                $s3_family[] = $id;
+            }
+        }
+
+        return [
+            'savedDriver' => (string) ($opts['driver'] ?? self::DRIVER_ALIYUN),
+            'savedSiteMode' => self::sanitize_site_mode($opts['site_mode'] ?? 'domestic'),
+            'savedRegion' => (string) ($opts['region'] ?? ''),
+            'configured' => ($opts['bucket'] ?? '') !== '',
+            'drivers' => self::driver_ids(),
+            'driverHelp' => self::driver_help(),
+            'bucketHelp' => self::bucket_help(),
+            'siteModes' => self::site_modes(),
+            'regions' => $regions,
+            'defaults' => $defaults,
+            's3Family' => $s3_family,
+            's3Presets' => self::s3_presets(),
+            'lockedPreset' => [
+                self::DRIVER_TOS => 'tos',
+                self::DRIVER_GCS => 'gcs',
+            ],
+            'groupOrder' => [
+                'domestic' => ['cn'],
+                'crossborder' => ['intl', 'cn'],
+                'mixed' => ['cn', 'intl'],
+            ],
+            'copy' => [
+                'preview' => '正在预览，尚未保存。',
+                'savePreview' => '预览中的更改需保存后才会生效。',
+                'saveDefault' => '密钥留空保存时将保留已保存的值。',
+                'appIdCos' => 'APPID（COS）',
+                'appIdCosHelp' => '创建桶的主账号 APPID。子账户的 APPID 无效。桶名已含 APPID 可留空。',
+                'appIdR2' => 'R2 Account ID',
+                'appIdR2Help' => '用于拼接服务 Endpoint。',
+                's3Help' => '将自动填入默认 Endpoint。',
+                'tosHelp' => '火山引擎固定为此预设。',
+                'gcsHelp' => 'Google 云固定为此预设。',
+                'bucketFallback' => '仅填写桶名',
+                'confirmPull' => '确认拉回本地？会覆盖 uploads 里的同名文件。',
+                'confirmPullDelete' => '确认拉回并永久删除桶内对象？删除后无法从回收站恢复。',
+                'confirmRewrite' => '确认把文章和字段里的地址写入数据库？建议先预览。',
+                'confirmRelease' => '确认解除进桶标记？桶内对象不会删除，但插件不再改写这些附件。',
+                'confirmClearErrors' => '确认清除失败标记？不会重新上传，只去掉错误提示。',
+                'confirmMediaPull' => '确认把此附件拉回本地？',
+                'confirmMediaDelete' => '此附件已进桶。永久删除会同时删掉桶内对象，文章里的地址可能裂开。确定删除？',
+                'confirmBulkPull' => '确认批量拉回所选附件？',
+                'confirmBulkDelete' => '所选附件若已进桶，永久删除会同时删掉桶内对象。确定？',
+            ],
+        ];
     }
 }
