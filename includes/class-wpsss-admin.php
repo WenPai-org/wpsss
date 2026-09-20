@@ -227,7 +227,7 @@ final class Wpsss_Admin
         $verb = $source === 'failed' ? '重试' : '补传';
         $msg = sprintf('%s完成：成功 %d，失败 %d，跳过 %d。', $verb, $result['ok'], $result['fail'], $result['skip']);
         if ($source !== 'failed' && (int) ($result['cursor'] ?? 0) > 0) {
-            $msg .= sprintf(' 下一批从 ID <%d 接着。', (int) $result['cursor']);
+            $msg .= sprintf(' 下一批次将从 ID <%d> 继续。', (int) $result['cursor']);
         }
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
@@ -270,7 +270,7 @@ final class Wpsss_Admin
         $scope = (isset($_POST['wpsss_pull_scope']) && (string) wp_unslash($_POST['wpsss_pull_scope']) === 'one') ? 'one' : 'batch';
         $only_id = ($scope === 'one' && isset($_POST['wpsss_pull_id'])) ? (int) $_POST['wpsss_pull_id'] : 0;
         if ($scope === 'one' && $only_id <= 0) {
-            $this->redirect_tools('error', '指定一个时请填写媒体库编号。', 'move');
+            $this->redirect_tools('error', '选择「单个附件」时请填写媒体库编号。', 'move');
         }
         if ($apply && $on_exist !== 'skip' && empty($_POST['wpsss_pull_confirm'])) {
             $this->redirect_tools('error', '请先勾选确认项。', 'move');
@@ -322,7 +322,7 @@ final class Wpsss_Admin
             $msg .= ' 只写回了磁盘，前台仍走桶。要改地址请解除标记，或拉回并删除。';
         }
         if ($apply && $only_id === 0 && (int) ($result['cursor'] ?? 0) > 0) {
-            $msg .= sprintf(' 下一批从 ID <%d 接着。', (int) $result['cursor']);
+            $msg .= sprintf(' 下一批次将从 ID <%d> 继续。', (int) $result['cursor']);
         }
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];

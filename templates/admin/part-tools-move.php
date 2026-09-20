@@ -47,16 +47,16 @@ $exist_modes = [
       <div class="seg wpsss-pull-seg" role="radiogroup" aria-label="<?php echo esc_attr__('选择范围', 'wpsss'); ?>">
         <label class="<?php echo $pull_scope === 'batch' ? 'on' : ''; ?>">
           <input type="radio" name="wpsss_pull_scope" value="batch" class="js-wpsss-pull-scope" <?php checked($pull_scope === 'batch'); ?> />
-          <?php echo esc_html__('下一批', 'wpsss'); ?>
+          <?php echo esc_html__('批量拉回', 'wpsss'); ?>
         </label>
         <label class="<?php echo $pull_scope === 'one' ? 'on' : ''; ?>">
           <input type="radio" name="wpsss_pull_scope" value="one" class="js-wpsss-pull-scope" <?php checked($pull_scope === 'one'); ?> />
-          <?php echo esc_html__('指定一个', 'wpsss'); ?>
+          <?php echo esc_html__('单个附件', 'wpsss'); ?>
         </label>
       </div>
       <p class="wpsss-pull-hint js-wpsss-pull-scope-hint"><?php echo $pull_scope === 'one'
           ? esc_html__('仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。', 'wpsss')
-          : esc_html__('对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行可继续下一批。', 'wpsss'); ?></p>
+          : esc_html__('对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行将处理下一批次。', 'wpsss'); ?></p>
       <div class="field js-wpsss-pull-one"<?php echo $pull_scope === 'one' ? '' : ' hidden'; ?>>
         <div>
           <div class="field-label"><?php echo esc_html__('媒体库编号', 'wpsss'); ?></div>
@@ -124,7 +124,7 @@ $exist_modes = [
       <div class="card-foot start">
         <span class="meta"><?php
           if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) {
-              echo esc_html(sprintf(__('下一批将从编号小于 %d 的附件继续。', 'wpsss'), (int) $pull_cursor));
+              echo esc_html(sprintf(__('下一批次将从编号小于 %d 的附件继续。', 'wpsss'), (int) $pull_cursor));
           } else {
               echo esc_html__('建议先预览再执行。仅写入磁盘，对外 URL 默认仍指向存储桶。', 'wpsss');
           }

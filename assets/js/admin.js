@@ -706,7 +706,7 @@
       if (pullScopeHint) {
         pullScopeHint.textContent = scope === "one"
           ? "仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。"
-          : "对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行可继续下一批。";
+          : "对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行将处理下一批次。";
       }
       if (pullOne) {
         pullOne.hidden = scope !== "one";

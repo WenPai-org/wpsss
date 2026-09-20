@@ -90,8 +90,8 @@ wpsss_assert(strpos($tools, 'wpsss_pull_exist') !== false, 'tools pull on-exist 
 wpsss_assert(strpos($tools, 'wpsss-pull-seg') !== false, 'tools pull uses compact seg');
 wpsss_assert(strpos((string) file_get_contents($toolsDir . 'part-tools-move.php'), 'choice-cards') === false, 'tools pull not choice cards');
 wpsss_assert(strpos($tools, '只写磁盘') !== false, 'tools pull says disk only');
-wpsss_assert(strpos($tools, '下一批') !== false, 'tools pull batch scope');
-wpsss_assert(strpos($tools, '指定一个') !== false, 'tools pull one scope');
+wpsss_assert(strpos($tools, '批量拉回') !== false, 'tools pull batch scope');
+wpsss_assert(strpos($tools, '单个附件') !== false, 'tools pull one scope');
 wpsss_assert(strpos($tools, '媒体库编号') !== false, 'tools pull id is media number');
 wpsss_assert(strpos((string) file_get_contents($toolsDir . 'part-tools-move.php'), 'placeholder="<?php echo esc_attr__(\'全部\'') === false, 'tools pull no cryptic 全部 placeholder');
 wpsss_assert(strpos($tools, '序列化字段不修改') === false, 'tools rewrite no longer lies about serialized');
@@ -122,7 +122,7 @@ wpsss_assert(strpos($admin, '删除远端须再确认') !== false, 'admin reject
 wpsss_assert(strpos($admin, 'function redirect_tools') !== false, 'admin returns to tools panel');
 wpsss_assert(strpos($admin, '删桶不能只补缺失') !== false, 'admin rejects delete+skip');
 wpsss_assert(strpos($admin, '只写回了磁盘，前台仍走桶') !== false, 'admin pull message disk vs url');
-wpsss_assert(strpos($admin, '指定一个时请填写媒体库编号') !== false, 'admin rejects empty one-scope');
+wpsss_assert(strpos($admin, '选择「单个附件」时请填写媒体库编号') !== false, 'admin rejects empty one-scope');
 wpsss_assert(strpos($admin, 'pull_cursor_key') !== false, 'admin pull cursor');
 
 $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php');
