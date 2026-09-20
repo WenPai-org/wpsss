@@ -666,19 +666,19 @@
     var pullConfirmText = pullForm.querySelector(".js-wpsss-pull-confirm-text");
     var pullCopy = {
       skip: {
-        hint: "服务器上没有的才从桶里取。已经有的文件原样留着。不改网页地址。",
+        hint: "仅当 uploads 目录缺少对应文件时从存储桶下载；已有文件保持不变，不修改对外 URL。",
         confirm: "",
         dialog: "",
       },
       rename: {
-        hint: "本地那份改名留底（原名-local-时间），再用桶里的文件占原来的名字。媒体库编号不变。",
-        confirm: "我确认把已有本地文件旁路改名后再写入",
-        dialog: "已有本地文件会改成 原名-local-时间，正式文件名仍按媒体库写入桶里那份。继续？",
+        hint: "将现有本地文件重命名为「原名-local-时间戳」，再写入存储桶中的文件；媒体库条目与对象键不变。",
+        confirm: "我确认先旁路改名已有本地文件，再执行写入",
+        dialog: "已有本地文件将重命名为「原名-local-时间戳」，再写入存储桶中的副本。是否继续？",
       },
       overwrite: {
-        hint: "用桶里的文件直接换掉本地同名文件。换掉就没有回收站。",
-        confirm: "接受覆盖 uploads 里的同名文件",
-        dialog: "会覆盖 uploads 里的同名文件。覆盖前没有回收站。默认不删桶。继续？",
+        hint: "用存储桶中的文件直接替换 uploads 中的同名文件；替换后无法从回收站恢复。",
+        confirm: "我确认覆盖 uploads 中的同名文件",
+        dialog: "将覆盖 uploads 中的同名文件，且无法从回收站恢复；默认不删除存储桶对象。是否继续？",
       },
     };
     var pullOne = pullForm.querySelector(".js-wpsss-pull-one");
@@ -705,8 +705,8 @@
       });
       if (pullScopeHint) {
         pullScopeHint.textContent = scope === "one"
-          ? "只拉媒体库里的这一个。编号在「媒体 → 媒体库」点开文件后能看到，例如 128。"
-          : "已进桶的按编号从新到旧拉，一次最多 20 个。要继续就再点一次。";
+          ? "仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。"
+          : "对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行可继续下一批。";
       }
       if (pullOne) {
         pullOne.hidden = scope !== "one";

@@ -13,21 +13,21 @@ $pull_scope = $pull_id > 0 ? 'one' : 'batch';
 $exist_modes = [
     'skip' => [
         'label' => __('只补缺失', 'wpsss'),
-        'help' => __('服务器上没有的才从桶里取。已经有的文件原样留着。不改网页地址。', 'wpsss'),
+        'help' => __('仅当 uploads 目录缺少对应文件时从存储桶下载；已有文件保持不变，不修改对外 URL。', 'wpsss'),
         'confirm' => '',
         'dialog' => '',
     ],
     'rename' => [
         'label' => __('旁路改名', 'wpsss'),
-        'help' => __('本地那份改名留底（原名-local-时间），再用桶里的文件占原来的名字。媒体库编号不变。', 'wpsss'),
-        'confirm' => __('我确认把已有本地文件旁路改名后再写入', 'wpsss'),
-        'dialog' => __('已有本地文件会改成 原名-local-时间，正式文件名仍按媒体库写入桶里那份。继续？', 'wpsss'),
+        'help' => __('将现有本地文件重命名为「原名-local-时间戳」，再写入存储桶中的文件；媒体库条目与对象键不变。', 'wpsss'),
+        'confirm' => __('我确认先旁路改名已有本地文件，再执行写入', 'wpsss'),
+        'dialog' => __('已有本地文件将重命名为「原名-local-时间戳」，再写入存储桶中的副本。是否继续？', 'wpsss'),
     ],
     'overwrite' => [
         'label' => __('覆盖', 'wpsss'),
-        'help' => __('用桶里的文件直接换掉本地同名文件。换掉就没有回收站。', 'wpsss'),
-        'confirm' => __('接受覆盖 uploads 里的同名文件', 'wpsss'),
-        'dialog' => __('会覆盖 uploads 里的同名文件。覆盖前没有回收站。默认不删桶。继续？', 'wpsss'),
+        'help' => __('用存储桶中的文件直接替换 uploads 中的同名文件；替换后无法从回收站恢复。', 'wpsss'),
+        'confirm' => __('我确认覆盖 uploads 中的同名文件', 'wpsss'),
+        'dialog' => __('将覆盖 uploads 中的同名文件，且无法从回收站恢复；默认不删除存储桶对象。是否继续？', 'wpsss'),
     ],
 ];
 ?>
@@ -36,15 +36,15 @@ $exist_modes = [
       <span class="tile warn"><?php echo Wpsss_Icons::svg('download'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('拉回本地', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('从桶里把文件写回这台服务器。先选拉哪些，再选本地已有时怎么办。网页地址默认还是桶。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('从对象存储拉取文件至本机 uploads 目录。请先选择范围，再选择本地已有同名文件时的处理方式。默认只写磁盘，对外 URL 仍指向存储桶。', 'wpsss'); ?></p>
       </div>
     </div>
     <form class="js-wpsss-pull-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-mode="<?php echo esc_attr($pull_exist); ?>" data-scope="<?php echo esc_attr($pull_scope); ?>">
       <input type="hidden" name="action" value="wpsss_pull" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_pull'); ?>
-      <p class="wpsss-pull-kicker"><?php echo esc_html__('拉哪些', 'wpsss'); ?></p>
-      <div class="seg wpsss-pull-seg" role="radiogroup" aria-label="<?php echo esc_attr__('拉哪些', 'wpsss'); ?>">
+      <p class="wpsss-pull-kicker"><?php echo esc_html__('选择范围', 'wpsss'); ?></p>
+      <div class="seg wpsss-pull-seg" role="radiogroup" aria-label="<?php echo esc_attr__('选择范围', 'wpsss'); ?>">
         <label class="<?php echo $pull_scope === 'batch' ? 'on' : ''; ?>">
           <input type="radio" name="wpsss_pull_scope" value="batch" class="js-wpsss-pull-scope" <?php checked($pull_scope === 'batch'); ?> />
           <?php echo esc_html__('下一批', 'wpsss'); ?>
@@ -55,12 +55,12 @@ $exist_modes = [
         </label>
       </div>
       <p class="wpsss-pull-hint js-wpsss-pull-scope-hint"><?php echo $pull_scope === 'one'
-          ? esc_html__('只拉媒体库里的这一个。编号在「媒体 → 媒体库」点开文件后能看到，例如 128。', 'wpsss')
-          : esc_html__('已进桶的按编号从新到旧拉，一次最多 20 个。要继续就再点一次。', 'wpsss'); ?></p>
+          ? esc_html__('仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。', 'wpsss')
+          : esc_html__('对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行可继续下一批。', 'wpsss'); ?></p>
       <div class="field js-wpsss-pull-one"<?php echo $pull_scope === 'one' ? '' : ' hidden'; ?>>
         <div>
           <div class="field-label"><?php echo esc_html__('媒体库编号', 'wpsss'); ?></div>
-          <div class="field-help"><?php echo esc_html__('就是附件 ID。在媒体库点开文件，地址栏或右侧详情里的数字。', 'wpsss'); ?></div>
+          <div class="field-help"><?php echo esc_html__('附件 ID，可在媒体库打开文件后，从地址栏或右侧详情中查看。', 'wpsss'); ?></div>
         </div>
         <div class="field-ctl"><input type="number" name="wpsss_pull_id" class="js-wpsss-pull-id" value="<?php echo $pull_id > 0 ? (int) $pull_id : ''; ?>" min="1" step="1" placeholder="128" <?php echo $pull_scope === 'one' ? '' : 'disabled'; ?> /></div>
       </div>
@@ -85,7 +85,7 @@ $exist_modes = [
                   $bits[] = sprintf(__('失败 %d', 'wpsss'), (int) $result['fail']);
               }
               if (empty($pull['delete'])) {
-                  $bits[] = __('前台仍走桶', 'wpsss');
+                  $bits[] = __('对外 URL 仍指向存储桶', 'wpsss');
               }
           } else {
               $bits[] = sprintf(__('将写入 %d', 'wpsss'), (int) ($result['ok'] ?? 0));
@@ -124,9 +124,9 @@ $exist_modes = [
       <div class="card-foot start">
         <span class="meta"><?php
           if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) {
-              echo esc_html(sprintf('下一批会接着编号小于 %d 的。', (int) $pull_cursor));
+              echo esc_html(sprintf(__('下一批将从编号小于 %d 的附件继续。', 'wpsss'), (int) $pull_cursor));
           } else {
-              echo esc_html__('先预览再拉回。只写磁盘，网页地址默认还是桶。', 'wpsss');
+              echo esc_html__('建议先预览再执行。仅写入磁盘，对外 URL 默认仍指向存储桶。', 'wpsss');
           }
         ?></span>
         <span class="wpsss-actions">
