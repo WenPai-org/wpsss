@@ -40,6 +40,13 @@ class Wpsss_Offload
         // WP 给音视频短网址追加 ?_=时间戳 缓存戳；签名 URL 的 query 一变就 403，这里剥掉。
         add_filter('wp_audio_shortcode', [$this, 'strip_media_cache_buster'], 100);
         add_filter('wp_video_shortcode', [$this, 'strip_media_cache_buster'], 100);
+        // keep_local=0 时本地文件不在：编辑/再生成等场景退回桶地址（AS3CF 同款语义）。
+        add_filter('get_attached_file', [$this, 'filter_attached_file'], 10, 2);
+        add_filter('wp_get_original_image_path', [$this, 'filter_attached_file'], 10, 2);
+        // FSE 区块模板与 Customizer 背景/头图里的硬编码地址，也走按附件改写。
+        add_filter('render_block', [$this, 'rewrite_content'], 100);
+        add_filter('theme_mod_background_image', [$this, 'rewrite_content'], 100);
+        add_filter('theme_mod_header_image', [$this, 'rewrite_content'], 100);
         add_filter('comment_text', [$this, 'rewrite_content'], 100);
         add_filter('rest_prepare_attachment', [$this, 'rewrite_rest_attachment'], 20, 3);
     }
@@ -181,7 +188,7 @@ class Wpsss_Offload
                     update_post_meta((int) $attachment_id, '_wpsss_filesize', $filesize);
                 }
                 $this->mark_offloaded((int) $attachment_id, $this->object_key($primary));
-            } elseif ($ok->get_error_code() !== 'wpsss_skip_type') {
+            } elseif ($ok->get_error_code() !== 'wpsss_skip_type' && $ok->get_error_code() !== 'wpsss_woo_exclude') {
                 $this->mark_failed((int) $attachment_id, $ok->get_error_message());
             }
         }
@@ -226,6 +233,10 @@ class Wpsss_Offload
             $put = $this->put_local_file($file, (string) (get_post_mime_type($post_id) ?: ''));
             if (is_wp_error($put)) {
                 if ($put->get_error_code() === 'wpsss_skip_type') {
+                    return true;
+                }
+                if ($put->get_error_code() === 'wpsss_woo_exclude') {
+                    update_post_meta($post_id, Wpsss_Library::META_LOCAL_ONLY, '1');
                     return true;
                 }
                 $this->mark_failed($post_id, $put->get_error_message());
@@ -494,6 +505,40 @@ class Wpsss_Offload
         return Wpsss_Url::style_srcset($sources, $style);
     }
 
+    /**
+     * 本地文件已删（keep_local=0）且附件已进桶时，get_attached_file 退回桶地址。
+     * 本地仍在则原样返回；未进桶也原样返回（调用方自行处理缺文件）。
+     *
+     * @param string|mixed $file
+     * @param int|mixed $attachment_id
+     * @return string|mixed
+     */
+    public function filter_attached_file($file, $attachment_id = 0)
+    {
+        if (!is_string($file) || $file === '' || (int) $attachment_id <= 0) {
+            return $file;
+        }
+        if (file_exists($file) || !Wpsss_Library::is_offloaded((int) $attachment_id)) {
+            return $file;
+        }
+        $opts = Wpsss_Options::get();
+        if (!$this->plugin->active_driver()->is_configured($opts)) {
+            return $file;
+        }
+        $base = Wpsss_Options::public_base();
+        if ($base === '') {
+            return $file;
+        }
+        $key = (string) get_post_meta((int) $attachment_id, Wpsss_Library::META_KEY, true);
+        if ($key === '') {
+            $key = $this->object_key($file);
+        }
+        if ($key === '') {
+            return $file;
+        }
+        return Wpsss_Url::sign_object_url($base, $key, $opts);
+    }
+
     public function rewrite_content(string $content): string
     {
         $opts = Wpsss_Options::get();
@@ -501,15 +546,80 @@ class Wpsss_Offload
         if ($to === '' || !$this->plugin->active_driver()->is_configured($opts)) {
             return $content;
         }
-        // 不要把整站 uploads 主机换成自定义域：未进桶的旧图会 404。
-        // 新附件走 wp_get_attachment_*。工具页改写走 library，不走这条。
+        // 先按附件改写：正文/区块里写死的本站 uploads 地址，只有对应附件确实
+        // 进桶才换成桶地址；未进桶的旧图保持本地，不做整站换主机。
+        $content = $this->rewrite_local_attachment_urls($content, $opts, $to);
+        // 再做前缀级替换（迁移旧 CDN 域名时填写 rewrite_from）。
         $extra = (string) ($opts['rewrite_from'] ?? '');
-        if ($extra === '') {
+        if ($extra !== '') {
+            $style = Wpsss_Url::style_suffix($opts);
+            $content = Wpsss_Url::rewrite_text($content, $extra, $to, $style);
+        }
+        return Wpsss_Url::sign_rewritten_text($content, $to, $opts);
+    }
+
+    /** @var array<string, bool> 相对路径 => 是否进桶（每请求缓存，避免重复查库） */
+    private $offloaded_rel_cache = [];
+
+    private function rewrite_local_attachment_urls(string $content, array $opts, string $to): string
+    {
+        $uploads = function_exists('wp_upload_dir') ? wp_upload_dir() : [];
+        $baseurl = isset($uploads['baseurl']) ? untrailingslashit((string) $uploads['baseurl']) : '';
+        if ($baseurl === '') {
             return $content;
         }
-        $style = Wpsss_Url::style_suffix($opts);
-        $content = Wpsss_Url::rewrite_text($content, $extra, $to, $style);
-        return Wpsss_Url::sign_rewritten_text($content, $to, $opts);
+        $bases = [$baseurl];
+        $extra = isset($opts['rewrite_from']) ? untrailingslashit((string) $opts['rewrite_from']) : '';
+        if ($extra !== '' && $extra !== $baseurl) {
+            $bases[] = $extra;
+        }
+        $pattern = '~(' . implode('|', array_map(static function ($b) {
+            return preg_quote((string) $b, '~');
+        }, $bases)) . ')/([^\s"\'<>)]+)~';
+        $that = $this;
+        return (string) preg_replace_callback($pattern, static function (array $m) use ($that, $to) {
+            $rel = (string) $m[2];
+            $path = preg_replace('/[?#].*$/', '', $rel);
+            if ($path === '' || !$that->rel_is_offloaded((string) $path)) {
+                return $m[0];
+            }
+            return $to . '/' . $rel;
+        }, $content);
+    }
+
+    /**
+     * 相对 uploads 的文件路径是否属于一个已进桶的附件。
+     * 尺寸文件（name-300x200.jpg）查不到 meta 时回落到原图再查一次。
+     */
+    private function rel_is_offloaded(string $path): bool
+    {
+        if (isset($this->offloaded_rel_cache[$path])) {
+            return $this->offloaded_rel_cache[$path];
+        }
+        $candidates = [$path];
+        if (preg_match('/(-\d+x\d+)(\.[a-z0-9]{2,6})$/i', $path, $m)) {
+            $candidates[] = substr($path, -(strlen($m[1]) + strlen($m[2]))) === '' ? '' : substr($path, 0, strlen($path) - strlen($m[1]) - strlen($m[2])) . $m[2];
+        }
+        $ok = false;
+        foreach ($candidates as $rel) {
+            $ids = get_posts([
+                'post_type' => 'attachment',
+                'post_status' => 'inherit',
+                'posts_per_page' => 1,
+                'fields' => 'ids',
+                'meta_key' => '_wp_attached_file',
+                'meta_value' => $rel,
+                'suppress_filters' => true,
+            ]);
+            foreach ($ids as $id) {
+                if ((int) $id > 0 && Wpsss_Library::is_offloaded((int) $id)) {
+                    $ok = true;
+                    break 2;
+                }
+            }
+        }
+        $this->offloaded_rel_cache[$path] = $ok;
+        return $ok;
     }
 
     /**
@@ -585,6 +695,9 @@ class Wpsss_Offload
             return new WP_Error('wpsss_bad_key', '不在 uploads 下，跳过。');
         }
         $opts = Wpsss_Options::get();
+        if (self::key_is_excluded_dir(Wpsss_Offload::local_rel_from_object_key($key, $opts), $opts)) {
+            return new WP_Error('wpsss_woo_exclude', '付费下载目录按设置不进桶。');
+        }
         if (!self::should_put_path($absolute_path, $opts)) {
             $code = self::is_denied_path($absolute_path) ? 'wpsss_denied' : 'wpsss_skip_type';
             return new WP_Error($code, '此类文件不进桶。');
@@ -599,11 +712,13 @@ class Wpsss_Offload
             $mime = (string) (wp_check_filetype($absolute_path)['type'] ?? 'application/octet-stream');
         }
 
+        $acl = self::key_is_private_dir(Wpsss_Offload::local_rel_from_object_key($key, $opts), $opts) ? 'private' : 'public-read';
         $result = $this->plugin->active_driver()->put_object(
             $opts,
             $key,
             $absolute_path,
-            $mime
+            $mime,
+            $acl
         );
         if (is_wp_error($result)) {
             error_log('WPSSS put failed: ' . $result->get_error_message());
@@ -632,6 +747,39 @@ class Wpsss_Offload
     public static function sanitize_on_exist(string $mode): string
     {
         return in_array($mode, ['skip', 'rename', 'overwrite'], true) ? $mode : 'skip';
+    }
+
+    /** @var string[] 付费下载等只应留在服务器或私有的目录（相对 uploads） */
+    public const PRIVATE_DIRS = ['woocommerce_uploads'];
+
+    /**
+     * 付费下载目录策略：exclude=不进桶（默认）；private=私有进桶、下载走签名；off=照常。
+     */
+    public static function key_is_excluded_dir(string $rel, array $opts = []): bool
+    {
+        if ((string) ($opts['woo_policy'] ?? 'exclude') !== 'exclude') {
+            return false;
+        }
+        return self::rel_in_private_dirs($rel);
+    }
+
+    public static function key_is_private_dir(string $rel, array $opts = []): bool
+    {
+        if ((string) ($opts['woo_policy'] ?? 'exclude') !== 'private') {
+            return false;
+        }
+        return self::rel_in_private_dirs($rel);
+    }
+
+    private static function rel_in_private_dirs(string $rel): bool
+    {
+        $rel = ltrim(str_replace('\\', '/', $rel), '/');
+        foreach (self::PRIVATE_DIRS as $dir) {
+            if ($rel === $dir || strpos($rel, $dir . '/') === 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static function key_fits_current_prefix(string $key, array $opts = []): bool
@@ -685,6 +833,19 @@ class Wpsss_Offload
             return false;
         }
         return hash_file('sha256', $dest) === hash('sha256', $body);
+    }
+
+    private static function same_file_hash(string $a, string $b): bool
+    {
+        if (!is_file($a) || !is_file($b)) {
+            return false;
+        }
+        $size_a = filesize($a);
+        $size_b = filesize($b);
+        if ($size_a === false || $size_b === false || $size_a !== $size_b) {
+            return false;
+        }
+        return hash_file('sha256', $a) === hash_file('sha256', $b);
     }
 
     /**
@@ -778,6 +939,37 @@ class Wpsss_Offload
             }
             $exists = is_file($dest);
             if ($exists && $on_exist === 'skip') {
+                continue;
+            }
+            if (method_exists($driver, 'get_object_range')) {
+                // 大文件路径：分段下载到临时文件，比对后再落到最终位置。
+                $tmp = $dest . '.wpsss-pulling';
+                $download = Wpsss_Stream::download(static function (int $start, int $end) use ($driver, $opts, $key) {
+                    return $driver->get_object_range($opts, (string) $key, $start, $end);
+                }, $tmp);
+                if (is_wp_error($download)) {
+                    @unlink($tmp);
+                    self::restore_sidecars($moved);
+                    return $download;
+                }
+                if ($exists && self::same_file_hash($dest, $tmp)) {
+                    @unlink($tmp);
+                    continue;
+                }
+                if ($exists && $on_exist === 'rename') {
+                    $side = self::sidecar_path($dest);
+                    if (!@rename($dest, $side)) {
+                        @unlink($tmp);
+                        self::restore_sidecars($moved);
+                        return new WP_Error('wpsss_rename', '挪不开本地文件：' . basename($dest));
+                    }
+                    $moved[] = [$side, $dest];
+                }
+                if (!@rename($tmp, $dest)) {
+                    @unlink($tmp);
+                    self::restore_sidecars($moved);
+                    return new WP_Error('wpsss_write', '写本地失败：' . $rel);
+                }
                 continue;
             }
             $body = $driver->get_object($opts, (string) $key);
@@ -875,6 +1067,16 @@ class Wpsss_Offload
     /**
      * @return string[]
      */
+    /**
+     * CLI 与搬运工具用：一个附件名下的全部对象键（主文件 + 原图 + 各尺寸 + 备份）。
+     *
+     * @return string[]
+     */
+    public function attachment_object_keys(int $post_id): array
+    {
+        return $this->attachment_keys($post_id);
+    }
+
     private function attachment_keys(int $post_id): array
     {
         $meta = wp_get_attachment_metadata($post_id);

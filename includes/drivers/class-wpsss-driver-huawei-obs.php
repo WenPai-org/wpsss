@@ -24,7 +24,7 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
             && $settings['access_key_secret'] !== '';
     }
 
-    public function put_object(array $settings, string $object, string $absolute_path, string $mime)
+    public function put_object(array $settings, string $object, string $absolute_path, string $mime, string $acl = 'public-read')
     {
         if (!is_readable($absolute_path)) {
             return new WP_Error('wpsss_missing_file', '本地文件不存在，无法上传。');
@@ -34,7 +34,15 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
             return new WP_Error('wpsss_read_file', '读本地文件失败。');
         }
         $mime = $mime !== '' ? $mime : 'application/octet-stream';
-        return $this->request($settings, 'PUT', $object, $body, $mime);
+        $extra = ($acl === 'private') ? ['x-amz-acl' => 'private'] : [];
+        return $this->request($settings, 'PUT', $object, $body, $mime, $extra, Wpsss_Stream::put_timeout((int) filesize($absolute_path)));
+    }
+
+    public function copy_object(array $to_settings, string $to_object, array $from_settings, string $from_object)
+    {
+        $from_object = ltrim($from_object, '/');
+        $source = '/' . rawurlencode($from_settings['bucket']) . '/' . implode('/', array_map('rawurlencode', explode('/', $from_object)));
+        return $this->request($to_settings, 'PUT', $to_object, '', '', ['x-amz-copy-source' => $source]);
     }
 
     public function delete_objects(array $settings, array $objects)
@@ -57,6 +65,20 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
     public function get_object(array $settings, string $object)
     {
         return $this->request($settings, 'GET', $object, '', '');
+    }
+
+    public function get_object_range(array $settings, string $object, int $start, int $end)
+    {
+        return $this->request(
+            $settings,
+            'GET',
+            $object,
+            '',
+            '',
+            ['Range' => 'bytes=' . $start . '-' . $end],
+            max(60, (int) ceil(($end - $start + 1) / 2097152) + 30),
+            true
+        );
     }
 
     public function probe(array $settings)
@@ -154,7 +176,11 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
     /**
      * @return true|WP_Error
      */
-    private function request(array $settings, string $method, string $object, string $body, string $mime)
+    /**
+     * @param array<string, string> $extra_headers 不进签名的附加头（Range 等）
+     * @return true|string|array{code: int, body: string, headers: array<string, string>}|WP_Error
+     */
+    private function request(array $settings, string $method, string $object, string $body, string $mime, array $extra_headers = [], int $timeout = 60, bool $with_meta = false)
     {
         $object = ltrim($object, '/');
         $date = Wpsss_Oss_Signer::gmt_date();
@@ -179,6 +205,9 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
         if ($mime !== '') {
             $headers['Content-Type'] = $mime;
         }
+        foreach ($extra_headers as $name => $value) {
+            $headers[$name] = $value;
+        }
         $url = Wpsss_Oss_Signer::object_url(Wpsss_Options::api_host($settings), $object);
         $response = wp_remote_request(
             $url,
@@ -186,7 +215,7 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
                 'method' => $method,
                 'headers' => $headers,
                 'body' => $method === 'PUT' ? $body : '',
-                'timeout' => 60,
+                'timeout' => $timeout,
                 'redirection' => 0,
             ]
         );
@@ -195,6 +224,13 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
         }
         $code = (int) wp_remote_retrieve_response_code($response);
         if ($code >= 200 && $code < 300) {
+            if ($with_meta) {
+                return [
+                    'code' => $code,
+                    'body' => (string) wp_remote_retrieve_body($response),
+                    'headers' => Wpsss_Bucket_Info::flatten_headers(wp_remote_retrieve_headers($response)),
+                ];
+            }
             return $method === 'GET' ? (string) wp_remote_retrieve_body($response) : true;
         }
         $raw = (string) wp_remote_retrieve_body($response);

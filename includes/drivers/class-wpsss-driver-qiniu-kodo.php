@@ -23,7 +23,7 @@ class Wpsss_Driver_Qiniu_Kodo implements Wpsss_Driver
             && $settings['access_key_secret'] !== '';
     }
 
-    public function put_object(array $settings, string $object, string $absolute_path, string $mime)
+    public function put_object(array $settings, string $object, string $absolute_path, string $mime, string $acl = 'public-read')
     {
         if (!is_readable($absolute_path)) {
             return new WP_Error('wpsss_missing_file', '本地文件不存在，无法上传。');
@@ -54,10 +54,29 @@ class Wpsss_Driver_Qiniu_Kodo implements Wpsss_Driver
                     'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
                 ],
                 'body' => $payload,
-                'timeout' => 60,
+                'timeout' => Wpsss_Stream::put_timeout((int) filesize($absolute_path)),
                 'redirection' => 0,
             ]
         );
+        return $this->ok($response, 'kodo');
+    }
+
+    public function copy_object(array $to_settings, string $to_object, array $from_settings, string $from_object)
+    {
+        $from_entry = Wpsss_Kodo_Signer::encoded_entry($from_settings['bucket'], ltrim($from_object, '/'));
+        $to_entry = Wpsss_Kodo_Signer::encoded_entry($to_settings['bucket'], ltrim($to_object, '/'));
+        $path = '/copy/' . $from_entry . '/' . $to_entry;
+        $host = Wpsss_Options::kodo_rs_host($to_settings['region'] ?? 'z0');
+        $auth = Wpsss_Kodo_Signer::qbox($to_settings['access_key_id'], $to_settings['access_key_secret'], $path);
+        $response = wp_remote_post($host . $path, [
+            'headers' => [
+                'Authorization' => $auth,
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ],
+            'body' => '',
+            'timeout' => 60,
+            'redirection' => 0,
+        ]);
         return $this->ok($response, 'kodo');
     }
 
@@ -100,6 +119,35 @@ class Wpsss_Driver_Qiniu_Kodo implements Wpsss_Driver
             return (string) wp_remote_retrieve_body($response);
         }
         return new WP_Error('wpsss_kodo_http', 'KODO 拉回 HTTP ' . $code, ['status' => $code]);
+    }
+
+    public function get_object_range(array $settings, string $object, int $start, int $end)
+    {
+        $object = ltrim($object, '/');
+        $base = trim((string) ($settings['custom_domain'] ?? ''));
+        if ($base === '') {
+            return new WP_Error('wpsss_kodo_domain', '七牛拉回需要自定义域名。');
+        }
+        $url = Wpsss_Kodo_Signer::private_download_url(
+            $settings['access_key_id'],
+            $settings['access_key_secret'],
+            untrailingslashit($base) . '/' . $object,
+            3600
+        );
+        $response = wp_remote_get($url, [
+            'headers' => ['Range' => 'bytes=' . $start . '-' . $end],
+            'timeout' => max(60, (int) ceil(($end - $start + 1) / 2097152) + 30),
+            'redirection' => 0,
+        ]);
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        $code = (int) wp_remote_retrieve_response_code($response);
+        return [
+            'code' => $code,
+            'body' => (string) wp_remote_retrieve_body($response),
+            'headers' => Wpsss_Bucket_Info::flatten_headers(wp_remote_retrieve_headers($response)),
+        ];
     }
 
     public function probe(array $settings)

@@ -359,6 +359,137 @@ final class Wpsss_CLI
      *
      * @when after_wp_load
      */
+    /**
+     * 把已进桶的对象搬到另一只桶或厂商。只搬对象，不改插件配置。
+     *
+     * 同厂商走服务端复制；跨厂商分段下载到临时文件再上传。搬完要切换，
+     * 把插件设置改到新桶后，用 --update-keys 重写附件对象键。
+     *
+     * ## OPTIONS
+     *
+     * --to-bucket=<bucket>
+     * : 目标桶（必填）。
+     * [--to-driver=<id>]
+     * : 目标厂商，默认与当前相同。
+     * [--to-region=<region>]
+     * : 目标区域。
+     * [--to-endpoint=<url>]
+     * : S3 兼容目标 endpoint。
+     * [--to-prefix=<prefix>]
+     * : 目标对象前缀，默认不加。
+     * [--to-ak=<key>] [--to-sk=<secret>]
+     * : 目标密钥，默认沿用当前。
+     * [--limit=<n>]
+     * : 一次搬多少个附件，默认 50。从新到旧。
+     * [--before=<id>]
+     * : 只搬编号小于它的附件（接续上一批）。
+     * [--dry-run]
+     * : 只列计划，不搬。
+     * [--update-keys] [--yes]
+     * : 搬完后把附件对象键改成目标前缀形态（需要 --yes）。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss copy --to-bucket=bucket-new --dry-run
+     *     wp sss copy --to-bucket=bucket-new --limit=200 --before=12300
+     *
+     * @when after_wp_load
+     */
+    public function copy(array $args, array $assoc_args): void
+    {
+        unset($args);
+        $to_bucket = (string) ($assoc_args['to-bucket'] ?? '');
+        if ($to_bucket === '') {
+            WP_CLI::error('请提供 --to-bucket。');
+        }
+        $opts = Wpsss_Options::get();
+        $to = $opts;
+        $to['bucket'] = $to_bucket;
+        $to['driver'] = (string) ($assoc_args['to-driver'] ?? $opts['driver']);
+        foreach (['to-region' => 'region', 'to-endpoint' => 'endpoint', 'to-ak' => 'access_key_id', 'to-sk' => 'access_key_secret', 'to-prefix' => 'object_prefix'] as $arg => $key) {
+            if (isset($assoc_args[$arg]) && (string) $assoc_args[$arg] !== '') {
+                $to[$key] = (string) $assoc_args[$arg];
+            }
+        }
+        $from_driver = wpsss()->active_driver();
+        if (!$from_driver->is_configured($opts)) {
+            WP_CLI::error('当前插件尚未配置完成，先 wp sss set。');
+        }
+        $to_driver = wpsss()->driver($to['driver']);
+        if ($to_driver === null) {
+            WP_CLI::error('未知目标厂商：' . $to['driver']);
+        }
+        if (!$to_driver->is_configured($to)) {
+            WP_CLI::error('目标桶信息不完整（区域 / 密钥），请补 --to-region / --to-ak / --to-sk。');
+        }
+        $limit = max(1, (int) ($assoc_args['limit'] ?? 50));
+        $before = (int) ($assoc_args['before'] ?? 0);
+        $dry = !empty($assoc_args['dry-run']);
+        $update_keys = !empty($assoc_args['update-keys']);
+        if ($update_keys && empty($assoc_args['yes'])) {
+            WP_CLI::error('改写附件对象键前请核对已搬运成功，并加 --yes。');
+        }
+
+        $ids = wpsss()->library()->offloaded_ids($limit, $before);
+        if ($ids === []) {
+            WP_CLI::success('没有可搬的附件。');
+            return;
+        }
+        $offload = wpsss()->offload();
+        $ok = 0;
+        $fail = 0;
+        $errors = [];
+        $last_id = 0;
+        foreach ($ids as $id) {
+            $last_id = (int) $id;
+            $keys = $offload->attachment_object_keys((int) $id);
+            if ($keys === []) {
+                WP_CLI::log(sprintf('#%d 没有对象键，跳过。', (int) $id));
+                continue;
+            }
+            $done = true;
+            foreach ($keys as $key) {
+                $rel = Wpsss_Offload::local_rel_from_object_key((string) $key, $opts);
+                if ($rel === '') {
+                    continue;
+                }
+                $to_key = Wpsss_Options::apply_object_prefix($rel, $to);
+                if ($dry) {
+                    WP_CLI::log(sprintf('#%d %s -> %s', (int) $id, $key, $to_key));
+                    continue;
+                }
+                $result = Wpsss_Copy::copy_key($from_driver, $opts, (string) $key, $to_driver, $to, $to_key);
+                if (is_wp_error($result)) {
+                    $done = false;
+                    $fail++;
+                    $errors[] = sprintf('#%d %s: %s', (int) $id, $key, $result->get_error_message());
+                    continue 2;
+                }
+            }
+            if ($dry) {
+                continue;
+            }
+            if ($done) {
+                $ok++;
+                if ($update_keys) {
+                    $primary = (string) get_post_meta((int) $id, Wpsss_Library::META_KEY, true);
+                    $rel = Wpsss_Offload::local_rel_from_object_key($primary, $opts);
+                    if ($rel !== '') {
+                        update_post_meta((int) $id, Wpsss_Library::META_KEY, Wpsss_Options::apply_object_prefix($rel, $to));
+                    }
+                }
+            }
+        }
+        if ($dry) {
+            WP_CLI::success('试运行结束，未做任何更改。');
+            return;
+        }
+        foreach (array_slice($errors, 0, 5) as $err) {
+            WP_CLI::warning($err);
+        }
+        WP_CLI::success(sprintf('搬运完成：成功 %d 个附件，失败 %d 个对象。接续：--before=%d', $ok, $fail, $last_id));
+    }
+
     public function rewrite(array $args, array $assoc_args): void
     {
         unset($args);

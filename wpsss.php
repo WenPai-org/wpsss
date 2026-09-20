@@ -52,6 +52,8 @@ require_once WPSSS_DIR . 'includes/class-wpsss-kodo-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-obs-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-s3-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-url.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-stream.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-copy.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-history.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-options.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-site.php';

@@ -304,6 +304,11 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
         <p class="hint js-wpsss-protect-hint"<?php echo trim((string) ($opts['image_style'] ?? '')) !== '' ? ' hidden' : ''; ?>><?php echo esc_html__('未填写图片样式时，此开关不会生效。', 'wpsss'); ?></p>
       </div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('不进桶的扩展名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('逗号分隔。php、htaccess 等可执行文件始终拒绝。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[exclude_ext]" type="text" value="<?php echo esc_attr((string) ($opts['exclude_ext'] ?? '')); ?>" placeholder="svg,zip,exe" /></div></div>
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('付费下载目录', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('uploads/woocommerce_uploads 里的商品文件。不进桶=留在服务器，靠本地权限拦截；私有进桶=对象不公开，下载地址带签名；照常=跟随全站设置。', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[woo_policy]">
+        <option value="exclude"<?php selected(($opts['woo_policy'] ?? 'exclude'), 'exclude'); ?>><?php echo esc_html__('不进桶（推荐）', 'wpsss'); ?></option>
+        <option value="private"<?php selected(($opts['woo_policy'] ?? 'exclude'), 'private'); ?>><?php echo esc_html__('私有进桶，下载走签名', 'wpsss'); ?></option>
+        <option value="off"<?php selected(($opts['woo_policy'] ?? 'exclude'), 'off'); ?>><?php echo esc_html__('照常进桶', 'wpsss'); ?></option>
+      </select></div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('远端已有则跳过', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('补传前先检查桶里是否已有同名对象；已有则跳过，不覆盖。', 'wpsss'); ?></div></div><div class="field-ctl">
         <input type="hidden" name="<?php echo esc_attr($key); ?>[skip_exist]" value="<?php echo (($opts['skip_exist'] ?? '0') === '1') ? '1' : '0'; ?>" />
         <button type="button" class="toggle<?php echo ($opts['skip_exist'] ?? '0') === '1' ? ' on' : ''; ?> js-wpsss-flip" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo ($opts['skip_exist'] ?? '0') === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>

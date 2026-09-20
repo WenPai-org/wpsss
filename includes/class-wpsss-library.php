@@ -12,6 +12,7 @@ final class Wpsss_Library
     public const META_OFFLOADED = '_wpsss_offloaded';
     public const META_KEY = '_wpsss_key';
     public const META_ERROR = '_wpsss_error';
+    public const META_LOCAL_ONLY = '_wpsss_local_only';
     public const CRON_HOOK = 'wpsss_offload_cron_event';
     public const CRON_SLUG = 'wpsss_minute';
     public const CURSOR_KEY = 'wpsss_offload_cursor';
@@ -82,12 +83,22 @@ final class Wpsss_Library
             'meta_compare' => 'EXISTS',
             'no_found_rows' => false,
         ]);
+        $local_only = new WP_Query([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'meta_key' => self::META_LOCAL_ONLY,
+            'meta_compare' => 'EXISTS',
+            'no_found_rows' => false,
+        ]);
         $offloaded = (int) $done->found_posts;
         return [
             'total' => $total,
             'offloaded' => $offloaded,
-            'pending' => max(0, $total - $offloaded),
+            'pending' => max(0, $total - $offloaded - (int) $local_only->found_posts),
             'failed' => (int) $failed->found_posts,
+            'local_only' => (int) $local_only->found_posts,
         ];
     }
 
@@ -181,15 +192,22 @@ final class Wpsss_Library
             'posts_per_page' => $limit > 0 ? $limit : 20,
             'fields' => 'ids',
             'meta_query' => [
-                'relation' => 'OR',
+                'relation' => 'AND',
                 [
-                    'key' => self::META_OFFLOADED,
+                    'key' => self::META_LOCAL_ONLY,
                     'compare' => 'NOT EXISTS',
                 ],
                 [
-                    'key' => self::META_OFFLOADED,
-                    'value' => '1',
-                    'compare' => '!=',
+                    'relation' => 'OR',
+                    [
+                        'key' => self::META_OFFLOADED,
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key' => self::META_OFFLOADED,
+                        'value' => '1',
+                        'compare' => '!=',
+                    ],
                 ],
             ],
         ], $before_id);

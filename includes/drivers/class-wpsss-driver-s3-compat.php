@@ -38,10 +38,21 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
             && $host !== '';
     }
 
-    public function put_object(array $settings, string $object, string $absolute_path, string $mime)
+    public function put_object(array $settings, string $object, string $absolute_path, string $mime, string $acl = 'public-read')
     {
         if (!is_readable($absolute_path)) {
             return new WP_Error('wpsss_missing_file', '本地文件不存在，无法上传。');
+        }
+
+        $size = (int) filesize($absolute_path);
+        if ($size >= Wpsss_Stream::MULTIPART_THRESHOLD) {
+            $multipart = $this->put_object_multipart($settings, $object, $absolute_path, $mime, $size, $acl);
+            if (!is_wp_error($multipart)) {
+                return $multipart;
+            }
+            if ($multipart->get_error_code() !== 'wpsss_multipart_init' && $multipart->get_error_code() !== 'wpsss_s3_multipart_unsupported') {
+                return $multipart;
+            }
         }
 
         $body = file_get_contents($absolute_path);
@@ -51,8 +62,11 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
 
         $mime = $mime !== '' ? $mime : 'application/octet-stream';
         $extra = $this->put_headers($settings);
+        if ($acl === 'private') {
+            return $this->request($settings, 'PUT', $object, $body, $mime, $extra + ['x-amz-acl' => 'private'], [], Wpsss_Stream::put_timeout($size));
+        }
         if (($settings['url_access'] ?? 'public') !== 'signed') {
-            $result = $this->request($settings, 'PUT', $object, $body, $mime, $extra + ['x-amz-acl' => 'public-read']);
+            $result = $this->request($settings, 'PUT', $object, $body, $mime, $extra + ['x-amz-acl' => 'public-read'], [], Wpsss_Stream::put_timeout($size));
             if (!is_wp_error($result)) {
                 return $result;
             }
@@ -61,7 +75,7 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
                 return $result;
             }
         }
-        return $this->request($settings, 'PUT', $object, $body, $mime, $extra);
+        return $this->request($settings, 'PUT', $object, $body, $mime, $extra, [], Wpsss_Stream::put_timeout($size));
     }
 
     /**
@@ -74,6 +88,13 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
             ? Wpsss_Options::object_cache_control($settings)
             : ((($settings['url_access'] ?? 'public') === 'signed') ? 'private, max-age=3600' : 'public, max-age=2592000');
         return $cc !== '' ? ['Cache-Control' => $cc] : [];
+    }
+
+    public function copy_object(array $to_settings, string $to_object, array $from_settings, string $from_object)
+    {
+        $from_object = ltrim($from_object, '/');
+        $source = '/' . rawurlencode($from_settings['bucket']) . '/' . implode('/', array_map('rawurlencode', explode('/', $from_object)));
+        return $this->request($to_settings, 'PUT', $to_object, '', '', ['x-amz-copy-source' => $source]);
     }
 
     public function delete_objects(array $settings, array $objects)
@@ -96,6 +117,75 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
     public function get_object(array $settings, string $object)
     {
         return $this->request($settings, 'GET', $object, '', '');
+    }
+
+    /**
+     * 分段拉回：Range 头不进 S3 V4 签名白名单也可发送。
+     */
+    public function get_object_range(array $settings, string $object, int $start, int $end)
+    {
+        return $this->request(
+            $settings,
+            'GET',
+            $object,
+            '',
+            '',
+            ['Range' => 'bytes=' . $start . '-' . $end],
+            [],
+            max(60, (int) ceil(($end - $start + 1) / 2097152) + 30),
+            true
+        );
+    }
+
+    /**
+     * 大文件分片上传（S3 multipart）。
+     *
+     * @return true|WP_Error
+     */
+    private function put_object_multipart(array $settings, string $object, string $absolute_path, string $mime, int $size, string $acl = 'public-read')
+    {
+        $extra = $this->put_headers($settings);
+        if ($acl === 'private') {
+            $extra['x-amz-acl'] = 'private';
+        }
+        $initiate = function () use ($settings, $object, $mime, $extra, $acl) {
+            $r = $this->request($settings, 'POST', $object, '', $mime !== '' ? $mime : 'application/octet-stream', $extra, ['uploads' => ''], 60, true);
+            if (is_wp_error($r)) {
+                return $r;
+            }
+            $id = Wpsss_Stream::parse_upload_id((string) $r['body']);
+            return $id !== '' ? $id : new WP_Error('wpsss_multipart_init', '初始化分片上传失败。');
+        };
+        $part = function (string $upload_id, int $number, string $body) use ($settings, $object) {
+            $r = $this->request($settings, 'PUT', $object, $body, '', [], [
+                'partNumber' => (string) $number,
+                'uploadId' => $upload_id,
+            ], Wpsss_Stream::put_timeout(strlen($body)), true);
+            if (is_wp_error($r)) {
+                return $r;
+            }
+            $etag = '';
+            foreach ($r['headers'] as $name => $value) {
+                if (strcasecmp((string) $name, 'etag') === 0) {
+                    $etag = trim((string) $value, "\"'");
+                }
+            }
+            return $etag !== '' ? $etag : new WP_Error('wpsss_multipart_etag', '分片上传没拿到 ETag。');
+        };
+        $complete = function (string $upload_id, string $xml) use ($settings, $object) {
+            $r = $this->request($settings, 'POST', $object, $xml, 'application/xml', [], ['uploadId' => $upload_id], 120, true);
+            if (is_wp_error($r)) {
+                return $r;
+            }
+            if (preg_match('/<Code>([^<]+)<\/Code>/', (string) $r['body'], $m)) {
+                return new WP_Error('wpsss_s3_multipart_complete', '分片合并失败：' . $m[1]);
+            }
+            return true;
+        };
+        $abort = function (string $upload_id) use ($settings, $object) {
+            $this->request($settings, 'DELETE', $object, '', '', [], ['uploadId' => $upload_id]);
+        };
+        return Wpsss_Stream::upload($initiate, $part, $complete, $abort, $absolute_path);
     }
 
     public function probe(array $settings)
@@ -206,7 +296,8 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
 
     /**
      * @param array<string, string> $extra
-     * @return true|WP_Error
+     * @param array<string, string> $query
+     * @return true|string|array{code: int, body: string, headers: array<string, string>}|WP_Error
      */
     private function request(
         array $settings,
@@ -214,16 +305,25 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
         string $object,
         string $body,
         string $mime,
-        array $extra = []
+        array $extra = [],
+        array $query = [],
+        int $timeout = 60,
+        bool $with_meta = false
     ) {
         $object = ltrim($object, '/');
         $built = Wpsss_Options::s3_object_request($settings, $object);
+        // WP HTTP 对带 body 的 PUT/POST 会默认补 application/x-www-form-urlencoded，
+        // 服务端把它当已签名头；mime 为空时先补默认值，两侧才对得上。
+        if (($method === 'PUT' || $method === 'POST') && $body !== '' && $mime === '') {
+            $mime = 'application/octet-stream';
+        }
+
         if ($built['url'] === '' || $built['host'] === '') {
             return new WP_Error('wpsss_s3_host', 'S3 兼容缺少 endpoint / 区域，无法签名。');
         }
 
         $amz_date = Wpsss_S3_Signer::amz_date();
-        $payload_hash = ($method === 'PUT')
+        $payload_hash = ($method === 'PUT' || $method === 'POST')
             ? Wpsss_S3_Signer::payload_hash($body)
             : Wpsss_S3_Signer::EMPTY_SHA256;
         $region = Wpsss_Options::s3_signing_region($settings);
@@ -240,12 +340,21 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
             $headers[strtolower((string) $name)] = (string) $value;
         }
 
+        $canonical_query = '';
+        if ($query !== []) {
+            ksort($query);
+            foreach ($query as $k => $v) {
+                // 与 S3 规范一致：键值都做 RFC3986 编码。
+                $canonical_query .= ($canonical_query === '' ? '' : '&') . rawurlencode((string) $k) . '=' . rawurlencode((string) $v);
+            }
+        }
+
         $signed = Wpsss_S3_Signer::sign(
             $settings['access_key_id'],
             $settings['access_key_secret'],
             $method,
             $built['canonical_uri'],
-            '',
+            $canonical_query,
             $headers,
             $payload_hash,
             $amz_date,
@@ -264,13 +373,17 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
             $request_headers[$name] = $value;
         }
 
+        $url = $built['url'];
+        if ($query !== []) {
+            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($query);
+        }
         $response = wp_remote_request(
-            $built['url'],
+            $url,
             [
                 'method' => $method,
                 'headers' => $request_headers,
-                'body' => $method === 'PUT' ? $body : '',
-                'timeout' => 60,
+                'body' => ($method === 'PUT' || $method === 'POST') ? $body : '',
+                'timeout' => $timeout,
                 'redirection' => 0,
             ]
         );
@@ -281,6 +394,13 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
 
         $code = (int) wp_remote_retrieve_response_code($response);
         if ($code >= 200 && $code < 300) {
+            if ($with_meta) {
+                return [
+                    'code' => $code,
+                    'body' => (string) wp_remote_retrieve_body($response),
+                    'headers' => Wpsss_Bucket_Info::flatten_headers(wp_remote_retrieve_headers($response)),
+                ];
+            }
             return $method === 'GET' ? (string) wp_remote_retrieve_body($response) : true;
         }
 

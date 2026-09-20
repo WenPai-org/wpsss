@@ -79,7 +79,36 @@ final class Wpsss_Woo
         if ($base === '') {
             return '';
         }
+        // 对象不在桶里（商家直传本地、已拉回删除等）就退回本地地址，别让订单下载 404。
+        if (!self::object_in_bucket($key, $opts)) {
+            return '';
+        }
+        // 私有策略的付费文件：无论全站是否签名访问，下载地址一律签名。
+        if (Wpsss_Offload::key_is_private_dir($rel, $opts)) {
+            $opts['url_access'] = 'signed';
+        }
         return Wpsss_Url::sign_object_url($base, $key, $opts);
+    }
+
+    /** @var array<string, bool> 每请求内缓存存在性，产品列表页会反复问同一批文件 */
+    private static $exists_cache = [];
+
+    private static function object_in_bucket(string $key, array $opts): bool
+    {
+        if (isset(self::$exists_cache[$key])) {
+            return self::$exists_cache[$key];
+        }
+        // 单测环境没有插件实例时沿用旧行为（视为存在）。
+        if (!function_exists('wpsss')) {
+            return true;
+        }
+        $driver = wpsss()->active_driver();
+        if (!$driver->is_configured($opts)) {
+            return false;
+        }
+        $ok = !is_wp_error($driver->head_object($opts, $key));
+        self::$exists_cache[$key] = $ok;
+        return $ok;
     }
 
     public static function absolute_uploads_path(string $file, string $basedir, string $baseurl): string
