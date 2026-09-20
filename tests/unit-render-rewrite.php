@@ -73,6 +73,11 @@ class Wpsss_Library
     {
         return in_array($post_id, $GLOBALS['wpsss_offloaded_ids'], true);
     }
+
+    public static function is_main_only(int $post_id): bool
+    {
+        return in_array($post_id, $GLOBALS['wpsss_main_only_ids'] ?? [], true);
+    }
 }
 
 $GLOBALS['wpsss_options_store']['wpsss_options'] = [

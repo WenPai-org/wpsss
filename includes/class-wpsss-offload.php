@@ -43,6 +43,8 @@ class Wpsss_Offload
         // keep_local=0 时本地文件不在：编辑/再生成等场景退回桶地址（AS3CF 同款语义）。
         add_filter('get_attached_file', [$this, 'filter_attached_file'], 10, 2);
         add_filter('wp_get_original_image_path', [$this, 'filter_attached_file'], 10, 2);
+        // 本地删净后核心按目录查重失效：同名新文件问一次桶，避免静默覆盖桶内对象。
+        add_filter('wp_unique_filename', [$this, 'unique_filename_in_bucket'], 20, 2);
         // FSE 区块模板与 Customizer 背景/头图里的硬编码地址，也走按附件改写。
         add_filter('render_block', [$this, 'rewrite_content'], 100);
         add_filter('theme_mod_background_image', [$this, 'rewrite_content'], 100);
@@ -188,6 +190,9 @@ class Wpsss_Offload
                     update_post_meta((int) $attachment_id, '_wpsss_filesize', $filesize);
                 }
                 $this->mark_offloaded((int) $attachment_id, $this->object_key($primary));
+                // 尺寸文件没进桶（thumbs 关闭或本来就没有）就打主文件标记，尺寸 URL 不改写。
+                $thumbs_uploaded = ($opts['upload_thumbs'] ?? '1') === '1' && !empty($metadata['sizes']) && is_array($metadata['sizes']);
+                Wpsss_Library::set_main_only((int) $attachment_id, !$thumbs_uploaded);
             } elseif ($ok->get_error_code() !== 'wpsss_skip_type' && $ok->get_error_code() !== 'wpsss_woo_exclude') {
                 $this->mark_failed((int) $attachment_id, $ok->get_error_message());
             }
@@ -213,6 +218,7 @@ class Wpsss_Offload
                 $head = $this->plugin->active_driver()->head_object(Wpsss_Options::get(), $key);
                 if (!is_wp_error($head)) {
                     $this->mark_offloaded($post_id, $key);
+                    Wpsss_Library::set_main_only($post_id, true);
                     return true;
                 }
             }
@@ -244,6 +250,7 @@ class Wpsss_Offload
             }
         }
         $this->mark_offloaded($post_id, $this->object_key($file));
+        Wpsss_Library::set_main_only($post_id, true);
         return true;
     }
 
@@ -251,6 +258,7 @@ class Wpsss_Offload
     {
         update_post_meta($post_id, Wpsss_Library::META_OFFLOADED, '1');
         delete_post_meta($post_id, Wpsss_Library::META_ERROR);
+        delete_post_meta($post_id, Wpsss_Library::META_FAIL_COUNT);
         if ($key !== '') {
             update_post_meta($post_id, Wpsss_Library::META_KEY, $key);
         }
@@ -264,6 +272,7 @@ class Wpsss_Offload
     public function mark_failed(int $post_id, string $message): void
     {
         update_post_meta($post_id, Wpsss_Library::META_ERROR, $message);
+        update_post_meta($post_id, Wpsss_Library::META_FAIL_COUNT, (string) (Wpsss_Library::fail_count($post_id) + 1));
         Wpsss_History::add_fail($post_id, $message);
     }
 
@@ -322,6 +331,10 @@ class Wpsss_Offload
         if (!Wpsss_Library::is_offloaded((int) $post_id) || Wpsss_Options::public_base() === '') {
             return $data;
         }
+        // 中间尺寸必是尺寸文件：主文件标记下不改写，交给本地。
+        if (Wpsss_Library::is_main_only((int) $post_id)) {
+            return $data;
+        }
         if (isset($data['url'])) {
             $data['url'] = $this->rewrite_url((string) $data['url'], (int) $post_id);
         }
@@ -343,6 +356,9 @@ class Wpsss_Offload
             return $out;
         }
         if (!Wpsss_Library::is_offloaded((int) $id) || Wpsss_Options::public_base() === '') {
+            return false;
+        }
+        if (Wpsss_Library::is_main_only((int) $id) && $size !== 'full') {
             return false;
         }
         if (!function_exists('image_get_intermediate_size')) {
@@ -424,6 +440,13 @@ class Wpsss_Offload
         }
 
         $primary = $this->attachment_primary_key($post_id);
+        // 主文件标记下，尺寸文件不在桶里，保持本地地址。
+        if (Wpsss_Library::is_main_only($post_id) && $primary !== '') {
+            $url_file = basename((string) parse_url($url, PHP_URL_PATH));
+            if ($url_file !== '' && $url_file !== basename($primary)) {
+                return $url;
+            }
+        }
         $style = method_exists('Wpsss_Url', 'style_suffix') ? Wpsss_Url::style_suffix($opts) : '';
         $key = self::object_key_for_url($url, $primary, $style);
         if ($key === '') {
@@ -479,16 +502,21 @@ class Wpsss_Offload
         if (!Wpsss_Library::is_offloaded((int) $attachment_id)) {
             return $sources;
         }
+        $main_only = Wpsss_Library::is_main_only((int) $attachment_id);
 
         $primary = $this->attachment_primary_key((int) $attachment_id);
         if ($primary === '') {
             return $sources;
         }
+        $primary_file = basename($primary);
         $dir = dirname($primary);
         $dir = $dir === '.' ? '' : $dir . '/';
 
         foreach ($sources as $width => $source) {
             if (empty($source['url'])) {
+                continue;
+            }
+            if ($main_only && basename((string) parse_url((string) $source['url'], PHP_URL_PATH)) !== $primary_file) {
                 continue;
             }
             $key = self::object_key_for_url((string) $source['url'], $primary, Wpsss_Url::style_suffix($opts));
@@ -503,6 +531,41 @@ class Wpsss_Offload
             ? Wpsss_Url::style_suffix($opts)
             : '';
         return Wpsss_Url::style_srcset($sources, $style);
+    }
+
+    /**
+     * wp_unique_filename 过滤器：本地没有但桶里已有同名对象时加 -N 后缀。
+     * 只在关本地备份（本地查重必然失效）且驱动已配置时才问桶，平时零开销。
+     */
+    public function unique_filename_in_bucket(string $filename, string $dir)
+    {
+        if ($filename === '' || $dir === '') {
+            return $filename;
+        }
+        $opts = Wpsss_Options::get();
+        if (($opts['keep_local'] ?? '1') === '1' || !$this->plugin->active_driver()->is_configured($opts)) {
+            return $filename;
+        }
+        if (file_exists(rtrim($dir, '/') . '/' . $filename)) {
+            return $filename;
+        }
+        $basedir = self::uploads()['basedir'] ?? '';
+        $rel = ($basedir !== '') ? Wpsss_Offload::key_from_uploads(rtrim($dir, '/') . '/' . $filename, $basedir) : '';
+        if ($rel === '') {
+            return $filename;
+        }
+        $ext = (string) pathinfo($filename, PATHINFO_EXTENSION);
+        $stem = pathinfo($filename, PATHINFO_FILENAME);
+        $driver = $this->plugin->active_driver();
+        for ($i = 1; $i <= 20; $i++) {
+            $name = ($i === 1) ? $filename : $stem . '-' . $i . ($ext !== '' ? '.' . $ext : '');
+            $candidate_rel = preg_replace('#/[^/]*$#', '', $rel) . '/' . $name;
+            $key = Wpsss_Options::apply_object_prefix($candidate_rel, $opts);
+            if (is_wp_error($driver->head_object($opts, $key))) {
+                return $name;
+            }
+        }
+        return $filename . '-duplicate';
     }
 
     /**
@@ -613,6 +676,10 @@ class Wpsss_Offload
             ]);
             foreach ($ids as $id) {
                 if ((int) $id > 0 && Wpsss_Library::is_offloaded((int) $id)) {
+                    // 尺寸文件靠父附件回落命中时，父若是主文件标记则该尺寸不在桶，不改写。
+                    if ($rel !== $path && Wpsss_Library::is_main_only((int) $id)) {
+                        continue;
+                    }
                     $ok = true;
                     break 2;
                 }

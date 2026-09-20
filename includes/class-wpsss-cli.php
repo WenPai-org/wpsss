@@ -202,6 +202,9 @@ final class Wpsss_CLI
      * [--limit=<n>]
      * : 一批最多几个。默认 20。
      *
+     * [--source=<which>]
+     * : pending（默认）取待传；failed 只重试带失败标记的附件。
+     *
      * [--dry-run]
      * : 只数不传。
      *
@@ -223,7 +226,8 @@ final class Wpsss_CLI
         $limit = isset($assoc_args['limit']) ? (int) $assoc_args['limit'] : 20;
         $dry = !empty($assoc_args['dry-run']);
         $before = isset($assoc_args['before']) ? (int) $assoc_args['before'] : 0;
-        $result = wpsss()->library()->offload_batch($limit, $dry, $id, 'pending', $before);
+        $source = (isset($assoc_args['source']) && (string) $assoc_args['source'] === 'failed') ? 'failed' : 'pending';
+        $result = wpsss()->library()->offload_batch($limit, $dry, $id, $source, $before);
         WP_CLI::log('ok=' . $result['ok'] . ' fail=' . $result['fail'] . ' skip=' . $result['skip'] . ' cursor=' . (int) ($result['cursor'] ?? 0));
         foreach ($result['errors'] as $line) {
             WP_CLI::warning($line);

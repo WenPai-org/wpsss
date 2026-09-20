@@ -197,3 +197,7 @@ wp sss delete &lt;对象键&gt; --yes</code></pre>
     </div>
   </section>
 </div>
+## 边界与支持范围
+
+- 多站点（Multisite）暂不支持；不要在网络层激活。
+- COS / OBS / 七牛的超大文件上传是单请求（超时按体积放大）。百兆以上建议用 OSS / S3 兼容厂商。

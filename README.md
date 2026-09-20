@@ -40,3 +40,8 @@ wp --path=~/Studio/wpsss-dev sss doctor
 4. [`docs/ai-context/HANDOFF.md`](docs/ai-context/HANDOFF.md)
 
 集群 SOP：linuxjoy `docs/ops/sop-wpsss.md`。计划：`docs/plans/2026-09-18-wpsss.md`。UI 原型：`docs/plans/wpsss-ui/`。
+
+## 边界
+
+- 多站点（Multisite）暂不支持，请勿在网络层激活。
+- COS / OBS / 七牛的超大文件上传仍是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。

@@ -13,6 +13,9 @@ final class Wpsss_Library
     public const META_KEY = '_wpsss_key';
     public const META_ERROR = '_wpsss_error';
     public const META_LOCAL_ONLY = '_wpsss_local_only';
+    public const META_MAIN_ONLY = '_wpsss_main_only';
+    public const META_FAIL_COUNT = '_wpsss_fail_count';
+    public const FAIL_BACKOFF_THRESHOLD = 3;
     public const CRON_HOOK = 'wpsss_offload_cron_event';
     public const CRON_SLUG = 'wpsss_minute';
     public const CURSOR_KEY = 'wpsss_offload_cursor';
@@ -53,52 +56,70 @@ final class Wpsss_Library
         return get_post_meta($post_id, self::META_OFFLOADED, true) === '1';
     }
 
+    /**
+     * 主文件标记：只有主文件（含原图）在桶，尺寸文件没传（thumbs 关闭 / PDF 预览）。
+     * 此时尺寸 URL 保持本地，只有主文件地址改写，避免前台尺寸 404。
+     */
+    public static function is_main_only(int $post_id): bool
+    {
+        return get_post_meta($post_id, self::META_MAIN_ONLY, true) === '1';
+    }
+
+    public static function set_main_only(int $post_id, bool $on): void
+    {
+        if ($on) {
+            update_post_meta($post_id, self::META_MAIN_ONLY, '1');
+        } else {
+            delete_post_meta($post_id, self::META_MAIN_ONLY);
+        }
+    }
+
+    public static function fail_count(int $post_id): int
+    {
+        return (int) get_post_meta($post_id, self::META_FAIL_COUNT, true);
+    }
+
     public static function last_error(int $post_id): string
     {
         return (string) get_post_meta($post_id, self::META_ERROR, true);
     }
 
     /**
-     * @return array{total: int, offloaded: int, pending: int, failed: int}
+     * 媒体库画像。一次 SQL 往返拿四个计数——补传 tick 每秒可能问多次，
+     * 原先的四条 found_rows 查询在大库上是主要开销。
+     *
+     * @return array{total: int, offloaded: int, pending: int, failed: int, local_only: int}
      */
     public function stats(): array
     {
-        $total_obj = wp_count_posts('attachment');
-        $total = isset($total_obj->inherit) ? (int) $total_obj->inherit : 0;
-        $done = new WP_Query([
-            'post_type' => 'attachment',
-            'post_status' => 'inherit',
-            'posts_per_page' => 1,
-            'fields' => 'ids',
-            'meta_key' => self::META_OFFLOADED,
-            'meta_value' => '1',
-            'no_found_rows' => false,
-        ]);
-        $failed = new WP_Query([
-            'post_type' => 'attachment',
-            'post_status' => 'inherit',
-            'posts_per_page' => 1,
-            'fields' => 'ids',
-            'meta_key' => self::META_ERROR,
-            'meta_compare' => 'EXISTS',
-            'no_found_rows' => false,
-        ]);
-        $local_only = new WP_Query([
-            'post_type' => 'attachment',
-            'post_status' => 'inherit',
-            'posts_per_page' => 1,
-            'fields' => 'ids',
-            'meta_key' => self::META_LOCAL_ONLY,
-            'meta_compare' => 'EXISTS',
-            'no_found_rows' => false,
-        ]);
-        $offloaded = (int) $done->found_posts;
+        global $wpdb;
+        if (!isset($wpdb) || !is_object($wpdb) || !method_exists($wpdb, 'get_row')) {
+            return ['total' => 0, 'offloaded' => 0, 'pending' => 0, 'failed' => 0, 'local_only' => 0];
+        }
+        $posts = isset($wpdb->posts) ? (string) $wpdb->posts : 'wp_posts';
+        $postmeta = isset($wpdb->postmeta) ? (string) $wpdb->postmeta : 'wp_postmeta';
+        $sql = "SELECT
+            (SELECT COUNT(*) FROM {$posts} WHERE post_type = 'attachment' AND post_status = 'inherit') AS total,
+            (SELECT COUNT(*) FROM {$posts} p JOIN {$postmeta} m ON m.post_id = p.ID
+                AND m.meta_key = %s AND m.meta_value = '1'
+                WHERE p.post_type = 'attachment' AND p.post_status = 'inherit') AS offloaded,
+            (SELECT COUNT(*) FROM {$posts} p JOIN {$postmeta} m ON m.post_id = p.ID
+                AND m.meta_key = %s
+                WHERE p.post_type = 'attachment' AND p.post_status = 'inherit') AS failed,
+            (SELECT COUNT(*) FROM {$posts} p JOIN {$postmeta} m ON m.post_id = p.ID
+                AND m.meta_key = %s
+                WHERE p.post_type = 'attachment' AND p.post_status = 'inherit') AS local_only";
+        $row = $wpdb->get_row($wpdb->prepare($sql, self::META_OFFLOADED, self::META_ERROR, self::META_LOCAL_ONLY), 'ARRAY_A');
+        $row = is_array($row) ? $row : [];
+        $total = (int) ($row['total'] ?? 0);
+        $offloaded = (int) ($row['offloaded'] ?? 0);
+        $local_only = (int) ($row['local_only'] ?? 0);
         return [
             'total' => $total,
             'offloaded' => $offloaded,
-            'pending' => max(0, $total - $offloaded - (int) $local_only->found_posts),
-            'failed' => (int) $failed->found_posts,
-            'local_only' => (int) $local_only->found_posts,
+            'pending' => max(0, $total - $offloaded - $local_only),
+            'failed' => (int) ($row['failed'] ?? 0),
+            'local_only' => $local_only,
         ];
     }
 
@@ -196,6 +217,12 @@ final class Wpsss_Library
                 [
                     'key' => self::META_LOCAL_ONLY,
                     'compare' => 'NOT EXISTS',
+                ],
+                [
+                    'key' => self::META_FAIL_COUNT,
+                    'value' => self::FAIL_BACKOFF_THRESHOLD,
+                    'compare' => '<',
+                    'type' => 'NUMERIC',
                 ],
                 [
                     'relation' => 'OR',
@@ -315,7 +342,8 @@ final class Wpsss_Library
             self::disarm_offload_cron();
             return;
         }
-        if ((int) $this->stats()['pending'] <= 0) {
+        $stats = $this->stats();
+        if ((int) $stats['pending'] <= 0) {
             self::disarm_offload_cron();
             return;
         }
@@ -334,6 +362,10 @@ final class Wpsss_Library
         $worked = ((int) $result['ok'] + (int) $result['fail'] + (int) $result['skip']) > 0;
         if (!$worked || $this->pending_ids(1, $cursor) === []) {
             self::disarm_offload_cron();
+            // 队列排干但统计上还有待传：余下全是连续失败退避项，别静默停车。
+            if ($worked && (int) $stats['pending'] > 0) {
+                set_transient('wpsss_stalled_notice', (int) $stats['pending'], DAY_IN_SECONDS);
+            }
         }
     }
 

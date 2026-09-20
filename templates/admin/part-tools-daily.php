@@ -63,6 +63,12 @@ defined('ABSPATH') || exit;
         </span>
       </div>
     </form>
+    <?php if ((int) ($stalled ?? 0) > 0) : ?>
+    <div class="notice warn">
+      <?php echo Wpsss_Icons::svg('info'); ?>
+      <span><?php echo esc_html(sprintf(__('后台慢跑已停：剩 %d 个附件连续失败 3 次以上。请到「体检」查明原因，再用下方按钮重试。', 'wpsss'), (int) $stalled)); ?></span>
+    </div>
+    <?php endif; ?>
     <?php if ($failed > 0) : ?>
     <form class="js-wpsss-offload-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_offload" />

@@ -91,23 +91,39 @@ $GLOBALS['wpsss_cron_all_ids'] = [];
 $GLOBALS['wpsss_cron_offloaded_ids'] = [];
 $GLOBALS['wpsss_cron_configured'] = true;
 
-function wp_count_posts($type = 'post', $perm = '')
+// stats() 走单往返 SQL：$wpdb 桩按 meta 集合计数。
+class wpsss_cron_wpdb extends wpsss_cron_wpdb_base
 {
-    $total = count($GLOBALS['wpsss_cron_all_ids']);
-    return (object) ['inherit' => $total];
 }
-
-class WP_Query
+class wpsss_cron_wpdb_base
 {
-    public $found_posts = 0;
+    public $posts = 'wp_posts';
+    public $postmeta = 'wp_postmeta';
 
-    public function __construct($args = [])
+    public function prepare($sql, ...$args)
     {
-        $this->found_posts = ($args['meta_key'] ?? '') === '_wpsss_offloaded'
-            ? count($GLOBALS['wpsss_cron_offloaded_ids'])
-            : 0;
+        foreach ($args as $a) {
+            $sql = preg_replace('/%s/', "'" . $a . "'", $sql, 1);
+        }
+        return $sql;
+    }
+
+    public function get_row($sql, $format = null)
+    {
+        $offloaded = count($GLOBALS['wpsss_cron_offloaded_ids']);
+        $failed = (int) ($GLOBALS['wpsss_cron_failed'] ?? 0);
+        $total = count($GLOBALS['wpsss_cron_all_ids']);
+        return [
+            'total' => (string) $total,
+            'offloaded' => (string) $offloaded,
+            'failed' => (string) $failed,
+            'local_only' => '0',
+        ];
     }
 }
+
+$GLOBALS['wpdb'] = null;
+$GLOBALS['wpdb'] = new wpsss_cron_wpdb();
 
 function get_posts($args = [])
 {

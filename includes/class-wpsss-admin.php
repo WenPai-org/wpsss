@@ -140,7 +140,7 @@ final class Wpsss_Admin
             'level' => $level,
             'secret_set' => $opts['access_key_secret'] !== '',
             'public_base' => Wpsss_Options::public_base(),
-            'stats' => $this->plugin->library()->stats(),
+            'stats' => $this->stats_cached(),
             'history' => Wpsss_History::all(),
             'rewrite' => get_transient($this->rewrite_transient_key()) ?: [],
             'pull' => get_transient($this->pull_transient_key()) ?: [],
@@ -148,6 +148,7 @@ final class Wpsss_Admin
             'offload_cursor' => (int) get_transient($this->offload_cursor_key()),
             'ops' => get_transient($this->ops_transient_key()) ?: [],
             'doctor' => ($configured && in_array($tab, ['overview', 'setup'], true)) ? $this->doctor_cached($opts) : [],
+            'stalled' => (int) get_transient('wpsss_stalled_notice'),
             'url' => [$this, 'url'],
             'setup_step' => $tab === 'setup' ? $this->setup_step() : 0,
             'setup_done_rows' => Wpsss_Options::setup_done_rows(
@@ -834,6 +835,23 @@ final class Wpsss_Admin
     private function offload_cursor_key(): string
     {
         return Wpsss_Library::CURSOR_KEY;
+    }
+
+    /**
+     * 概览页的计数 30 秒一刷：补传进行中数字本就有延迟，没必要每次渲染四连查。
+     * 队列 tick 走 stats() 原方法，不受此缓存影响。
+     *
+     * @return array<string, int>
+     */
+    private function stats_cached(): array
+    {
+        $hit = get_transient('wpsss_stats_snapshot');
+        if (is_array($hit)) {
+            return $hit;
+        }
+        $stats = $this->plugin->library()->stats();
+        set_transient('wpsss_stats_snapshot', $stats, 30);
+        return $stats;
     }
 
     /**
