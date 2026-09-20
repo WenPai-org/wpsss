@@ -342,11 +342,42 @@ class Wpsss_Url
         if (!is_serialized($value)) {
             return $rewriter($value);
         }
-        $data = @unserialize($value);
+        // 只放行 stdClass：能写 postmeta 的人可以埋带 gadget 的序列化对象，
+        // 管理员跑改写时不该把它们实例化。含真对象的值原样返回，不做改写。
+        $data = @unserialize($value, ['allowed_classes' => ['stdClass']]);
         if ($data === false && $value !== serialize(false)) {
             return $value;
         }
+        if (self::serialized_has_incomplete($data)) {
+            return $value;
+        }
         return serialize(self::rewrite_serialized_walk($data, $rewriter));
+    }
+
+    /**
+     * @param mixed $data
+     */
+    private static function serialized_has_incomplete($data): bool
+    {
+        if ($data instanceof __PHP_Incomplete_Class) {
+            return true;
+        }
+        if (is_array($data)) {
+            foreach ($data as $item) {
+                if (self::serialized_has_incomplete($item)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        if (is_object($data) && get_class($data) === 'stdClass') {
+            foreach (get_object_vars($data) as $item) {
+                if (self::serialized_has_incomplete($item)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

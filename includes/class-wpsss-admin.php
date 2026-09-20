@@ -147,7 +147,7 @@ final class Wpsss_Admin
             'pull_cursor' => (int) get_transient($this->pull_cursor_key()),
             'offload_cursor' => (int) get_transient($this->offload_cursor_key()),
             'ops' => get_transient($this->ops_transient_key()) ?: [],
-            'doctor' => ($configured && in_array($tab, ['overview', 'setup'], true)) ? Wpsss_CLI::doctor_report($opts) : [],
+            'doctor' => ($configured && in_array($tab, ['overview', 'setup'], true)) ? $this->doctor_cached($opts) : [],
             'url' => [$this, 'url'],
             'setup_step' => $tab === 'setup' ? $this->setup_step() : 0,
             'setup_done_rows' => Wpsss_Options::setup_done_rows(
@@ -242,18 +242,19 @@ final class Wpsss_Admin
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
             wp_send_json_error(['message' => '先保存桶名和密钥再补传。']);
         }
+        $token = 'user:' . get_current_user_id();
         if (!empty($_POST['stop'])) {
             Wpsss_Library::disarm_offload_cron();
-            Wpsss_Library::run_lock_release();
+            Wpsss_Library::run_lock_release($token);
             wp_send_json_success(['done' => true]);
         }
         $source = (isset($_POST['source']) && (string) wp_unslash($_POST['source']) === 'failed') ? 'failed' : 'pending';
-        $stats = $this->plugin->library()->stats();
-        if (!Wpsss_Library::run_lock_acquire()) {
+        if (!Wpsss_Library::run_lock_acquire($token)) {
+            $stats = $this->plugin->library()->stats();
             wp_send_json_success($this->offload_tick_payload(0, 0, 0, 0, false, $stats, false, ''));
         }
         $result = $this->run_offload_slice($source, 1);
-        Wpsss_Library::run_lock_release();
+        Wpsss_Library::run_lock_release($token);
         $stats = $this->plugin->library()->stats();
         $processed = (int) $result['ok'] + (int) $result['fail'] + (int) $result['skip'];
         $remaining = $source === 'failed' ? (int) $stats['failed'] : (int) $stats['pending'];
@@ -596,6 +597,9 @@ final class Wpsss_Admin
                 continue;
             }
             $value = sanitize_text_field((string) wp_unslash($_POST[$key]));
+            if (in_array($key, ['endpoint', 'custom_domain'], true) && $value !== '' && self::points_at_private_host($value)) {
+                wp_send_json_error(['message' => __('探测地址不能指向内网、回环或链路本地地址。', 'wpsss')]);
+            }
             if ($value !== '') {
                 $settings[$key] = $value;
             }
@@ -711,6 +715,18 @@ final class Wpsss_Admin
     }
 
     /**
+     * 只拦 IP 字面量的私网/回环/链路本地段；域名解析后的私网目标不在这一层管。
+     */
+    private static function points_at_private_host(string $url): bool
+    {
+        $host = (string) wp_parse_url($url, PHP_URL_HOST);
+        if ($host === '' || !filter_var($host, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+    }
+
+    /**
      * @param array<string, string> $extra
      */
     public function url(string $tab, array $extra = []): string
@@ -818,6 +834,31 @@ final class Wpsss_Admin
     private function offload_cursor_key(): string
     {
         return Wpsss_Library::CURSOR_KEY;
+    }
+
+    /**
+     * 体检要对样本对象发匿名 HEAD，桶端慢时同步跑会把概览页拖住十几秒；
+     * 按当前桶身份缓存一分钟，改设置自动换键。
+     *
+     * @param array<string, string> $opts
+     * @return array<string, mixed>
+     */
+    private function doctor_cached(array $opts): array
+    {
+        $key = 'wpsss_doctor_' . md5((string) wp_json_encode([
+            'driver' => $opts['driver'] ?? '',
+            'bucket' => $opts['bucket'] ?? '',
+            'region' => $opts['region'] ?? '',
+            'endpoint' => $opts['endpoint'] ?? '',
+            'prefix' => $opts['object_prefix'] ?? '',
+        ]));
+        $hit = get_transient($key);
+        if (is_array($hit)) {
+            return $hit;
+        }
+        $report = Wpsss_CLI::doctor_report($opts);
+        set_transient($key, $report, MINUTE_IN_SECONDS);
+        return $report;
     }
 
     private function ops_transient_key(): string

@@ -104,6 +104,14 @@ class Wpsss_Offload
     }
 
     /**
+     * 本请求内已经进过桶的文件（wp_handle_upload 先于附件创建）。
+     * 后续 add_attachment / metadata 钩子据此跳过重复 PUT，keep_local=0 删了本地也能靠它认账。
+     *
+     * @var array<string, string>
+     */
+    private static $just_put = [];
+
+    /**
      * @param array<string, string> $upload
      * @return array<string, string>
      */
@@ -121,7 +129,11 @@ class Wpsss_Offload
             return $upload;
         }
 
-        $this->put_local_file((string) $upload['file'], $mime);
+        $path = wp_normalize_path((string) $upload['file']);
+        $put = $this->put_local_file($path, $mime);
+        if (!is_wp_error($put)) {
+            self::$just_put[$path] = $this->object_key($path);
+        }
         return $upload;
     }
 
@@ -138,8 +150,10 @@ class Wpsss_Offload
         $uploads = $this->uploads();
         $basedir = (string) $uploads['basedir'];
         $primary = $basedir . '/' . ltrim((string) $metadata['file'], '/');
+        // 主文件可能已被 wp_handle_upload 传过（非图片先于附件创建进桶），不重复 PUT。
+        $primary_done = isset(self::$just_put[wp_normalize_path($primary)]);
         $filesize = file_exists($primary) ? (string) filesize($primary) : '';
-        $ok = $this->put_local_file($primary, (string) (wp_check_filetype($primary)['type'] ?? ''));
+        $ok = $primary_done ? true : $this->put_local_file($primary, (string) (wp_check_filetype($primary)['type'] ?? ''));
 
         $dir = dirname((string) $metadata['file']);
         $dir_abs = $dir !== '.' ? $basedir . '/' . $dir . '/' : $basedir . '/';
@@ -182,6 +196,17 @@ class Wpsss_Offload
         }
         $file = get_attached_file($post_id);
         if (!$file || !file_exists($file)) {
+            // 本地已不在：可能是 wp_handle_upload 传完即删（keep_local=0），或进程死在半路。
+            // 先问一次桶，桶里有就补上标记；两边都没有才记失败，不再无声卡在待传里。
+            if ($file) {
+                $key = $this->object_key($file);
+                $head = $this->plugin->active_driver()->head_object(Wpsss_Options::get(), $key);
+                if (!is_wp_error($head)) {
+                    $this->mark_offloaded($post_id, $key);
+                    return true;
+                }
+            }
+            $this->mark_failed($post_id, '本地文件不在，桶里也没有，无法进桶。');
             return new WP_Error('wpsss_missing_local', '本地文件不在，无法进桶。');
         }
         $meta = wp_get_attachment_metadata($post_id);
@@ -192,13 +217,17 @@ class Wpsss_Offload
             }
             return true;
         }
-        $put = $this->put_local_file($file, (string) (get_post_mime_type($post_id) ?: ''));
-        if (is_wp_error($put)) {
-            if ($put->get_error_code() === 'wpsss_skip_type') {
-                return true;
+        // wp_handle_upload 已经传过同一个文件（含第三方直传），不再重复 PUT。
+        $normalized = wp_normalize_path($file);
+        if (!isset(self::$just_put[$normalized])) {
+            $put = $this->put_local_file($file, (string) (get_post_mime_type($post_id) ?: ''));
+            if (is_wp_error($put)) {
+                if ($put->get_error_code() === 'wpsss_skip_type') {
+                    return true;
+                }
+                $this->mark_failed($post_id, $put->get_error_message());
+                return $put;
             }
-            $this->mark_failed($post_id, $put->get_error_message());
-            return $put;
         }
         $this->mark_offloaded($post_id, $this->object_key($file));
         return true;
@@ -229,19 +258,14 @@ class Wpsss_Offload
         return Wpsss_Url::rewrite_text($text, $from_base, $to_base, '');
     }
 
-    /** @var bool */
-    private static $editor_hooked = false;
-
     /**
      * @param mixed $override
      * @return mixed
      */
     public function on_save_image_editor($override)
     {
-        if (!self::$editor_hooked) {
-            add_filter('wp_update_attachment_metadata', [$this, 'on_generate_metadata']);
-            self::$editor_hooked = true;
-        }
+        // boot() 已用优先级 100 挂了 wp_update_attachment_metadata；
+        // 这里再挂一条（默认优先级 10）会导致图像编辑保存时整套尺寸双倍上传。
         return $override;
     }
 
@@ -670,6 +694,8 @@ class Wpsss_Offload
             }
             $rel = self::local_rel_from_object_key((string) $key, $opts);
             if ($rel === '' || strpos($rel, '..') !== false) {
+                // 和执行路径对齐：坏键计入「前缀不符」类拦截，预览不再少报。
+                $block++;
                 continue;
             }
             $dest = $basedir . '/' . $rel;

@@ -793,6 +793,7 @@
     }
     var running = false;
     var halt = false;
+    var failStreak = 0;
     var totals = { ok: 0, fail: 0, skip: 0 };
 
     function setProgress(text) {
@@ -855,6 +856,17 @@
           totals.ok += data.ok || 0;
           totals.fail += data.fail || 0;
           totals.skip += data.skip || 0;
+          if ((data.fail || 0) > 0 && !(data.ok > 0)) {
+            failStreak++;
+          } else {
+            failStreak = 0;
+          }
+          if (failStreak >= 5) {
+            running = false;
+            idle();
+            setProgress("连续失败 5 次，已暂停。请先用「体检」查明原因，或用 CLI 小批量试。");
+            return;
+          }
           var left = body.get("source") === "failed" ? data.failed : data.pending;
           setProgress("本轮成功 " + totals.ok + "，失败 " + totals.fail + "，还剩 " + (left || 0) + "。");
           if (data.error) {
@@ -869,7 +881,8 @@
             }
             return;
           }
-          window.setTimeout(tick, 40);
+          var delay = (data.fail || 0) > 0 ? Math.min(5000, 200 * Math.pow(2, failStreak)) : 40;
+          window.setTimeout(tick, delay);
         })
         .catch(function () {
           running = false;
@@ -911,6 +924,7 @@
           return;
         }
         totals = { ok: 0, fail: 0, skip: 0 };
+        failStreak = 0;
         halt = false;
         running = true;
         form.classList.add("is-busy");
@@ -944,6 +958,7 @@
     }
     var running = false;
     var halt = false;
+    var failStreak = 0;
     var totals = { ok: 0, fail: 0, skip: 0, renamed: 0 };
 
     function setProgress(text) {
@@ -1004,6 +1019,17 @@
           totals.fail += data.fail || 0;
           totals.skip += data.skip || 0;
           totals.renamed += data.renamed || 0;
+          if ((data.fail || 0) > 0 && !(data.ok > 0)) {
+            failStreak++;
+          } else {
+            failStreak = 0;
+          }
+          if (failStreak >= 5) {
+            running = false;
+            idle();
+            setProgress("连续失败 5 次，已暂停。请用「体检」查明原因后再继续。");
+            return;
+          }
           var line = "本轮已拉回 " + totals.ok + "，失败 " + totals.fail;
           if (totals.renamed > 0) {
             line += "，旁路 " + totals.renamed;
@@ -1020,7 +1046,8 @@
             setProgress(doneLine);
             return;
           }
-          window.setTimeout(tick, 60);
+          var delay = (data.fail || 0) > 0 ? Math.min(5000, 200 * Math.pow(2, failStreak)) : 60;
+          window.setTimeout(tick, delay);
         })
         .catch(function () {
           running = false;
@@ -1059,6 +1086,7 @@
           return;
         }
         totals = { ok: 0, fail: 0, skip: 0, renamed: 0 };
+        failStreak = 0;
         halt = false;
         running = true;
         form.classList.add("is-busy");
@@ -1095,9 +1123,19 @@
           return;
         }
         form.classList.add("is-busy");
+        // 提交条目列表在 submit 处理器跑完之后才构建：此刻禁用 submitter 会让它的
+        // name/value 不进 POST（「从头」会变成普通补传）。submitter 延后一拍再禁。
+        var submitter = event.submitter;
         form.querySelectorAll("button").forEach(function (item) {
-          item.disabled = true;
+          if (item !== submitter) {
+            item.disabled = true;
+          }
         });
+        if (submitter) {
+          window.setTimeout(function () {
+            submitter.disabled = true;
+          }, 0);
+        }
       },
       true
     );

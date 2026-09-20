@@ -139,12 +139,25 @@ wpsss_assert(strpos($admin, 'arm_offload_cron') !== false, 'admin arms cron fall
 $lib = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-library.php');
 wpsss_assert(strpos($lib, 'cron_offload_tick') !== false, 'library cron fallback');
 wpsss_assert(strpos($lib, 'offload_batch(2') !== false, 'cron drains at most two per minute');
-wpsss_assert(strpos($lib, 'wpsss_before_id') !== false, 'query exposes cursor floor for tests');
+wpsss_assert(strpos($lib, "['suppress_filters'] = false") !== false, 'cursor queries opt out of suppression');
+wpsss_assert(strpos($lib, 'ID > %d') !== false, 'rewrite uses keyset pagination');
 
 wpsss_assert(strpos($tools, 'js-wpsss-pull-progress') !== false, 'tools pull ajax progress');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-stop') !== false, 'tools pull pause button');
 wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-time copy');
 wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
+
+$entry = (string) file_get_contents(dirname(__DIR__) . '/wpsss.php');
+wpsss_assert(strpos($entry, 'str_ends_with') !== false && strpos($entry, 'PHP_VERSION_ID') !== false, 'php 7.4 polyfill present');
+
+$offload_src = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-offload.php');
+wpsss_assert(strpos($offload_src, 'just_put') !== false, 'upload path dedupe set present');
+wpsss_assert(strpos($offload_src, 'editor_hooked') === false, 'image editor hook not double-registered');
+
+$url_src = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-url.php');
+wpsss_assert(strpos($url_src, "allowed_classes") !== false, 'serialized rewrite restricts classes');
+
+wpsss_assert(strpos($js, '连续失败 5 次') !== false, 'js failure circuit breaker');
 
 $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php');
 wpsss_assert(strpos($cli, '删除远端须加 --yes') !== false, 'cli pull delete needs yes');

@@ -70,9 +70,60 @@ function get_current_user_id()
     return 7;
 }
 
+function add_filter($tag, $cb, $prio = 10, $args = 1)
+{
+    if ($tag === 'posts_where') {
+        $GLOBALS['wpsss_posts_where_filters'][] = $cb;
+    }
+    return true;
+}
+
+function remove_filter($tag, $cb, $prio = 10)
+{
+    if ($tag === 'posts_where') {
+        $GLOBALS['wpsss_posts_where_filters'] = array_values(array_filter(
+            $GLOBALS['wpsss_posts_where_filters'],
+            static function ($f) use ($cb) {
+                return $f !== $cb;
+            }
+        ));
+    }
+    return true;
+}
+
+$GLOBALS['wpsss_posts_where_filters'] = [];
+
+// 最小 $wpdb：让 posts_where 回调真的拼出带游标的 SQL。
+class wpsss_pull_wpdb_stub
+{
+    public $posts = 'wp_posts';
+
+    public function prepare($sql, ...$args)
+    {
+        foreach ($args as $a) {
+            $sql = preg_replace('/%d/', (string) (int) $a, $sql, 1);
+        }
+        return $sql;
+    }
+}
+
+$GLOBALS['wpdb'] = new wpsss_pull_wpdb_stub();
+
 function get_posts($args = [])
 {
-    $before = (int) ($args['wpsss_before_id'] ?? 0);
+    // 仿真 WP：get_posts() 默认 suppress_filters=true，posts_where 不跑、游标不生效；
+    // 只有查询显式传 false 时才应用过滤器。忘了传，下面的游标断言就会红。
+    $suppress = array_key_exists('suppress_filters', $args) ? (bool) $args['suppress_filters'] : true;
+    $before = 0;
+    if (!$suppress) {
+        $sql = 'SELECT ID FROM wp_posts WHERE 1=1';
+        foreach ($GLOBALS['wpsss_posts_where_filters'] as $cb) {
+            $sql = (string) $cb($sql);
+        }
+        if (preg_match('/ID < (\d+)/', $sql, $m)) {
+            $before = (int) $m[1];
+        }
+    }
     $limit = (int) ($args['posts_per_page'] ?? 20);
     $ids = array_values(array_filter($GLOBALS['wpsss_pull_pool'], static function ($id) use ($before) {
         return $before <= 0 || $id < $before;

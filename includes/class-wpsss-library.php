@@ -161,17 +161,16 @@ final class Wpsss_Library
     /**
      * @return int[]
      */
-    public function failed_ids(int $limit = 20): array
+    public function failed_ids(int $limit = 20, int $before_id = 0): array
     {
-        $ids = get_posts([
+        return $this->query_ids([
             'post_type' => 'attachment',
             'post_status' => 'inherit',
             'posts_per_page' => $limit > 0 ? $limit : 20,
             'fields' => 'ids',
             'meta_key' => self::META_ERROR,
             'meta_compare' => 'EXISTS',
-        ]);
-        return array_map('intval', $ids);
+        ], $before_id);
     }
 
     public function pending_ids(int $limit = 20, int $before_id = 0): array
@@ -248,25 +247,33 @@ final class Wpsss_Library
 
     /**
      * 浏览器补传与 cron 托底共用的运行锁：同刻只允许一条队列在跑。
-     * 锁带 TTL，进程中途死掉也会自己过期，不会卡死队列。
+     * 锁值是持有者令牌（浏览器按用户、cron 用 'cron'），释放只放自己的；
+     * TTL 覆盖单附件最坏临界区（主文件 + 多尺寸逐个 PUT），进程死掉也会自己过期。
      */
-    public static function run_lock_acquire(): bool
+    public static function run_lock_acquire(string $token): bool
     {
         if (get_transient(self::RUN_LOCK_KEY) !== false) {
             return false;
         }
-        set_transient(self::RUN_LOCK_KEY, 1, 2 * MINUTE_IN_SECONDS);
+        set_transient(self::RUN_LOCK_KEY, $token, 10 * MINUTE_IN_SECONDS);
         return true;
     }
 
-    public static function run_lock_release(): void
+    public static function run_lock_release(string $token): void
     {
-        delete_transient(self::RUN_LOCK_KEY);
+        if ((string) get_transient(self::RUN_LOCK_KEY) === $token) {
+            delete_transient(self::RUN_LOCK_KEY);
+        }
     }
 
     public static function arm_offload_cron(): void
     {
         if (!function_exists('wp_schedule_event')) {
+            return;
+        }
+        // 每个 tick 都 clear+schedule 会双写 autoload 的 cron option；已有近期事件就不再动。
+        $next = function_exists('wp_next_scheduled') ? wp_next_scheduled(self::CRON_HOOK) : false;
+        if (is_int($next) && $next > time() && $next - time() <= 110) {
             return;
         }
         wp_clear_scheduled_hook(self::CRON_HOOK);
@@ -294,7 +301,7 @@ final class Wpsss_Library
             self::disarm_offload_cron();
             return;
         }
-        if (!self::run_lock_acquire()) {
+        if (!self::run_lock_acquire('cron')) {
             return;
         }
         $before = (int) get_transient(self::CURSOR_KEY);
@@ -305,7 +312,7 @@ final class Wpsss_Library
         } else {
             delete_transient(self::CURSOR_KEY);
         }
-        self::run_lock_release();
+        self::run_lock_release('cron');
         $worked = ((int) $result['ok'] + (int) $result['fail'] + (int) $result['skip']) > 0;
         if (!$worked || $this->pending_ids(1, $cursor) === []) {
             self::disarm_offload_cron();
@@ -320,6 +327,9 @@ final class Wpsss_Library
     {
         $args['orderby'] = 'ID';
         $args['order'] = 'DESC';
+        // get_posts() 默认 suppress_filters=true，posts_where 根本不会跑，
+        // 游标（ID < before）就静默失效。这里必须显式关掉，否则两个队列都会原地打转。
+        $args['suppress_filters'] = false;
         $where = null;
         if ($before_id > 0 && function_exists('add_filter')) {
             $where = static function (string $sql) use ($before_id): string {
@@ -332,8 +342,6 @@ final class Wpsss_Library
             };
             add_filter('posts_where', $where);
         }
-        // 附加原始 before_id，便于测试桩与排查工具不解析 SQL 就能看到游标下限。
-        $args['wpsss_before_id'] = $before_id;
         $ids = get_posts($args);
         if ($where !== null && function_exists('remove_filter')) {
             remove_filter('posts_where', $where);
@@ -366,15 +374,20 @@ final class Wpsss_Library
         global $wpdb;
         $like = '%' . $wpdb->esc_like($from) . '%';
         $post_batch = 200;
-        $post_offset = 0;
+        // 键集分页：apply 会把命中行改写成不再命中 LIKE，OFFSET 翻页会整批跳过；
+        // 修订等后台类型不参与改写，避免计数虚高。
+        $last_post_id = 0;
         do {
             $ids = $wpdb->get_col($wpdb->prepare(
-                "SELECT ID FROM {$wpdb->posts} WHERE post_status != %s AND (post_content LIKE %s OR post_excerpt LIKE %s) LIMIT %d OFFSET %d",
+                "SELECT ID FROM {$wpdb->posts} WHERE post_status != %s AND post_type NOT IN (%s, %s, %s) AND ID > %d AND (post_content LIKE %s OR post_excerpt LIKE %s) ORDER BY ID ASC LIMIT %d",
                 'trash',
+                'revision',
+                'customize_changeset',
+                'oembed_cache',
+                $last_post_id,
                 $like,
                 $like,
-                $post_batch,
-                $post_offset
+                $post_batch
             ));
             foreach ($ids as $post_id) {
                 $post = get_post((int) $post_id);
@@ -403,18 +416,20 @@ final class Wpsss_Library
                     ]);
                 }
             }
+            foreach ($ids as $post_id) {
+                $last_post_id = max($last_post_id, (int) $post_id);
+            }
             $got_posts = count($ids);
-            $post_offset += $post_batch;
         } while ($got_posts === $post_batch);
 
         $meta_batch = 500;
-        $meta_offset = 0;
+        $last_meta_id = 0;
         do {
             $rows = $wpdb->get_results($wpdb->prepare(
-                "SELECT meta_id, post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_value LIKE %s LIMIT %d OFFSET %d",
+                "SELECT meta_id, post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_value LIKE %s AND meta_id > %d ORDER BY meta_id ASC LIMIT %d",
                 $like,
-                $meta_batch,
-                $meta_offset
+                $last_meta_id,
+                $meta_batch
             ));
             foreach ($rows as $row) {
                 $value = (string) $row->meta_value;
@@ -439,9 +454,9 @@ final class Wpsss_Library
                         ['%d']
                     );
                 }
+                $last_meta_id = max($last_meta_id, (int) $row->meta_id);
             }
             $got_meta = count($rows);
-            $meta_offset += $meta_batch;
         } while ($got_meta === $meta_batch);
 
         return compact('scanned', 'changed', 'samples', 'meta_scanned', 'meta_changed');

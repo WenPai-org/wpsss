@@ -170,10 +170,14 @@ if (!class_exists('Wpsss_Wpdb_Stub')) {
         public function get_col($query): array
         {
             [$limit, $offset] = $this->parse_limit_offset((string) $query);
+            $after_id = $this->keyset_floor((string) $query, 'ID');
             $needle = $this->like_needle((string) $query);
             $ids = [];
             foreach ($this->post_rows as $id => $row) {
                 if (($row['post_status'] ?? '') === 'trash') {
+                    continue;
+                }
+                if ($after_id > 0 && (int) $id <= $after_id) {
                     continue;
                 }
                 $hay = (string) ($row['post_content'] ?? '') . (string) ($row['post_excerpt'] ?? '');
@@ -182,20 +186,34 @@ if (!class_exists('Wpsss_Wpdb_Stub')) {
                 }
                 $ids[] = $id;
             }
+            if ($after_id > 0) {
+                sort($ids, SORT_NUMERIC);
+                return array_slice($ids, 0, $limit);
+            }
             return array_slice($ids, $offset, $limit);
         }
 
         public function get_results($query): array
         {
             [$limit, $offset] = $this->parse_limit_offset((string) $query);
+            $after_id = $this->keyset_floor((string) $query, 'meta_id');
             $needle = $this->like_needle((string) $query);
             $rows = [];
             foreach ($this->meta_rows as $row) {
+                if ($after_id > 0 && (int) ($row['meta_id'] ?? 0) <= $after_id) {
+                    continue;
+                }
                 $value = (string) ($row['meta_value'] ?? '');
                 if ($needle !== '' && strpos($value, $needle) === false) {
                     continue;
                 }
                 $rows[] = (object) $row;
+            }
+            if ($after_id > 0) {
+                usort($rows, static function ($a, $b) {
+                    return (int) $a->meta_id <=> (int) $b->meta_id;
+                });
+                return array_slice($rows, 0, $limit);
             }
             return array_slice($rows, $offset, $limit);
         }
@@ -227,6 +245,17 @@ if (!class_exists('Wpsss_Wpdb_Stub')) {
                 $offset = (int) $m[1];
             }
             return [$limit, $offset];
+        }
+
+        /**
+         * 键集分页下限：解析「AND <column> > %d」并把 prepare 已代入的数字取出来。
+         */
+        private function keyset_floor(string $query, string $column): int
+        {
+            if (preg_match('/' . $column . '\s*>\s*(\d+)/i', $query, $m)) {
+                return (int) $m[1];
+            }
+            return 0;
         }
 
         private function like_needle(string $query): string

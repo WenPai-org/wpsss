@@ -17,6 +17,28 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// 声明支持 PHP 7.4，str_* 三兄弟是 PHP 8 才有的；缺了它们媒体库行操作在 7.4 上致命。
+if (PHP_VERSION_ID < 80000) {
+    if (!function_exists('str_starts_with')) {
+        function str_starts_with(string $haystack, string $needle): bool
+        {
+            return $needle === '' || strpos($haystack, $needle) === 0;
+        }
+    }
+    if (!function_exists('str_ends_with')) {
+        function str_ends_with(string $haystack, string $needle): bool
+        {
+            return $needle === '' || substr($haystack, -strlen($needle)) === $needle;
+        }
+    }
+    if (!function_exists('str_contains')) {
+        function str_contains(string $haystack, string $needle): bool
+        {
+            return $needle === '' || strpos($haystack, $needle) !== false;
+        }
+    }
+}
+
 define('WPSSS_VERSION', '0.8.0');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
