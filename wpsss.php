@@ -43,7 +43,7 @@ define('WPSSS_VERSION', '0.9.0');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
 define('WPSSS_PRODUCT_URL', 'https://wpcy.com/');
-define('WPSSS_DOCS_URL', 'https://wpcy.com/wpsss');
+define('WPSSS_DOCS_URL', 'https://wpcy.com/document');
 define('WPSSS_SUPPORT_URL', 'https://wpcy.com/support/');
 
 require_once WPSSS_DIR . 'includes/class-wpsss-oss-signer.php';
