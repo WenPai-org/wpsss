@@ -14,10 +14,10 @@ $tabs = [
   <div class="wpcy-head">
     <a class="wpcy-brand" href="<?php echo esc_url($url('overview')); ?>">
       <span class="wpcy-mark"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-      <span class="wpcy-name"><?php echo esc_html__('文派对象存储', 'wpsss'); ?></span>
+      <span class="wpcy-name"><?php echo esc_html__('文派智储', 'wpsss'); ?></span>
     </a>
     <?php if (!$wizard) : ?>
-    <nav class="wpcy-tabs" aria-label="<?php echo esc_attr__('文派对象存储', 'wpsss'); ?>">
+    <nav class="wpcy-tabs" aria-label="<?php echo esc_attr__('文派智储', 'wpsss'); ?>">
       <?php foreach ($tabs as $id => $meta) : ?>
         <a class="wpcy-tab<?php echo $tab === $id ? ' is-active' : ''; ?>" href="<?php echo esc_url($url($id)); ?>">
           <?php echo Wpsss_Icons::svg($meta[1]); ?>

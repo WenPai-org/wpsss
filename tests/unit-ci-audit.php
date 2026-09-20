@@ -19,21 +19,21 @@ function wpsss_assert(bool $ok, string $label): void
 
 $help = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-help.php');
 wpsss_assert(strpos($help, '强制下载') !== false, 'help 强制下载');
-wpsss_assert(strpos($help, '镜像回源') !== false, 'help 镜像回源');
-wpsss_assert(strpos($help, '主账号 APPID') !== false, 'help 主账号 APPID');
+wpsss_assert(strpos($help, 'WPSSS_DOCS_URL') !== false, 'help links to doc site');
+wpsss_assert(strpos($help, "WPSSS_DOCS_URL . '/' . \$slug") !== false, 'help uses doc links');
 wpsss_assert(strpos($help, '七牛') !== false, 'help 七牛');
-wpsss_assert(strpos($help, '不限定厂商') !== false || strpos($help, '任意 CDN') !== false || strpos($help, '不是。插件只改对外主机名') !== false, 'help custom domain any cdn');
+wpsss_assert(strpos($help, 'custom-domain') !== false, 'help links custom domain doc');
 wpsss_assert(strpos($help, '拉回会不会删掉桶里的文件') !== false, 'help pull delete confirm');
-wpsss_assert(strpos($help, '本地已有同名文件时拉回会怎样') !== false, 'help pull on-exist');
-wpsss_assert(strpos($help, '批量拉回与单个附件有何区别') !== false, 'help pull scope');
-wpsss_assert(strpos($help, '拉回后前台地址会变吗') !== false, 'help pull does not change url');
-wpsss_assert(strpos($help, '改写会动序列化字段吗') !== false, 'help rewrite serialized honesty');
-wpsss_assert(strpos($help, '换过桶或前缀再拉回会怎样') !== false, 'help prefix mismatch');
-wpsss_assert(strpos($help, '旧文件改名保留') !== false, 'help pull rename');
+wpsss_assert(strpos($help, "'pull-local'") !== false, 'help pull on-exist');
+wpsss_assert(strpos($help, "'troubleshooting'") !== false, 'help pull scope');
+wpsss_assert(strpos($help, "'rewrite-urls'") !== false, 'help rewrite doc linked');
+wpsss_assert(strpos($help, "'faq'") !== false, 'help faq doc linked');
+wpsss_assert(strpos($help, "'woocommerce'") !== false, 'help woo doc linked');
+wpsss_assert(strpos($help, "'large-files'") !== false, 'help large files doc linked');
 wpsss_assert(strpos($help, '没有回收站') !== false, 'help pull delete no trash');
-wpsss_assert(strpos($help, '诊断一条地址') !== false, 'help diagnose tool');
-wpsss_assert(strpos($help, '默认 V4') !== false, 'help oss v4');
-wpsss_assert(strpos($help, 'RAM 角色') !== false, 'help ecs ram');
+wpsss_assert(strpos($help, "'access-keys'") !== false, 'help keys doc linked');
+wpsss_assert(strpos($help, "'choose-vendor'") !== false, 'help vendor doc linked');
+wpsss_assert(strpos($help, "'object-access'") !== false, 'help access doc linked');
 
 $settings = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-settings.php');
 wpsss_assert(strpos($settings, '创建桶的主账号 APPID') !== false, 'settings COS AppId help');

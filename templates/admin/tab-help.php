@@ -3,6 +3,9 @@ defined('ABSPATH') || exit;
 /** @var array<string, mixed> $view */
 $url = $view['url'];
 $on = (bool) $view['configured'];
+$docs = static function (string $slug): string {
+    return WPSSS_DOCS_URL . '/' . $slug;
+};
 ?>
 <div class="wpcy-page-head">
   <div>
@@ -24,7 +27,7 @@ $on = (bool) $view['configured'];
       <strong><?php echo esc_html__('填写桶与密钥', 'wpsss'); ?></strong>
       <span><?php echo esc_html__('跟随设置向导选择云厂商并保存桶名、区域与访问密钥；也可在高级设置中手动填写。', 'wpsss'); ?></span>
       <a class="btn btn-secondary" href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('开始向导', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>"><?php echo esc_html__('高级设置', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url($docs('start-guide')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('图文教程', 'wpsss'); ?></a>
     </li>
     <li>
       <strong><?php echo esc_html__('测试连通', 'wpsss'); ?></strong>
@@ -33,7 +36,8 @@ $on = (bool) $view['configured'];
     </li>
     <li>
       <strong><?php echo esc_html__('上传媒体', 'wpsss'); ?></strong>
-      <span><?php echo esc_html__('新上传的附件会自动进桶；已有附件可在工具页补传。', 'wpsss'); ?></span>
+      <span><?php echo esc_html__('新上传的附件会自动进桶；已有附件在工具页点「开始补传」，关掉页面后台也会继续。', 'wpsss'); ?></span>
+      <a class="btn btn-ghost" href="<?php echo esc_url($docs('upload-offload')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('补传说明', 'wpsss'); ?></a>
     </li>
   </ol>
   <?php if ($on) : ?>
@@ -42,6 +46,40 @@ $on = (bool) $view['configured'];
     <a class="btn btn-ghost" href="<?php echo esc_url($url('overview')); ?>"><?php echo esc_html__('查看概览', 'wpsss'); ?></a>
   </div>
   <?php endif; ?>
+</section>
+
+<section class="card wpsss-help-card">
+  <div class="card-head">
+    <span class="tile"><?php echo Wpsss_Icons::svg('help'); ?></span>
+    <div>
+      <h2 class="card-title"><?php echo esc_html__('完整文档', 'wpsss'); ?></h2>
+      <p class="card-sub"><?php echo esc_html__('每篇教程都在 wpcy.com 文档站，持续更新。', 'wpsss'); ?></p>
+    </div>
+  </div>
+  <dl class="wpsss-help-dl">
+    <dt><?php echo esc_html__('入门与配置', 'wpsss'); ?></dt>
+    <dd>
+      <a href="<?php echo esc_url($docs('start-guide')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('五分钟上手', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('choose-vendor')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('选择云厂商与站点场景', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('access-keys')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('密钥安全与最小权限', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('object-access')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('公开读与签名 URL', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('custom-domain')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('自定义域名与 CDN', 'wpsss'); ?></a>
+    </dd>
+    <dt><?php echo esc_html__('日常使用', 'wpsss'); ?></dt>
+    <dd>
+      <a href="<?php echo esc_url($docs('upload-offload')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('上传与补传', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('large-files')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('大文件分片', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('woocommerce')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('WooCommerce 付费下载', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('pull-local')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('拉回本地与卸载', 'wpsss'); ?></a>
+    </dd>
+    <dt><?php echo esc_html__('进阶', 'wpsss'); ?></dt>
+    <dd>
+      <a href="<?php echo esc_url($docs('rewrite-urls')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('迁移与地址改写', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('wp-cli')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('WP-CLI 手册', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('troubleshooting')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('体检与排障', 'wpsss'); ?></a> ·
+      <a href="<?php echo esc_url($docs('faq')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('常见问题速答', 'wpsss'); ?></a>
+    </dd>
+  </dl>
 </section>
 
 <div class="wpsss-help-stack">
@@ -62,31 +100,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('设置 · 高级', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('云厂商、桶名、区域、密钥、对象前缀、图片样式等完整选项。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('工具', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('工具页分日常、排障、迁移三组。日常：连通、补传、同步记录。排障：体检、诊断、抽检、清除失败标记。迁移：拉回、改写、解除标记、导出。高危操作须勾选并弹窗确认。', 'wpsss'); ?></dd>
-      </dl>
-    </div>
-  </details>
-
-  <details class="card wpsss-help-details">
-    <summary>
-      <span class="tile"><?php echo Wpsss_Icons::svg('equalizer'); ?></span>
-      <span class="wpsss-help-summary-text">
-        <strong><?php echo esc_html__('站点场景与访问方式', 'wpsss'); ?></strong>
-        <span><?php echo esc_html__('按站点类型选择推荐厂商与对象访问模式。', 'wpsss'); ?></span>
-      </span>
-    </summary>
-    <div class="wpsss-help-body">
-      <dl class="wpsss-help-dl">
-        <dt><?php echo esc_html__('国内站', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('访客与服务器主要位于中国大陆，推荐国内云对象存储。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('跨境 · 外贸站', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('服务器与访客在海外，推荐 S3 兼容或海外区域；国内云仍可选。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('混合站', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('访客来源包含境内外，两组厂商均列出供选择。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('公开读', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('附件 URL 可直接访问，要求存储桶允许匿名读取或使用已备案的自定义域名。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('签名访问', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('私有桶通过带有效期的签名 URL 对外提供；匿名探测返回 403 属预期。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('分日常、排障、迁移三组。高危操作须勾选并弹窗确认。', 'wpsss'); ?></dd>
       </dl>
     </div>
   </details>
@@ -95,65 +109,26 @@ $on = (bool) $view['configured'];
     <summary>
       <span class="tile"><?php echo Wpsss_Icons::svg('info'); ?></span>
       <span class="wpsss-help-summary-text">
-        <strong><?php echo esc_html__('常见问题', 'wpsss'); ?></strong>
-        <span><?php echo esc_html__('排查上传、访问与同步中的典型情况。', 'wpsss'); ?></span>
+        <strong><?php echo esc_html__('常见问题速答', 'wpsss'); ?></strong>
+        <span><?php echo esc_html__('最常见的六个问题；完整排障见文档。', 'wpsss'); ?></span>
       </span>
     </summary>
     <div class="wpsss-help-body">
       <dl class="wpsss-help-dl">
         <dt><?php echo esc_html__('上传后前台图片无法显示', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('公开读模式下，请确认存储桶允许匿名访问或已配置 HTTPS 自定义域名。签名模式下前台由插件生成签名 URL。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('运行体检提示匿名访问受限', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('若已启用签名访问，匿名 403 为正常结果，不代表上传失败。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('图片样式填什么', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('填存储桶的图片处理参数，接到图片地址后面。阿里云常用 ?x-oss-process=image/quality,q_80 或样式路径。GIF 与 SVG 不会追加。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('原图保护做什么', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('打开后，媒体库和文章里的原图也会带上图片样式，避免直接打开未处理文件。须先填写图片样式，否则不生效。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('本地备份是什么', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('开启后，文件进桶的同时保留服务器 uploads 目录中的副本，便于回滚与插件兼容。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('公开读模式下确认桶允许匿名访问或已配 HTTPS 自定义域名；签名模式由插件生成签名 URL。匿名 403 属预期。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('已有附件如何进桶', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('在工具 → 日常使用「补传已有附件」，或在媒体库对单个附件操作。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('文章里仍是旧的 uploads 地址', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('在工具 → 迁移使用「改写文章中的媒体地址」，先预览命中数量，确认后再写入数据库。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('整站 HTML 会上传吗', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('不会。仅媒体库附件与相关对象进桶，页面 HTML 仍在 WordPress 源站。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('工具 → 日常 → 开始补传。一次传一个，可暂停，关页后台继续。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('为什么点图片变成下载', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('阿里云 2019 年后默认域名常强制下载。请绑定 HTTPS 自定义域名，或使用签名访问。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('主题或其它插件自己传到 uploads，为什么没进桶', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('只处理经 WordPress 媒体库上传的文件。主题或其它插件直接放进 uploads 的文件不会进桶：可在存储桶开启镜像回源（回源到本站），或让开发者调用 wpsss_file_upload()。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('腾讯云 APPID 填谁的', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('填创建存储桶的主账号 APPID，不是子账户的。桶名已含 APPID 时可留空。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('七牛为什么必须填自定义域名', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('KODO 默认域不能稳定给访客用。自定义域留空则对外地址为空，前台图片可能无法显示。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('自定义域名是不是只能接某一家 CDN', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('不是。插件只改对外主机名。阿里云 CDN、腾讯云 CDN、Cloudflare、自建边缘或 CyberCDN 都是在各自控制台把该域名指到桶或边缘，这里填同一个 HTTPS 地址。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('内容审核做了什么', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会请求万象文本审核；判定违规标为垃圾评论，疑似改待审。审核接口失败时，评论先按正常发布并记录日志，避免正常评论被误判。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('阿里签名 V1 和 V4 怎么选', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认 V4。部分新区域只认 V4。若旧脚本或网关只认 V1，在高级设置改回即可。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('ECS 上能否不填 AccessKey', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('源站在阿里云 ECS 且实例绑了 RAM 角色时，高级设置选「ECS 实例 RAM 角色」。插件向实例元数据取临时密钥，不写入设置页。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('哪些文件不会进桶', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('php、htaccess 等可执行文件始终拒绝。高级设置「不进桶的扩展名」可再排除 svg、zip 等。打开「远端已有则跳过」后，补传不会覆盖桶里已有对象。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('阿里云 2019 年后默认域名常强制下载。绑定 HTTPS 自定义域名或改签名访问。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('文章里仍是旧的 uploads 地址', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('插件渲染期会自动改写已进桶附件的地址；要把地址写进数据库，用迁移页的改写工具，先预览再写入。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('拉回会不会删掉桶里的文件', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认不会。勾选删除后会出现警示：桶里没有回收站。请先只拉回、在媒体库打开核对，并确认本地还有副本，再勾「本地已经打开核对过」。删除桶内对象时不能选「只补缺失」。媒体库永久删除附件也会同时删除桶内对象，删除前会再问一次。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('本地已有同名文件时拉回会怎样', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认只补缺失：仅当 uploads 缺少文件时才从存储桶下载。旧文件改名保留会先把本地文件改名为「原名-local-时间戳」保留，再写入桶里的文件；媒体库条目与存储路径不变。覆盖会直接替换 uploads 中的同名文件，且无法从回收站恢复。内容相同时不会重复写入。媒体库单条或批量拉回默认使用旧文件改名保留。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('批量拉回与单个附件有何区别', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('「批量拉回」：对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个，再次执行将处理下一批次。「单个附件」：仅处理媒体库中的指定附件，编号可在打开文件后查看。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('拉回后前台地址会变吗', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认不变。拉回仅写入 uploads 目录；进桶标记仍在时，对外 URL 仍指向存储桶。若要改回本地地址，请解除进桶标记，或拉回并删除存储桶对象。完成后请清除页面缓存。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('改写会动序列化字段吗', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('会改正文、摘要和 post meta（含序列化）。不改 options、theme_mods、磁盘上的 CSS。写完请清页面缓存和 CDN。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('换过桶或前缀再拉回会怎样', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('对象键对不上当前前缀时，插件会停住，避免写到错误目录。到排障看「前缀不对」，先核对象键或改回原来的前缀。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('前台图片无法显示或地址仍是旧主机', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('到工具 → 排障：用「诊断一条地址」看主机是否对得上，「媒体体检」扫本地缺失和 http 明文，「抽检远端」看桶里对象还在不在。文章里的旧地址到迁移里改写，先预览再写入。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('默认不会。勾选删除会出现红色警示与三步核对，桶里没有回收站，确认后再操作。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('想停用插件但先不删桶', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('用「解除进桶标记」。插件不再改写这些附件，对象仍留在桶里。卸载插件才会清掉本机选项。', 'wpsss'); ?></dd>
-        <dt><?php echo esc_html__('文章以外的地址会改吗', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('会。小工具、分类描述、评论、RSS 与附件 REST 接口里的媒体地址，也会实时按当前对外地址改写。要把地址写进数据库，请用迁移页的「改写文章中的媒体地址」（须填写来源地址）。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('用「解除进桶标记」。插件不再改写这些附件，对象留在桶里。', 'wpsss'); ?></dd>
       </dl>
+      <p class="wpsss-help-note"><a href="<?php echo esc_url($docs('troubleshooting')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('更多问题看排障文档 →', 'wpsss'); ?></a></p>
     </div>
   </details>
 
@@ -172,30 +147,11 @@ wp sss probe
 wp sss set --from-env
 wp sss offload --dry-run
 wp sss pull --dry-run --on-exist=skip
-wp sss pull --before=100
-wp sss offload --before=100
-wp sss scan
-wp sss diagnose 128
-wp sss rewrite
-wp sss url &lt;附件ID&gt;
-wp sss delete &lt;对象键&gt; --yes</code></pre>
-      <p class="wpsss-help-note"><?php echo esc_html__('密钥请通过环境文件或安全渠道配置，不要在命令行中明文传递。', 'wpsss'); ?></p>
+wp sss copy --to-bucket=新桶 --dry-run</code></pre>
+      <p class="wpsss-help-note"><a href="<?php echo esc_url($docs('wp-cli')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('完整命令手册 →', 'wpsss'); ?></a><?php echo esc_html__('　密钥请通过环境文件配置，不要在命令行明文传递。', 'wpsss'); ?></p>
     </div>
   </details>
 
-  <section class="card wpsss-help-card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('chat'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('需要更多帮助', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
-      </div>
-    </div>
-    <div class="card-foot start">
-      <a class="btn btn-secondary" href="<?php echo esc_url(WPSSS_PRODUCT_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('产品官网', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
-    </div>
-  </section>
   <section class="card wpsss-help-card">
     <div class="card-head">
       <span class="tile"><?php echo Wpsss_Icons::svg('info'); ?></span>
@@ -208,5 +164,19 @@ wp sss delete &lt;对象键&gt; --yes</code></pre>
       <li><?php echo esc_html__('多站点（Multisite）暂不支持；不要在网络层激活。', 'wpsss'); ?></li>
       <li><?php echo esc_html__('COS / OBS / 七牛的超大文件上传是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。', 'wpsss'); ?></li>
     </ul>
+  </section>
+  <section class="card wpsss-help-card">
+    <div class="card-head">
+      <span class="tile"><?php echo Wpsss_Icons::svg('chat'); ?></span>
+      <div>
+        <h2 class="card-title"><?php echo esc_html__('需要更多帮助', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
+      </div>
+    </div>
+    <div class="card-foot start">
+      <a class="btn btn-secondary" href="<?php echo esc_url(WPSSS_DOCS_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('文档中心', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_PRODUCT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('产品官网', 'wpsss'); ?></a>
+      <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
+    </div>
   </section>
 </div>

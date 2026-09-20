@@ -89,8 +89,8 @@ final class Wpsss_Admin
     public function register_menu(): void
     {
         add_menu_page(
-            '文派对象存储',
-            '文派对象存储',
+            '文派智储',
+            '文派智储',
             'manage_options',
             'wpsss',
             [$this, 'render'],
@@ -162,7 +162,7 @@ final class Wpsss_Admin
         echo '<main class="wpcy-main wpcy-wrap">';
         $this->include_template('tab-' . $tab, $view);
         echo '<footer class="foot">';
-        echo '<span>文派对象存储 ' . esc_html(WPSSS_VERSION) . '</span>';
+        echo '<span>文派智储 ' . esc_html(WPSSS_VERSION) . '</span>';
         echo '<span class="r">';
         echo '<a href="' . esc_url($this->url('help')) . '">' . Wpsss_Icons::svg('help') . esc_html__('帮助', 'wpsss') . '</a>';
         echo '</span></footer>';
