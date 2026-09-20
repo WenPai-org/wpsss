@@ -101,6 +101,8 @@ wpsss_assert(strpos($tools, 'Woo 付费下载') !== false, 'tools delete mention
 wpsss_assert(strpos($tools, '只补缺失') !== false, 'tools pull skip mode');
 wpsss_assert(strpos($tools, 'wpsss_pull_reset') !== false, 'tools pull resume reset');
 wpsss_assert(strpos($tools, 'wpsss_offload_reset') !== false, 'tools offload resume reset');
+wpsss_assert(strpos($tools, 'js-wpsss-offload-form') !== false, 'tools offload ajax form');
+wpsss_assert(strpos($tools, '开始补传') !== false, 'tools offload start label');
 wpsss_assert(strpos($tools, '前缀不对') !== false, 'tools scan prefix mismatch');
 wpsss_assert(strpos($tools, '旁路改名') !== false, 'tools pull rename mode');
 wpsss_assert(strpos($tools, 'name="wpsss_pull_apply"') !== false, 'tools pull preview');
@@ -116,6 +118,7 @@ wpsss_assert(strpos($js, 'js-wpsss-pull-exist') !== false, 'js pull exist mode')
 wpsss_assert(strpos($js, 'js-wpsss-pull-scope') !== false, 'js pull scope');
 wpsss_assert(strpos($js, 'posts-filter') !== false, 'js media bulk confirm');
 wpsss_assert(strpos($js, 'confirmMediaDelete') !== false, 'js media delete confirm');
+wpsss_assert(strpos($js, 'wpsss_offload_tick') !== false, 'js offload tick');
 
 $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
 wpsss_assert(strpos($admin, '删除远端须再确认') !== false, 'admin rejects pull delete without second confirm');
@@ -124,6 +127,8 @@ wpsss_assert(strpos($admin, '删桶不能只补缺失') !== false, 'admin reject
 wpsss_assert(strpos($admin, '只写回了磁盘，前台仍走桶') !== false, 'admin pull message disk vs url');
 wpsss_assert(strpos($admin, '选择「单个附件」时请填写媒体库编号') !== false, 'admin rejects empty one-scope');
 wpsss_assert(strpos($admin, 'pull_cursor_key') !== false, 'admin pull cursor');
+wpsss_assert(strpos($admin, 'handle_offload_tick') !== false, 'admin offload tick');
+wpsss_assert(strpos($admin, 'run_offload_slice') !== false, 'admin offload budget slice');
 
 $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php');
 wpsss_assert(strpos($cli, '删除远端须加 --yes') !== false, 'cli pull delete needs yes');

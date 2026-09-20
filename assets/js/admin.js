@@ -784,6 +784,137 @@
     updatePull();
   }
 
+  function bindOffload(form) {
+    var runBtn = form.querySelector(".js-wpsss-offload-run");
+    var stopBtn = form.querySelector(".js-wpsss-offload-stop");
+    var progress = form.querySelector(".js-wpsss-offload-progress");
+    if (!runBtn || !cfg.ajaxUrl || !cfg.offloadNonce) {
+      return;
+    }
+    var running = false;
+    var halt = false;
+    var totals = { ok: 0, fail: 0, skip: 0 };
+
+    function setProgress(text) {
+      if (progress) {
+        progress.textContent = text;
+      }
+    }
+
+    function idle() {
+      running = false;
+      form.classList.remove("is-busy");
+      form.querySelectorAll("button").forEach(function (btn) {
+        if (btn === stopBtn) {
+          return;
+        }
+        btn.disabled = false;
+      });
+      if (stopBtn) {
+        stopBtn.hidden = true;
+        stopBtn.disabled = false;
+      }
+    }
+
+    function tick() {
+      if (!running || halt) {
+        idle();
+        if (halt && (totals.ok + totals.fail + totals.skip) > 0) {
+          setProgress("已暂停。本轮成功 " + totals.ok + "，失败 " + totals.fail + "，跳过 " + totals.skip + "。");
+        }
+        return;
+      }
+      var body = new URLSearchParams();
+      body.set("action", "wpsss_offload_tick");
+      body.set("nonce", cfg.offloadNonce);
+      if (form.querySelector('[name="wpsss_retry"]') || (form.querySelector('[name="source"]') && form.querySelector('[name="source"]').value === "failed")) {
+        body.set("source", "failed");
+      }
+      fetch(cfg.ajaxUrl, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        body: body.toString(),
+      })
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (json) {
+          if (!json || !json.success) {
+            running = false;
+            idle();
+            setProgress((json && json.data && json.data.message) || "补传中断。");
+            return;
+          }
+          var data = json.data || {};
+          totals.ok += data.ok || 0;
+          totals.fail += data.fail || 0;
+          totals.skip += data.skip || 0;
+          var left = body.get("source") === "failed" ? data.failed : data.pending;
+          setProgress("本轮成功 " + totals.ok + "，失败 " + totals.fail + "，还剩 " + (left || 0) + "。");
+          if (data.error) {
+            setProgress((progress ? progress.textContent + " " : "") + data.error);
+          }
+          if (data.done) {
+            running = false;
+            idle();
+            setProgress("补传结束。成功 " + totals.ok + "，失败 " + totals.fail + "，跳过 " + totals.skip + "。");
+            if (runBtn && (left || 0) === 0) {
+              runBtn.disabled = true;
+            }
+            return;
+          }
+          window.setTimeout(tick, 40);
+        })
+        .catch(function () {
+          running = false;
+          idle();
+          setProgress("网络中断，已暂停。可再点开始继续。");
+        });
+    }
+
+    if (stopBtn) {
+      stopBtn.addEventListener("click", function () {
+        halt = true;
+        stopBtn.disabled = true;
+      });
+    }
+
+    form.addEventListener(
+      "submit",
+      function (event) {
+        var btn = event.submitter;
+        if (btn && btn.name === "wpsss_offload_reset") {
+          return;
+        }
+        if (!cfg.offloadNonce) {
+          return;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (running) {
+          return;
+        }
+        totals = { ok: 0, fail: 0, skip: 0 };
+        halt = false;
+        running = true;
+        form.classList.add("is-busy");
+        if (runBtn) {
+          runBtn.disabled = true;
+        }
+        if (stopBtn) {
+          stopBtn.hidden = false;
+          stopBtn.disabled = false;
+        }
+        setProgress("开始补传…");
+        tick();
+      },
+      true
+    );
+  }
+
+  app.querySelectorAll(".js-wpsss-offload-form").forEach(bindOffload);
+
   app.querySelectorAll("form").forEach(function (form) {
     form.addEventListener(
       "submit",

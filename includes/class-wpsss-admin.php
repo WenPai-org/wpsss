@@ -21,6 +21,7 @@ final class Wpsss_Admin
         add_filter('admin_body_class', [$this, 'body_class']);
         add_action('admin_post_wpsss_probe', [$this, 'handle_probe']);
         add_action('admin_post_wpsss_offload', [$this, 'handle_offload']);
+        add_action('wp_ajax_wpsss_offload_tick', [$this, 'handle_offload_tick']);
         add_action('admin_post_wpsss_offload_one', [$this, 'handle_offload_one']);
         add_action('admin_post_wpsss_export', [$this, 'handle_export']);
         add_action('admin_post_wpsss_scan', [$this, 'handle_scan']);
@@ -73,6 +74,7 @@ final class Wpsss_Admin
         $ui = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'inspectNonce' => wp_create_nonce('wpsss_inspect'),
+            'offloadNonce' => wp_create_nonce('wpsss_offload_tick'),
         ];
         if ($this->is_screen()) {
             $ui = array_merge($ui, Wpsss_Options::admin_ui(Wpsss_Options::get()));
@@ -214,18 +216,12 @@ final class Wpsss_Admin
             $this->redirect_tools('ok', '已从头开始补传。', 'daily');
         }
         $source = !empty($_POST['wpsss_retry']) ? 'failed' : 'pending';
-        $before = $source === 'failed' ? 0 : (int) get_transient($this->offload_cursor_key());
-        $result = $this->plugin->library()->offload_batch(20, false, 0, $source, $before);
-        if ($source !== 'failed') {
-            $cursor = (int) ($result['cursor'] ?? 0);
-            if ($cursor > 0) {
-                set_transient($this->offload_cursor_key(), $cursor, DAY_IN_SECONDS);
-            } else {
-                delete_transient($this->offload_cursor_key());
-            }
-        }
+        $result = $this->run_offload_slice($source, 20);
         $verb = $source === 'failed' ? '重试' : '补传';
         $msg = sprintf('%s完成：成功 %d，失败 %d，跳过 %d。', $verb, $result['ok'], $result['fail'], $result['skip']);
+        if (!empty($result['stopped'])) {
+            $msg .= ' 本请求已到时间上限，未跑满一批，避免网关超时。';
+        }
         if ($source !== 'failed' && (int) ($result['cursor'] ?? 0) > 0) {
             $msg .= sprintf(' 下一批次将从 ID <%d> 继续。', (int) $result['cursor']);
         }
@@ -233,6 +229,34 @@ final class Wpsss_Admin
             $msg .= ' ' . $result['errors'][0];
         }
         $this->redirect_tools($result['fail'] > 0 ? 'error' : 'ok', $msg, 'daily');
+    }
+
+    public function handle_offload_tick(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('没有权限。', 'wpsss')], 403);
+        }
+        check_ajax_referer('wpsss_offload_tick', 'nonce');
+        if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+            wp_send_json_error(['message' => '先保存桶名和密钥再补传。']);
+        }
+        $source = (isset($_POST['source']) && (string) wp_unslash($_POST['source']) === 'failed') ? 'failed' : 'pending';
+        $result = $this->run_offload_slice($source, 1);
+        $stats = $this->plugin->library()->stats();
+        $processed = (int) $result['ok'] + (int) $result['fail'] + (int) $result['skip'];
+        $remaining = $source === 'failed' ? (int) $stats['failed'] : (int) $stats['pending'];
+        wp_send_json_success([
+            'ok' => (int) $result['ok'],
+            'fail' => (int) $result['fail'],
+            'skip' => (int) $result['skip'],
+            'cursor' => (int) ($result['cursor'] ?? 0),
+            'stopped' => !empty($result['stopped']),
+            'pending' => (int) $stats['pending'],
+            'failed' => (int) $stats['failed'],
+            'offloaded' => (int) $stats['offloaded'],
+            'done' => $remaining === 0 || $processed === 0,
+            'error' => $result['errors'][0] ?? '',
+        ]);
     }
 
     public function handle_offload_one(): void
@@ -282,7 +306,8 @@ final class Wpsss_Admin
             $this->redirect_tools('error', '删桶不能只补缺失。请改用覆盖或旁路改名。', 'move');
         }
         $before = $only_id > 0 ? 0 : (int) get_transient($this->pull_cursor_key());
-        $result = $this->plugin->library()->pull_batch(20, !$apply, $only_id, $apply && $delete, $on_exist, $before);
+        $budget = ($apply && $only_id === 0) ? 12.0 : 0.0;
+        $result = $this->plugin->library()->pull_batch(20, !$apply, $only_id, $apply && $delete, $on_exist, $before, $budget);
         if ($apply && $only_id === 0) {
             $cursor = (int) ($result['cursor'] ?? 0);
             if ($cursor > 0) {
@@ -320,6 +345,9 @@ final class Wpsss_Admin
         }
         if ($apply && !$delete) {
             $msg .= ' 只写回了磁盘，前台仍走桶。要改地址请解除标记，或拉回并删除。';
+        }
+        if (!empty($result['stopped'])) {
+            $msg .= ' 本请求已到时间上限，未跑满一批，避免网关超时。';
         }
         if ($apply && $only_id === 0 && (int) ($result['cursor'] ?? 0) > 0) {
             $msg .= sprintf(' 下一批次将从 ID <%d> 继续。', (int) $result['cursor']);
@@ -684,6 +712,24 @@ final class Wpsss_Admin
     private function pull_cursor_key(): string
     {
         return 'wpsss_pull_cursor_' . get_current_user_id();
+    }
+
+    /**
+     * @return array{ok: int, fail: int, skip: int, cursor: int, errors: string[], stopped: bool}
+     */
+    private function run_offload_slice(string $source, int $limit): array
+    {
+        $before = $source === 'failed' ? 0 : (int) get_transient($this->offload_cursor_key());
+        $result = $this->plugin->library()->offload_batch($limit, false, 0, $source, $before, 12.0);
+        if ($source !== 'failed') {
+            $cursor = (int) ($result['cursor'] ?? 0);
+            if ($cursor > 0) {
+                set_transient($this->offload_cursor_key(), $cursor, DAY_IN_SECONDS);
+            } else {
+                delete_transient($this->offload_cursor_key());
+            }
+        }
+        return $result;
     }
 
     private function offload_cursor_key(): string

@@ -103,9 +103,9 @@ final class Wpsss_Library
     }
 
     /**
-     * @return array{ok: int, fail: int, skip: int, renamed: int, missing: int, exists: int, blocked: int, cursor: int, errors: string[], on_exist: string, dry_run: bool}
+     * @return array{ok: int, fail: int, skip: int, renamed: int, missing: int, exists: int, blocked: int, cursor: int, errors: string[], on_exist: string, dry_run: bool, stopped: bool}
      */
-    public function pull_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, bool $delete_remote = false, string $on_exist = 'skip', int $before_id = 0): array
+    public function pull_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, bool $delete_remote = false, string $on_exist = 'skip', int $before_id = 0, float $budget_seconds = 0): array
     {
         $on_exist = Wpsss_Offload::sanitize_on_exist($on_exist);
         $ids = $only_id > 0 ? [$only_id] : $this->offloaded_ids($limit, $before_id);
@@ -117,7 +117,15 @@ final class Wpsss_Library
         $exists = 0;
         $blocked = 0;
         $errors = [];
+        $started = microtime(true);
+        $stopped = false;
+        $last = 0;
         foreach ($ids as $id) {
+            if (self::budget_hit($started, $budget_seconds) && ($ok + $fail + $skip) > 0) {
+                $stopped = true;
+                break;
+            }
+            $last = $id;
             if (!self::is_offloaded($id) && $only_id === 0) {
                 $skip++;
                 continue;
@@ -142,8 +150,8 @@ final class Wpsss_Library
             }
             $ok++;
         }
-        $cursor = $ids === [] ? 0 : min($ids);
-        return compact('ok', 'fail', 'skip', 'renamed', 'missing', 'exists', 'blocked', 'cursor', 'errors', 'on_exist', 'dry_run');
+        $cursor = $last;
+        return compact('ok', 'fail', 'skip', 'renamed', 'missing', 'exists', 'blocked', 'cursor', 'errors', 'on_exist', 'dry_run', 'stopped');
     }
 
     /**
@@ -185,9 +193,9 @@ final class Wpsss_Library
     }
 
     /**
-     * @return array{ok: int, fail: int, skip: int, cursor: int, errors: string[]}
+     * @return array{ok: int, fail: int, skip: int, cursor: int, errors: string[], stopped: bool}
      */
-    public function offload_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, string $source = 'pending', int $before_id = 0): array
+    public function offload_batch(int $limit = 20, bool $dry_run = false, int $only_id = 0, string $source = 'pending', int $before_id = 0, float $budget_seconds = 0): array
     {
         if ($only_id > 0) {
             $ids = [$only_id];
@@ -200,7 +208,15 @@ final class Wpsss_Library
         $fail = 0;
         $skip = 0;
         $errors = [];
+        $started = microtime(true);
+        $stopped = false;
+        $last = 0;
         foreach ($ids as $id) {
+            if (self::budget_hit($started, $budget_seconds) && ($ok + $fail + $skip) > 0) {
+                $stopped = true;
+                break;
+            }
+            $last = $id;
             if (self::is_offloaded($id) && $only_id === 0) {
                 $skip++;
                 continue;
@@ -217,8 +233,13 @@ final class Wpsss_Library
             }
             $ok++;
         }
-        $cursor = $ids === [] ? 0 : min($ids);
-        return compact('ok', 'fail', 'skip', 'cursor', 'errors');
+        $cursor = $last;
+        return compact('ok', 'fail', 'skip', 'cursor', 'errors', 'stopped');
+    }
+
+    private static function budget_hit(float $started, float $budget_seconds): bool
+    {
+        return $budget_seconds > 0 && (microtime(true) - $started) >= $budget_seconds;
     }
 
     /**

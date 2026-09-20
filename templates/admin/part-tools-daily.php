@@ -31,7 +31,7 @@ defined('ABSPATH') || exit;
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html(sprintf(
-            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。每批最多 20 个。',
+            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。一次传一个，关掉页面即停。',
             (int) $stats['total'],
             (int) $stats['offloaded'],
             (int) $stats['pending'],
@@ -39,16 +39,17 @@ defined('ABSPATH') || exit;
         )); ?></p>
       </div>
     </div>
-    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+    <form class="js-wpsss-offload-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_offload" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_offload'); ?>
+      <p class="meta js-wpsss-offload-progress" aria-live="polite"></p>
       <div class="card-foot start">
-        <span class="meta"><?php
+        <span class="meta js-wpsss-offload-hint"><?php
           if ((int) ($offload_cursor ?? 0) > 0) {
               echo esc_html(sprintf('接着 ID <%d。新上传会自动进桶。', (int) $offload_cursor));
           } elseif ($pending > 0) {
-              echo esc_html__('新上传的附件会自动进桶。', 'wpsss');
+              echo esc_html__('一次传一个附件。关掉此页即暂停。', 'wpsss');
           } else {
               echo esc_html__('当前没有待补传的附件。', 'wpsss');
           }
@@ -57,19 +58,21 @@ defined('ABSPATH') || exit;
           <?php if ((int) ($offload_cursor ?? 0) > 0) : ?>
             <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1"><?php echo esc_html__('从头', 'wpsss'); ?></button>
           <?php endif; ?>
-          <button class="btn btn-secondary" type="submit" <?php disabled($pending <= 0); ?>><?php echo esc_html__('补传一批', 'wpsss'); ?></button>
+          <button class="btn btn-ghost js-wpsss-offload-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
+          <button class="btn btn-secondary js-wpsss-offload-run" type="submit" name="wpsss_offload" value="1" <?php disabled($pending <= 0); ?>><?php echo esc_html__('开始补传', 'wpsss'); ?></button>
         </span>
       </div>
     </form>
     <?php if ($failed > 0) : ?>
-    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+    <form class="js-wpsss-offload-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_offload" />
       <input type="hidden" name="wpsss_retry" value="1" />
+      <input type="hidden" name="source" value="failed" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_offload'); ?>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html(sprintf('有 %d 个上次失败的附件，可只重试这些。', $failed)); ?></span>
-        <button class="btn btn-ghost" type="submit"><?php echo esc_html__('重试失败项', 'wpsss'); ?></button>
+        <button class="btn btn-ghost js-wpsss-offload-run" type="submit"><?php echo esc_html__('重试失败项', 'wpsss'); ?></button>
       </div>
     </form>
     <?php endif; ?>
