@@ -4,27 +4,52 @@ defined('ABSPATH') || exit;
 /** @var string $rewrite_from */
 /** @var string $rewrite_to */
 /** @var array<string, mixed> $rewrite */
+/** @var array<string, mixed> $opts */
+$keep_on = (($opts['keep_local'] ?? '1') === '1');
 ?>
   <section class="card">
     <div class="card-head">
       <span class="tile warn"><?php echo Wpsss_Icons::svg('download'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('拉回本地', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('将已进桶的附件写回本地 uploads 目录；默认保留远端对象。每批最多 20 个。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('把已进桶的附件写回这台服务器的 uploads。每批最多 20 个。', 'wpsss'); ?></p>
       </div>
     </div>
-    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_pull_confirm" data-wpsss-confirm="<?php echo esc_attr__('确认拉回本地？会覆盖 uploads 里的同名文件。', 'wpsss'); ?>">
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_pull_confirm" data-wpsss-confirm="<?php echo esc_attr__('拉回会覆盖 uploads 里的同名文件。默认不删桶。继续？', 'wpsss'); ?>">
       <input type="hidden" name="action" value="wpsss_pull" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_pull'); ?>
+      <div class="notice warn">
+        <?php echo Wpsss_Icons::svg('info'); ?>
+        <span><?php echo esc_html__('会覆盖 uploads 里的同名文件。默认不删桶；本地不对，还能再从桶里取。', 'wpsss'); ?></span>
+      </div>
+      <p class="wpsss-backup-note"><?php echo $keep_on
+          ? esc_html__('备份：当前开着本地备份。若 uploads 里的文件和桶里不是同一版，先把本地那份拷走再拉回。', 'wpsss')
+          : esc_html__('备份：当前没开本地备份。uploads 里可能本来就没有文件。删桶之前必须先拉回并打开核对，否则可能丢掉最后一份。', 'wpsss'); ?></p>
       <div class="chk wpsss-gate">
-        <label><input type="checkbox" name="wpsss_pull_confirm" value="1" /> <?php echo esc_html__('我确认拉回本地，并接受覆盖 uploads 中的同名文件', 'wpsss'); ?></label>
-        <label><input type="checkbox" name="wpsss_pull_delete" value="1" class="js-wpsss-pull-delete" /> <?php echo esc_html__('同时永久删除桶内对象', 'wpsss'); ?></label>
-        <label class="js-wpsss-pull-delete-confirm wpsss-gate-extra" hidden><input type="checkbox" name="wpsss_pull_delete_confirm" value="1" /> <?php echo esc_html__('我明白删除后无法从回收站恢复，文章里的桶地址会失效', 'wpsss'); ?></label>
+        <label><input type="checkbox" name="wpsss_pull_confirm" value="1" /> <?php echo esc_html__('接受覆盖 uploads 里的同名文件', 'wpsss'); ?></label>
+        <label><input type="checkbox" name="wpsss_pull_delete" value="1" class="js-wpsss-pull-delete" /> <?php echo esc_html__('还要永久删除桶内对象', 'wpsss'); ?></label>
+      </div>
+      <div class="wpsss-caution js-wpsss-pull-delete-confirm wpsss-gate-extra" hidden>
+        <div class="notice bad">
+          <?php echo Wpsss_Icons::svg('info'); ?>
+          <span><strong><?php echo esc_html__('桶里没有回收站。', 'wpsss'); ?></strong> <?php echo esc_html__('对象存储控制台通常也找不回来。文章、缩略图、付费下载若还指向桶地址，会立刻裂图。', 'wpsss'); ?></span>
+        </div>
+        <p class="wpsss-backup-note"><?php echo esc_html__('先做完这三步，再勾下面：', 'wpsss'); ?></p>
+        <ol class="wpsss-backup-steps">
+          <li><?php echo esc_html__('先不要勾删除，只拉回本地。', 'wpsss'); ?></li>
+          <li><?php echo esc_html__('到媒体库打开文件，确认能看、体积正常。', 'wpsss'); ?></li>
+          <li><?php echo $keep_on
+              ? esc_html__('确认本地备份仍开着，或你已经另存了一份。', 'wpsss')
+              : esc_html__('本地备份已关。请另存一份能打开的文件，再删桶。', 'wpsss'); ?></li>
+        </ol>
+        <div class="chk">
+          <label><input type="checkbox" name="wpsss_pull_delete_confirm" value="1" /> <?php echo esc_html__('本地已经打开核对过，可以丢掉桶里那份', 'wpsss'); ?></label>
+        </div>
       </div>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('默认可逆：只写回本地，远端仍留着。勾选删除须第二次确认。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled><?php echo esc_html__('拉回一批', 'wpsss'); ?></button>
+        <span class="meta"><?php echo esc_html__('默认可逆：只写回本地。删桶是另一回事。', 'wpsss'); ?></span>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-label="<?php echo esc_attr__('拉回一批', 'wpsss'); ?>" data-wpsss-label-delete="<?php echo esc_attr__('拉回并删除', 'wpsss'); ?>"><?php echo esc_html__('拉回一批', 'wpsss'); ?></button>
       </div>
     </form>
   </section>
@@ -49,6 +74,11 @@ defined('ABSPATH') || exit;
         <div><div class="field-label"><?php echo esc_html__('目标地址', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('留空则使用当前对外地址', 'wpsss'); ?></div></div>
         <div class="field-ctl"><input type="text" name="wpsss_rewrite_to" value="<?php echo esc_attr($rewrite_to); ?>" /></div>
       </div>
+      <div class="notice warn">
+        <?php echo Wpsss_Icons::svg('info'); ?>
+        <span><?php echo esc_html__('写入文章正文和普通字段，插件不能撤销。序列化字段不会改。', 'wpsss'); ?></span>
+      </div>
+      <p class="wpsss-backup-note"><?php echo esc_html__('备份：先点预览看命中篇数。写入前用主机面板、备份插件或 wp db export 留一份数据库。', 'wpsss'); ?></p>
       <?php if ($rewrite !== []) : ?>
         <?php
           $result = isset($rewrite['result']) && is_array($rewrite['result']) ? $rewrite['result'] : [];
@@ -68,13 +98,13 @@ defined('ABSPATH') || exit;
         </div>
       <?php endif; ?>
       <div class="chk wpsss-gate">
-        <label><input type="checkbox" name="wpsss_rewrite_confirm" value="1" /> <?php echo esc_html__('我确认写入数据库，并已先预览命中范围', 'wpsss'); ?></label>
+        <label><input type="checkbox" name="wpsss_rewrite_confirm" value="1" /> <?php echo esc_html__('我已经预览过，并且有数据库备份', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('建议先预览，确认无误后再写入数据库。', 'wpsss'); ?></span>
+        <span class="meta"><?php echo esc_html__('没有预览结果时，不要写入。', 'wpsss'); ?></span>
         <span class="wpsss-actions">
           <button class="btn btn-ghost" type="submit" name="wpsss_rewrite_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
-          <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认把文章和字段里的地址写入数据库？建议先预览。', 'wpsss'); ?>"><?php echo esc_html__('写入数据库', 'wpsss'); ?></button>
+          <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('会写入数据库，插件不能撤销。确认已经预览，并且有数据库备份？', 'wpsss'); ?>"><?php echo esc_html__('写入数据库', 'wpsss'); ?></button>
         </span>
       </div>
     </form>
@@ -92,12 +122,21 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="action" value="wpsss_release" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_release'); ?>
+      <div class="notice warn">
+        <?php echo Wpsss_Icons::svg('info'); ?>
+        <span><?php echo esc_html__('只去掉插件标记，不删桶。前台可能改回本地 uploads 地址。', 'wpsss'); ?></span>
+      </div>
+      <p class="wpsss-backup-note"><?php echo $keep_on
+          ? esc_html__('备份：本地备份开着，前台多半改回 uploads。先确认本地文件还在。', 'wpsss')
+          : esc_html__('备份：本地备份已关。解除后前台可能裂图。先拉回，或确认本地还有文件。', 'wpsss'); ?></p>
       <div class="chk wpsss-gate">
-        <label><input type="checkbox" name="wpsss_release_confirm" value="1" /> <?php echo esc_html__('我确认解除进桶标记，并明白前台可能改回本地地址', 'wpsss'); ?></label>
+        <label><input type="checkbox" name="wpsss_release_confirm" value="1" /> <?php echo $keep_on
+            ? esc_html__('我明白前台会改回本地地址', 'wpsss')
+            : esc_html__('我确认本地还有文件，或接受前台可能裂图', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('每批最多 20 个。此操作不删桶。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？桶内对象不会删除，但插件不再改写这些附件。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不删桶。若本地没有文件，前台可能裂图。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
       </div>
     </form>
   </section>

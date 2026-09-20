@@ -657,6 +657,11 @@
       form.classList.toggle("is-confirmed", ok);
       apply.forEach(function (btn) {
         btn.disabled = !ok;
+        var label = btn.getAttribute("data-wpsss-label");
+        var labelDelete = btn.getAttribute("data-wpsss-label-delete");
+        if (label && labelDelete) {
+          btn.textContent = del && del.checked ? labelDelete : label;
+        }
       });
     }
     box.addEventListener("change", update);

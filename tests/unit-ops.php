@@ -59,6 +59,10 @@ wpsss_assert(strpos($shell, "'check'") !== false, 'tools has check panel');
 wpsss_assert(strpos($shell, "'move'") !== false, 'tools has move panel');
 wpsss_assert(strpos($shell, '媒体体检') === false, 'tools index does not stack all cards');
 wpsss_assert(strpos($tools, 'wpsss_pull_delete_confirm') !== false, 'tools second confirm for delete remote');
+wpsss_assert(strpos($tools, '桶里没有回收站') !== false, 'tools delete has no-trash warning');
+wpsss_assert(strpos($tools, '先做完这三步') !== false, 'tools delete has backup steps');
+wpsss_assert(strpos($tools, '本地已经打开核对过') !== false, 'tools delete confirm is a backup claim');
+wpsss_assert(strpos($tools, '有数据库备份') !== false, 'tools rewrite asks for database backup');
 wpsss_assert(strpos($tools, 'data-wpsss-confirm') !== false, 'tools dialog confirm');
 wpsss_assert(strpos($tools, '媒体体检') !== false, 'tools scan card');
 wpsss_assert(strpos($tools, '诊断一条地址') !== false, 'tools diagnose card');
@@ -67,6 +71,8 @@ wpsss_assert(strpos($tools, '解除进桶标记') !== false, 'tools release card
 wpsss_assert(strpos($tools, '我确认在测试站执行拉回') === false, 'tools pull copy not test-only');
 $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin.css');
 wpsss_assert(strpos($css, '.wpsss-gate-extra[hidden]') !== false, 'css hides extra confirm');
+wpsss_assert(strpos($css, '.wpsss-caution') !== false, 'css caution panel');
+wpsss_assert(strpos($css, '.wpsss-backup-note') !== false, 'css backup note');
 
 $js = (string) file_get_contents(dirname(__DIR__) . '/assets/js/admin.js');
 wpsss_assert(strpos($js, 'confirmPullDelete') !== false || strpos($js, 'wpsss_pull_delete_confirm') !== false, 'js pull delete gate');

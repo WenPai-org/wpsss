@@ -20,7 +20,7 @@ $head = isset($ops['head']) && is_array($ops['head']) ? $ops['head'] : [];
 $ledes = [
     'daily' => __('补传、连通测试与最近记录。', 'wpsss'),
     'check' => __('裂图、主机不对、桶里对象不见了时用。', 'wpsss'),
-    'move' => __('拉回、改写、解除标记。执行前先确认。', 'wpsss'),
+    'move' => __('拉回、改写、解除标记。先看警示和备份说明，再动手。', 'wpsss'),
 ];
 $panels = [
     'daily' => __('日常', 'wpsss'),
