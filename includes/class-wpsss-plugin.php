@@ -36,8 +36,15 @@ final class Wpsss_Plugin
         $this->register_driver(new Wpsss_Driver_S3_Compat('gcs', 'Google Cloud Storage'));
         $this->register_driver(new Wpsss_Driver_S3_Compat());
         add_action('admin_init', [$this, 'register_settings']);
+        add_filter('cron_schedules', static function (array $schedules): array {
+            if (!isset($schedules[Wpsss_Library::CRON_SLUG])) {
+                $schedules[Wpsss_Library::CRON_SLUG] = ['interval' => 60, 'display' => 'WPSSS 每分钟'];
+            }
+            return $schedules;
+        });
         $this->offload = new Wpsss_Offload($this);
         $this->library = new Wpsss_Library($this, $this->offload);
+        add_action(Wpsss_Library::CRON_HOOK, [$this->library, 'cron_offload_tick']);
         (new Wpsss_Admin($this))->register();
         $this->offload->register();
         $this->library->register();

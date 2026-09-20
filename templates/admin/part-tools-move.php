@@ -56,7 +56,7 @@ $exist_modes = [
       </div>
       <p class="wpsss-pull-hint js-wpsss-pull-scope-hint"><?php echo $pull_scope === 'one'
           ? esc_html__('仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。', 'wpsss')
-          : esc_html__('对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行将处理下一批次。', 'wpsss'); ?></p>
+          : esc_html__('对已进桶的附件按媒体库编号从新到旧拉回，一次拉一个；关掉页面即停，再点「拉回」可继续。', 'wpsss'); ?></p>
       <div class="field js-wpsss-pull-one"<?php echo $pull_scope === 'one' ? '' : ' hidden'; ?>>
         <div>
           <div class="field-label"><?php echo esc_html__('媒体库编号', 'wpsss'); ?></div>
@@ -121,6 +121,7 @@ $exist_modes = [
           <label><input type="checkbox" name="wpsss_pull_delete_confirm" value="1" /> <?php echo esc_html__('本地已经打开核对过，可以丢掉桶里那份', 'wpsss'); ?></label>
         </div>
       </div>
+      <p class="meta js-wpsss-pull-progress" aria-live="polite"></p>
       <div class="card-foot start">
         <span class="meta"><?php
           if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) {
@@ -134,7 +135,8 @@ $exist_modes = [
             <button class="btn btn-ghost" type="submit" name="wpsss_pull_reset" value="1"><?php echo esc_html__('从头', 'wpsss'); ?></button>
           <?php endif; ?>
           <button class="btn btn-ghost js-wpsss-pull-go" type="submit" name="wpsss_pull_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
-          <button class="btn btn-secondary js-wpsss-pull-go" type="submit" name="wpsss_pull_apply" value="1" data-wpsss-need-apply <?php echo $pull_exist === 'skip' ? '' : 'disabled '; ?>data-wpsss-label="<?php echo esc_attr__('拉回', 'wpsss'); ?>" data-wpsss-label-delete="<?php echo esc_attr__('拉回并删除', 'wpsss'); ?>" data-wpsss-confirm="<?php echo esc_attr($exist_modes[$pull_exist]['dialog']); ?>"><?php echo esc_html__('拉回', 'wpsss'); ?></button>
+          <button class="btn btn-ghost js-wpsss-pull-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
+          <button class="btn btn-secondary js-wpsss-pull-go js-wpsss-pull-run" type="submit" name="wpsss_pull_apply" value="1" data-wpsss-need-apply <?php echo $pull_exist === 'skip' ? '' : 'disabled '; ?>data-wpsss-label="<?php echo esc_attr__('拉回', 'wpsss'); ?>" data-wpsss-label-delete="<?php echo esc_attr__('拉回并删除', 'wpsss'); ?>" data-wpsss-confirm="<?php echo esc_attr($exist_modes[$pull_exist]['dialog']); ?>"><?php echo esc_html__('拉回', 'wpsss'); ?></button>
         </span>
       </div>
     </form>

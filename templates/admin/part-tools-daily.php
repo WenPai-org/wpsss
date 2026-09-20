@@ -31,7 +31,7 @@ defined('ABSPATH') || exit;
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html(sprintf(
-            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。一次传一个，关掉页面即停。',
+            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。一次传一个。',
             (int) $stats['total'],
             (int) $stats['offloaded'],
             (int) $stats['pending'],
@@ -49,7 +49,7 @@ defined('ABSPATH') || exit;
           if ((int) ($offload_cursor ?? 0) > 0) {
               echo esc_html(sprintf('接着 ID <%d。新上传会自动进桶。', (int) $offload_cursor));
           } elseif ($pending > 0) {
-              echo esc_html__('一次传一个附件。关掉此页即暂停。', 'wpsss');
+              echo esc_html__('开始后一次传一个。关掉页面，后台每分钟最多补 2 个，补完自动停；点「暂停」立即全停。', 'wpsss');
           } else {
               echo esc_html__('当前没有待补传的附件。', 'wpsss');
           }

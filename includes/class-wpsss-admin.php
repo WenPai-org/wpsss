@@ -31,6 +31,7 @@ final class Wpsss_Admin
         add_action('admin_post_wpsss_release', [$this, 'handle_release']);
         add_action('admin_post_wpsss_rewrite', [$this, 'handle_rewrite']);
         add_action('admin_post_wpsss_pull', [$this, 'handle_pull']);
+        add_action('wp_ajax_wpsss_pull_tick', [$this, 'handle_pull_tick']);
         add_action('admin_post_wpsss_pull_one', [$this, 'handle_pull_one']);
         add_action('admin_post_wpsss_quick', [$this, 'handle_quick']);
         add_action('admin_post_wpsss_setup', [$this, 'handle_setup']);
@@ -75,6 +76,7 @@ final class Wpsss_Admin
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'inspectNonce' => wp_create_nonce('wpsss_inspect'),
             'offloadNonce' => wp_create_nonce('wpsss_offload_tick'),
+            'pullNonce' => wp_create_nonce('wpsss_pull_tick'),
         ];
         if ($this->is_screen()) {
             $ui = array_merge($ui, Wpsss_Options::admin_ui(Wpsss_Options::get()));
@@ -240,21 +242,101 @@ final class Wpsss_Admin
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
             wp_send_json_error(['message' => '先保存桶名和密钥再补传。']);
         }
+        if (!empty($_POST['stop'])) {
+            Wpsss_Library::disarm_offload_cron();
+            Wpsss_Library::run_lock_release();
+            wp_send_json_success(['done' => true]);
+        }
         $source = (isset($_POST['source']) && (string) wp_unslash($_POST['source']) === 'failed') ? 'failed' : 'pending';
+        $stats = $this->plugin->library()->stats();
+        if (!Wpsss_Library::run_lock_acquire()) {
+            wp_send_json_success($this->offload_tick_payload(0, 0, 0, 0, false, $stats, false, ''));
+        }
         $result = $this->run_offload_slice($source, 1);
+        Wpsss_Library::run_lock_release();
         $stats = $this->plugin->library()->stats();
         $processed = (int) $result['ok'] + (int) $result['fail'] + (int) $result['skip'];
         $remaining = $source === 'failed' ? (int) $stats['failed'] : (int) $stats['pending'];
+        $done = $remaining === 0 || $processed === 0;
+        if ($done) {
+            Wpsss_Library::disarm_offload_cron();
+        }
+        wp_send_json_success($this->offload_tick_payload(
+            (int) $result['ok'],
+            (int) $result['fail'],
+            (int) $result['skip'],
+            (int) ($result['cursor'] ?? 0),
+            !empty($result['stopped']),
+            $stats,
+            $done,
+            $result['errors'][0] ?? ''
+        ));
+    }
+
+    /**
+     * @param array{total: int, offloaded: int, pending: int, failed: int} $stats
+     * @return array<string, int|bool|string>
+     */
+    private function offload_tick_payload(int $ok, int $fail, int $skip, int $cursor, bool $stopped, array $stats, bool $done, string $error): array
+    {
+        return [
+            'ok' => $ok,
+            'fail' => $fail,
+            'skip' => $skip,
+            'cursor' => $cursor,
+            'stopped' => $stopped,
+            'busy' => $ok === 0 && $fail === 0 && $skip === 0 && $cursor === 0 && !$done,
+            'pending' => (int) $stats['pending'],
+            'failed' => (int) $stats['failed'],
+            'offloaded' => (int) $stats['offloaded'],
+            'done' => $done,
+            'error' => $error,
+        ];
+    }
+
+    /**
+     * 拉回队列的浏览器 tick：一次只拉一个附件，参数沿用表单里的选择。
+     * 预览与「单个附件」仍走同步 POST，这里只接管批量拉回。
+     */
+    public function handle_pull_tick(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('没有权限。', 'wpsss')], 403);
+        }
+        check_ajax_referer('wpsss_pull_tick', 'nonce');
+        if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+            wp_send_json_error(['message' => '先保存桶名和密钥再拉回。']);
+        }
+        $on_exist = Wpsss_Offload::sanitize_on_exist(isset($_POST['wpsss_pull_exist']) ? (string) wp_unslash($_POST['wpsss_pull_exist']) : 'skip');
+        $delete = !empty($_POST['wpsss_pull_delete']);
+        if ($delete && $on_exist === 'skip') {
+            wp_send_json_error(['message' => '删桶不能只补缺失。请改用覆盖或旁路改名。']);
+        }
+        if ($on_exist !== 'skip' && empty($_POST['wpsss_pull_confirm'])) {
+            wp_send_json_error(['message' => '请先勾选确认项。']);
+        }
+        if ($delete && empty($_POST['wpsss_pull_delete_confirm'])) {
+            wp_send_json_error(['message' => '删除远端须再确认。']);
+        }
+        $before = (int) get_transient($this->pull_cursor_key());
+        $result = $this->plugin->library()->pull_batch(1, false, 0, $delete, $on_exist, $before, 12.0);
+        $cursor = (int) ($result['cursor'] ?? 0);
+        $more = $cursor > 0 && $this->plugin->library()->offloaded_ids(1, $cursor) !== [];
+        if ($more) {
+            set_transient($this->pull_cursor_key(), $cursor, DAY_IN_SECONDS);
+        } else {
+            delete_transient($this->pull_cursor_key());
+        }
+        $processed = (int) $result['ok'] + (int) $result['fail'] + (int) $result['skip'];
         wp_send_json_success([
             'ok' => (int) $result['ok'],
             'fail' => (int) $result['fail'],
             'skip' => (int) $result['skip'],
-            'cursor' => (int) ($result['cursor'] ?? 0),
+            'renamed' => (int) $result['renamed'],
+            'blocked' => (int) $result['blocked'],
+            'cursor' => $cursor,
             'stopped' => !empty($result['stopped']),
-            'pending' => (int) $stats['pending'],
-            'failed' => (int) $stats['failed'],
-            'offloaded' => (int) $stats['offloaded'],
-            'done' => $remaining === 0 || $processed === 0,
+            'done' => !$more || $processed === 0,
             'error' => $result['errors'][0] ?? '',
         ]);
     }
@@ -719,22 +801,23 @@ final class Wpsss_Admin
      */
     private function run_offload_slice(string $source, int $limit): array
     {
-        $before = $source === 'failed' ? 0 : (int) get_transient($this->offload_cursor_key());
+        $before = $source === 'failed' ? 0 : (int) get_transient(Wpsss_Library::CURSOR_KEY);
         $result = $this->plugin->library()->offload_batch($limit, false, 0, $source, $before, 12.0);
         if ($source !== 'failed') {
             $cursor = (int) ($result['cursor'] ?? 0);
             if ($cursor > 0) {
-                set_transient($this->offload_cursor_key(), $cursor, DAY_IN_SECONDS);
+                set_transient(Wpsss_Library::CURSOR_KEY, $cursor, DAY_IN_SECONDS);
             } else {
-                delete_transient($this->offload_cursor_key());
+                delete_transient(Wpsss_Library::CURSOR_KEY);
             }
+            Wpsss_Library::arm_offload_cron();
         }
         return $result;
     }
 
     private function offload_cursor_key(): string
     {
-        return 'wpsss_offload_cursor_' . get_current_user_id();
+        return Wpsss_Library::CURSOR_KEY;
     }
 
     private function ops_transient_key(): string

@@ -12,6 +12,10 @@ final class Wpsss_Library
     public const META_OFFLOADED = '_wpsss_offloaded';
     public const META_KEY = '_wpsss_key';
     public const META_ERROR = '_wpsss_error';
+    public const CRON_HOOK = 'wpsss_offload_cron_event';
+    public const CRON_SLUG = 'wpsss_minute';
+    public const CURSOR_KEY = 'wpsss_offload_cursor';
+    public const RUN_LOCK_KEY = 'wpsss_offload_runlock';
 
     /** @var Wpsss_Plugin */
     private $plugin;
@@ -243,6 +247,72 @@ final class Wpsss_Library
     }
 
     /**
+     * 浏览器补传与 cron 托底共用的运行锁：同刻只允许一条队列在跑。
+     * 锁带 TTL，进程中途死掉也会自己过期，不会卡死队列。
+     */
+    public static function run_lock_acquire(): bool
+    {
+        if (get_transient(self::RUN_LOCK_KEY) !== false) {
+            return false;
+        }
+        set_transient(self::RUN_LOCK_KEY, 1, 2 * MINUTE_IN_SECONDS);
+        return true;
+    }
+
+    public static function run_lock_release(): void
+    {
+        delete_transient(self::RUN_LOCK_KEY);
+    }
+
+    public static function arm_offload_cron(): void
+    {
+        if (!function_exists('wp_schedule_event')) {
+            return;
+        }
+        wp_clear_scheduled_hook(self::CRON_HOOK);
+        wp_schedule_event(time() + 60, self::CRON_SLUG, self::CRON_HOOK);
+    }
+
+    public static function disarm_offload_cron(): void
+    {
+        if (function_exists('wp_clear_scheduled_hook')) {
+            wp_clear_scheduled_hook(self::CRON_HOOK);
+        }
+    }
+
+    /**
+     * cron 托底：管理员关掉页面后，每分钟最多补 2 个，慢慢清完待传队列。
+     * 队列清空、密钥失效或卡住时自动卸下自己；和浏览器 tick 抢同一把运行锁。
+     */
+    public function cron_offload_tick(): void
+    {
+        if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
+            self::disarm_offload_cron();
+            return;
+        }
+        if ((int) $this->stats()['pending'] <= 0) {
+            self::disarm_offload_cron();
+            return;
+        }
+        if (!self::run_lock_acquire()) {
+            return;
+        }
+        $before = (int) get_transient(self::CURSOR_KEY);
+        $result = $this->offload_batch(2, false, 0, 'pending', $before, 20.0);
+        $cursor = (int) ($result['cursor'] ?? 0);
+        if ($cursor > 0) {
+            set_transient(self::CURSOR_KEY, $cursor, DAY_IN_SECONDS);
+        } else {
+            delete_transient(self::CURSOR_KEY);
+        }
+        self::run_lock_release();
+        $worked = ((int) $result['ok'] + (int) $result['fail'] + (int) $result['skip']) > 0;
+        if (!$worked || $this->pending_ids(1, $cursor) === []) {
+            self::disarm_offload_cron();
+        }
+    }
+
+    /**
      * @param array<string, mixed> $args
      * @return int[]
      */
@@ -262,6 +332,8 @@ final class Wpsss_Library
             };
             add_filter('posts_where', $where);
         }
+        // 附加原始 before_id，便于测试桩与排查工具不解析 SQL 就能看到游标下限。
+        $args['wpsss_before_id'] = $before_id;
         $ids = get_posts($args);
         if ($where !== null && function_exists('remove_filter')) {
             remove_filter('posts_where', $where);

@@ -706,7 +706,7 @@
       if (pullScopeHint) {
         pullScopeHint.textContent = scope === "one"
           ? "仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。"
-          : "对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个；再次执行将处理下一批次。";
+          : "对已进桶的附件按媒体库编号从新到旧拉回，一次拉一个；关掉页面即停，再点「拉回」可继续。";
       }
       if (pullOne) {
         pullOne.hidden = scope !== "one";
@@ -847,6 +847,11 @@
             return;
           }
           var data = json.data || {};
+          if (data.busy) {
+            setProgress("后台慢跑正占着队列，稍候自动继续…");
+            window.setTimeout(tick, 2500);
+            return;
+          }
           totals.ok += data.ok || 0;
           totals.fail += data.fail || 0;
           totals.skip += data.skip || 0;
@@ -877,6 +882,16 @@
       stopBtn.addEventListener("click", function () {
         halt = true;
         stopBtn.disabled = true;
+        var stopBody = new URLSearchParams();
+        stopBody.set("action", "wpsss_offload_tick");
+        stopBody.set("nonce", cfg.offloadNonce);
+        stopBody.set("stop", "1");
+        fetch(cfg.ajaxUrl, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+          body: stopBody.toString(),
+        }).catch(function () {});
       });
     }
 
@@ -914,6 +929,156 @@
   }
 
   app.querySelectorAll(".js-wpsss-offload-form").forEach(bindOffload);
+
+  /**
+   * 批量拉回走 admin-ajax 一次拉一个附件；预览与「单个附件」仍走同步 POST。
+   * 挂在通用提交处理器之前注册（同 capture 阶段按注册顺序执行），
+   * 先问确认再接管提交，避免通用处理器把表单按普通 POST 发出去。
+   */
+  function bindPullQueue(form) {
+    var runBtn = form.querySelector(".js-wpsss-pull-run");
+    var stopBtn = form.querySelector(".js-wpsss-pull-stop");
+    var progress = form.querySelector(".js-wpsss-pull-progress");
+    if (!runBtn || !cfg.ajaxUrl || !cfg.pullNonce) {
+      return;
+    }
+    var running = false;
+    var halt = false;
+    var totals = { ok: 0, fail: 0, skip: 0, renamed: 0 };
+
+    function setProgress(text) {
+      if (progress) {
+        progress.textContent = text;
+      }
+    }
+
+    function idle() {
+      running = false;
+      form.classList.remove("is-busy");
+      form.querySelectorAll("button").forEach(function (btn) {
+        if (btn === stopBtn) {
+          return;
+        }
+        btn.disabled = false;
+      });
+      if (stopBtn) {
+        stopBtn.hidden = true;
+        stopBtn.disabled = false;
+      }
+    }
+
+    function isBatchScope() {
+      var checked = form.querySelector(".js-wpsss-pull-scope:checked");
+      return !checked || checked.value !== "one";
+    }
+
+    function tick() {
+      if (!running || halt) {
+        idle();
+        if (halt && (totals.ok + totals.fail + totals.skip) > 0) {
+          setProgress("已暂停。本轮已拉回 " + totals.ok + "，失败 " + totals.fail + "。");
+        }
+        return;
+      }
+      var body = new URLSearchParams(new FormData(form));
+      body.set("action", "wpsss_pull_tick");
+      body.set("nonce", cfg.pullNonce);
+      fetch(cfg.ajaxUrl, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        body: body.toString(),
+      })
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (json) {
+          if (!json || !json.success) {
+            running = false;
+            idle();
+            setProgress((json && json.data && json.data.message) || "拉回中断。");
+            return;
+          }
+          var data = json.data || {};
+          totals.ok += data.ok || 0;
+          totals.fail += data.fail || 0;
+          totals.skip += data.skip || 0;
+          totals.renamed += data.renamed || 0;
+          var line = "本轮已拉回 " + totals.ok + "，失败 " + totals.fail;
+          if (totals.renamed > 0) {
+            line += "，旁路 " + totals.renamed;
+          }
+          line += data.cursor > 0 ? "。处理到编号 " + data.cursor + "。" : "。";
+          setProgress(line);
+          if (data.error) {
+            setProgress((progress ? progress.textContent + " " : "") + data.error);
+          }
+          if (data.done) {
+            running = false;
+            idle();
+            var doneLine = "拉回结束。已拉回 " + totals.ok + "，失败 " + totals.fail + "，跳过 " + totals.skip + "。";
+            setProgress(doneLine);
+            return;
+          }
+          window.setTimeout(tick, 60);
+        })
+        .catch(function () {
+          running = false;
+          idle();
+          setProgress("网络中断，已暂停。可再点「拉回」继续。");
+        });
+    }
+
+    if (stopBtn) {
+      stopBtn.addEventListener("click", function () {
+        halt = true;
+        stopBtn.disabled = true;
+      });
+    }
+
+    form.addEventListener(
+      "submit",
+      function (event) {
+        var btn = event.submitter;
+        if (!btn || btn.name !== "wpsss_pull_apply" || btn.value !== "1") {
+          return;
+        }
+        if (!isBatchScope()) {
+          return;
+        }
+        var msg = btn.getAttribute("data-wpsss-confirm") || form.getAttribute("data-wpsss-confirm");
+        if (form.querySelector('input[name="wpsss_pull_delete"]:checked')) {
+          msg = copy.confirmPullDelete || msg;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (msg && !askConfirm(msg)) {
+          return;
+        }
+        if (running) {
+          return;
+        }
+        totals = { ok: 0, fail: 0, skip: 0, renamed: 0 };
+        halt = false;
+        running = true;
+        form.classList.add("is-busy");
+        if (runBtn) {
+          runBtn.disabled = true;
+        }
+        if (stopBtn) {
+          stopBtn.hidden = false;
+          stopBtn.disabled = false;
+        }
+        setProgress("开始拉回…");
+        tick();
+      },
+      true
+    );
+  }
+
+  if (pullForm) {
+    bindPullQueue(pullForm);
+  }
 
   app.querySelectorAll("form").forEach(function (form) {
     form.addEventListener(

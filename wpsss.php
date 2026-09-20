@@ -70,6 +70,16 @@ add_action('plugins_loaded', static function () {
     wpsss()->boot();
 });
 
+register_deactivation_hook(__FILE__, static function () {
+    if (function_exists('wp_clear_scheduled_hook')) {
+        wp_clear_scheduled_hook('wpsss_offload_cron_event');
+    }
+    if (function_exists('delete_transient')) {
+        delete_transient('wpsss_offload_runlock');
+        delete_transient('wpsss_offload_cursor');
+    }
+});
+
 if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('sss', 'Wpsss_CLI');
 }

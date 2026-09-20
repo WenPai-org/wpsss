@@ -119,6 +119,9 @@ wpsss_assert(strpos($js, 'js-wpsss-pull-scope') !== false, 'js pull scope');
 wpsss_assert(strpos($js, 'posts-filter') !== false, 'js media bulk confirm');
 wpsss_assert(strpos($js, 'confirmMediaDelete') !== false, 'js media delete confirm');
 wpsss_assert(strpos($js, 'wpsss_offload_tick') !== false, 'js offload tick');
+wpsss_assert(strpos($js, 'wpsss_pull_tick') !== false, 'js pull tick');
+wpsss_assert(strpos($js, 'bindPullQueue') !== false, 'js pull queue binder');
+wpsss_assert(strpos($js, 'data.busy') !== false, 'js offload busy retry');
 
 $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
 wpsss_assert(strpos($admin, '删除远端须再确认') !== false, 'admin rejects pull delete without second confirm');
@@ -129,6 +132,19 @@ wpsss_assert(strpos($admin, '选择「单个附件」时请填写媒体库编号
 wpsss_assert(strpos($admin, 'pull_cursor_key') !== false, 'admin pull cursor');
 wpsss_assert(strpos($admin, 'handle_offload_tick') !== false, 'admin offload tick');
 wpsss_assert(strpos($admin, 'run_offload_slice') !== false, 'admin offload budget slice');
+wpsss_assert(strpos($admin, 'handle_pull_tick') !== false, 'admin pull tick');
+wpsss_assert(strpos($admin, 'run_lock_acquire') !== false, 'admin shares run lock with cron');
+wpsss_assert(strpos($admin, 'arm_offload_cron') !== false, 'admin arms cron fallback');
+
+$lib = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-library.php');
+wpsss_assert(strpos($lib, 'cron_offload_tick') !== false, 'library cron fallback');
+wpsss_assert(strpos($lib, 'offload_batch(2') !== false, 'cron drains at most two per minute');
+wpsss_assert(strpos($lib, 'wpsss_before_id') !== false, 'query exposes cursor floor for tests');
+
+wpsss_assert(strpos($tools, 'js-wpsss-pull-progress') !== false, 'tools pull ajax progress');
+wpsss_assert(strpos($tools, 'js-wpsss-pull-stop') !== false, 'tools pull pause button');
+wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-time copy');
+wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
 
 $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php');
 wpsss_assert(strpos($cli, '删除远端须加 --yes') !== false, 'cli pull delete needs yes');
