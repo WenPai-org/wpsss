@@ -196,8 +196,17 @@ wp sss delete &lt;对象键&gt; --yes</code></pre>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
     </div>
   </section>
+  <section class="card wpsss-help-card">
+    <div class="card-head">
+      <span class="tile"><?php echo Wpsss_Icons::svg('info'); ?></span>
+      <div>
+        <h2 class="card-title"><?php echo esc_html__('边界与支持范围', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('这些场景目前不支持或有限制，使用前请先了解。', 'wpsss'); ?></p>
+      </div>
+    </div>
+    <ul>
+      <li><?php echo esc_html__('多站点（Multisite）暂不支持；不要在网络层激活。', 'wpsss'); ?></li>
+      <li><?php echo esc_html__('COS / OBS / 七牛的超大文件上传是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。', 'wpsss'); ?></li>
+    </ul>
+  </section>
 </div>
-## 边界与支持范围
-
-- 多站点（Multisite）暂不支持；不要在网络层激活。
-- COS / OBS / 七牛的超大文件上传是单请求（超时按体积放大）。百兆以上建议用 OSS / S3 兼容厂商。

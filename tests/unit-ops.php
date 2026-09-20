@@ -72,6 +72,12 @@ $tools = (string) file_get_contents($toolsDir . 'tab-tools.php')
     . (string) file_get_contents($toolsDir . 'part-tools-move.php');
 $shell = (string) file_get_contents($toolsDir . 'tab-tools.php');
 wpsss_assert(strpos($shell, "'daily'") !== false && strpos($shell, 'part-tools-') !== false, 'tools has daily panel');
+
+// 模板里混进裸 markdown（PHP 标签外文本）会原样渲染到页面上——2026-09-20 帮助页事故的回归门。
+foreach (glob(dirname(__DIR__) . '/templates/admin/*.php') ?: [] as $tpl_file) {
+    $tpl_text = (string) file_get_contents($tpl_file);
+    wpsss_assert(preg_match('/^(##|###)\s/m', $tpl_text) !== 1, 'no raw markdown in ' . basename($tpl_file));
+}
 wpsss_assert(strpos($shell, "'check'") !== false, 'tools has check panel');
 wpsss_assert(strpos($shell, "'move'") !== false, 'tools has move panel');
 wpsss_assert(strpos($shell, '媒体体检') === false, 'tools index does not stack all cards');
