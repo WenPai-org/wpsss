@@ -218,11 +218,20 @@ final class Wpsss_Library
                     'key' => self::META_LOCAL_ONLY,
                     'compare' => 'NOT EXISTS',
                 ],
+                // 值比较是 INNER JOIN：没有失败计数的附件（绝大多数）必须用
+                // NOT EXISTS 显式放行，否则待传队列整体为空（2026-09-21 生产事故）。
                 [
-                    'key' => self::META_FAIL_COUNT,
-                    'value' => self::FAIL_BACKOFF_THRESHOLD,
-                    'compare' => '<',
-                    'type' => 'NUMERIC',
+                    'relation' => 'OR',
+                    [
+                        'key' => self::META_FAIL_COUNT,
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key' => self::META_FAIL_COUNT,
+                        'value' => self::FAIL_BACKOFF_THRESHOLD,
+                        'compare' => '<',
+                        'type' => 'NUMERIC',
+                    ],
                 ],
                 [
                     'relation' => 'OR',
