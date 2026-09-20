@@ -11,14 +11,14 @@ defined('ABSPATH') || exit;
       <span class="tile"><?php echo Wpsss_Icons::svg('equalizer'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('媒体体检', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('只读扫描最近一批附件：本地缺失、对外主机不一致、http 明文、失败标记、前缀不对。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('只读扫描最近一批附件：本地文件缺失、访问域名不一致、仍是 http 明文、带失败标记、存储路径前缀不符。', 'wpsss'); ?></p>
       </div>
     </div>
     <?php if ($scan !== []) : ?>
       <div class="notice info">
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html(sprintf(
-            '已检查 %d 个。本地缺失 %d，主机不一致 %d，http %d，失败 %d，前缀不对 %d。',
+            '已检查 %d 个：本地缺失 %d，访问域名不一致 %d，http 明文 %d，失败 %d，前缀不符 %d。',
             (int) ($scan['checked'] ?? 0),
             count($scan['local_missing'] ?? []),
             count($scan['host_mismatch'] ?? []),
@@ -30,7 +30,7 @@ defined('ABSPATH') || exit;
       <?php if (!empty($scan['expected_host'])) : ?>
         <p class="meta"><?php echo esc_html(sprintf('当前对外主机：%s', $scan['expected_host'])); ?></p>
       <?php endif; ?>
-      <?php foreach (['local_missing' => '本地文件不在', 'host_mismatch' => '对外主机不一致', 'http' => '仍是 http', 'failed' => '带失败标记', 'prefix_mismatch' => '对象键对不上前缀'] as $flag => $label) : ?>
+      <?php foreach (['local_missing' => '本地文件不在', 'host_mismatch' => '对外主机不一致', 'http' => '仍是 http', 'failed' => '带失败标记', 'prefix_mismatch' => '存储路径前缀不符'] as $flag => $label) : ?>
         <?php $rows = isset($scan[$flag]) && is_array($scan[$flag]) ? $scan[$flag] : []; ?>
         <?php if ($rows === []) { continue; } ?>
         <ul class="wpsss-log">
@@ -43,10 +43,10 @@ defined('ABSPATH') || exit;
         </ul>
       <?php endforeach; ?>
       <?php if (!empty($scan['local_missing'])) : ?>
-        <p class="meta"><a href="<?php echo esc_url($url('tools', ['panel' => 'move'])); ?>"><?php echo esc_html__('到迁移用「只补缺失」拉回', 'wpsss'); ?></a></p>
+        <p class="meta"><a href="<?php echo esc_url($url('tools', ['panel' => 'move'])); ?>"><?php echo esc_html__('到「工具 → 迁移」，选「只补缺失」拉回', 'wpsss'); ?></a></p>
       <?php endif; ?>
       <?php if (!empty($scan['prefix_mismatch'])) : ?>
-        <p class="meta"><?php echo esc_html__('前缀不对的附件不要直接拉回，先核对象键或改回原来的前缀。', 'wpsss'); ?></p>
+        <p class="meta"><?php echo esc_html__('前缀不符的附件先不要拉回：到云厂商控制台核对存储路径，或把插件里的前缀改回原值。', 'wpsss'); ?></p>
       <?php endif; ?>
     <?php endif; ?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -54,7 +54,7 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_scan'); ?>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('不改数据库，也不删桶。最多看最近 40 个。', 'wpsss'); ?></span>
+        <span class="meta"><?php echo esc_html__('只读检查，不改数据库、不动桶内文件。每次最多检查最近 40 个。', 'wpsss'); ?></span>
         <button class="btn btn-secondary" type="submit"><?php echo esc_html__('扫描附件', 'wpsss'); ?></button>
       </div>
     </form>
@@ -104,7 +104,7 @@ defined('ABSPATH') || exit;
             <p class="meta"><?php echo esc_html(implode(' ', $diagnose['notes'])); ?></p>
           <?php endif; ?>
           <?php if (!empty($diagnose['offloaded']) && empty($diagnose['local_exists'])) : ?>
-            <p class="meta"><a href="<?php echo esc_url($url('tools', ['panel' => 'move'])); ?>"><?php echo esc_html__('到迁移用「只补缺失」拉回', 'wpsss'); ?></a></p>
+            <p class="meta"><a href="<?php echo esc_url($url('tools', ['panel' => 'move'])); ?>"><?php echo esc_html__('到「工具 → 迁移」，选「只补缺失」拉回', 'wpsss'); ?></a></p>
           <?php endif; ?>
         <?php endif; ?>
       <?php endif; ?>
@@ -120,7 +120,7 @@ defined('ABSPATH') || exit;
       <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('抽检远端对象', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('对已进桶的附件执行 HEAD 请求。库中有标记但桶内返回 404，通常是对象已被手动删除或更换过存储桶。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('对已进桶的附件执行 HEAD 请求。媒体库显示已进桶、但桶里查不到该对象，通常是对象被手动删除，或换过存储桶。', 'wpsss'); ?></p>
       </div>
     </div>
     <?php if ($head !== []) : ?>

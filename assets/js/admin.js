@@ -671,9 +671,9 @@
         dialog: "",
       },
       rename: {
-        hint: "将现有本地文件重命名为「原名-local-时间戳」，再写入存储桶中的文件；媒体库条目与对象键不变。",
-        confirm: "我确认先旁路改名已有本地文件，再执行写入",
-        dialog: "已有本地文件将重命名为「原名-local-时间戳」，再写入存储桶中的副本。是否继续？",
+        hint: "先把现有本地文件改名为「原名-local-时间戳」保留，再写入桶里的文件；媒体库条目与存储路径不变。",
+        confirm: "我确认先把已有本地文件改名保留，再写入桶里的文件",
+        dialog: "已有本地文件会先改名为「原名-local-时间戳」保留，再写入桶里的文件。是否继续？",
       },
       overwrite: {
         hint: "用存储桶中的文件直接替换 uploads 中的同名文件；替换后无法从回收站恢复。",
@@ -849,7 +849,7 @@
           }
           var data = json.data || {};
           if (data.busy) {
-            setProgress("后台慢跑正占着队列，稍候自动继续…");
+            setProgress("队列正被另一个任务使用，稍候自动继续…");
             window.setTimeout(tick, 2500);
             return;
           }
@@ -1032,7 +1032,7 @@
           }
           var line = "本轮已拉回 " + totals.ok + "，失败 " + totals.fail;
           if (totals.renamed > 0) {
-            line += "，旁路 " + totals.renamed;
+            line += "，改名保留 " + totals.renamed;
           }
           line += data.cursor > 0 ? "。处理到编号 " + data.cursor + "。" : "。";
           setProgress(line);

@@ -19,7 +19,7 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_probe'); ?>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('请在测试桶上操作；生产环境须另行审批。', 'wpsss'); ?></span>
+        <span class="meta"><?php echo esc_html__('测试会向桶写入并删除一个临时对象，用来验证密钥与权限。', 'wpsss'); ?></span>
         <button class="btn btn-secondary" type="submit"><?php echo esc_html__('测试连通', 'wpsss'); ?></button>
       </div>
     </form>
@@ -31,7 +31,7 @@ defined('ABSPATH') || exit;
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html(sprintf(
-            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。一次传一个。',
+            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。每次上传 1 个附件。',
             (int) $stats['total'],
             (int) $stats['offloaded'],
             (int) $stats['pending'],
@@ -47,7 +47,7 @@ defined('ABSPATH') || exit;
       <div class="card-foot start">
         <span class="meta js-wpsss-offload-hint"><?php
           if ((int) ($offload_cursor ?? 0) > 0) {
-              echo esc_html(sprintf('接着 ID <%d。新上传会自动进桶。', (int) $offload_cursor));
+              echo esc_html(sprintf('已补到编号 %d，下次从编号更小的附件继续。新上传会自动进桶。', (int) $offload_cursor));
           } elseif ($pending > 0) {
               echo esc_html__('开始后一次传一个。关掉页面，后台每分钟最多补 2 个，补完自动停；点「暂停」立即全停。', 'wpsss');
           } else {
@@ -82,8 +82,8 @@ defined('ABSPATH') || exit;
     <div class="card-head">
       <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
       <div>
-        <h2 class="card-title"><?php echo esc_html__('同步记录', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('最近 50 条上传、失败、删除与拉回记录。', 'wpsss'); ?></p>
+        <h2 class="card-title"><?php echo esc_html__('操作记录', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('最近 50 条上传、失败、删除与拉回的操作记录。', 'wpsss'); ?></p>
       </div>
     </div>
     <?php if ($history === []) : ?>

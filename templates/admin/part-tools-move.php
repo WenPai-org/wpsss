@@ -18,10 +18,10 @@ $exist_modes = [
         'dialog' => '',
     ],
     'rename' => [
-        'label' => __('旁路改名', 'wpsss'),
-        'help' => __('将现有本地文件重命名为「原名-local-时间戳」，再写入存储桶中的文件；媒体库条目与对象键不变。', 'wpsss'),
-        'confirm' => __('我确认先旁路改名已有本地文件，再执行写入', 'wpsss'),
-        'dialog' => __('已有本地文件将重命名为「原名-local-时间戳」，再写入存储桶中的副本。是否继续？', 'wpsss'),
+        'label' => __('旧文件改名保留', 'wpsss'),
+        'help' => __('先把现有本地文件改名为「原名-local-时间戳」保留，再写入桶里的文件；媒体库条目与存储路径不变。', 'wpsss'),
+        'confirm' => __('我确认先把已有本地文件改名保留，再写入桶里的文件', 'wpsss'),
+        'dialog' => __('已有本地文件会先改名为「原名-local-时间戳」保留，再写入桶里的文件。是否继续？', 'wpsss'),
     ],
     'overwrite' => [
         'label' => __('覆盖', 'wpsss'),
@@ -36,7 +36,7 @@ $exist_modes = [
       <span class="tile warn"><?php echo Wpsss_Icons::svg('download'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('拉回本地', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('从对象存储拉取文件至本机 uploads 目录。请先选择范围，再选择本地已有同名文件时的处理方式。默认只写磁盘，对外 URL 仍指向存储桶。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('把桶里的文件下载回服务器的 uploads 目录。请先选择范围，再选择本地已有同名文件时的处理方式。默认只写磁盘，对外地址仍指向存储桶。', 'wpsss'); ?></p>
       </div>
     </div>
     <form class="js-wpsss-pull-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-mode="<?php echo esc_attr($pull_exist); ?>" data-scope="<?php echo esc_attr($pull_scope); ?>">
@@ -60,7 +60,7 @@ $exist_modes = [
       <div class="field js-wpsss-pull-one"<?php echo $pull_scope === 'one' ? '' : ' hidden'; ?>>
         <div>
           <div class="field-label"><?php echo esc_html__('媒体库编号', 'wpsss'); ?></div>
-          <div class="field-help"><?php echo esc_html__('附件 ID，可在媒体库打开文件后，从地址栏或右侧详情中查看。', 'wpsss'); ?></div>
+          <div class="field-help"><?php echo esc_html__('附件编号，可在媒体库打开文件后，从地址栏或右侧详情中查看。', 'wpsss'); ?></div>
         </div>
         <div class="field-ctl"><input type="number" name="wpsss_pull_id" class="js-wpsss-pull-id" value="<?php echo $pull_id > 0 ? (int) $pull_id : ''; ?>" min="1" step="1" placeholder="128" <?php echo $pull_scope === 'one' ? '' : 'disabled'; ?> /></div>
       </div>
@@ -85,13 +85,13 @@ $exist_modes = [
                   $bits[] = sprintf(__('失败 %d', 'wpsss'), (int) $result['fail']);
               }
               if (empty($pull['delete'])) {
-                  $bits[] = __('对外 URL 仍指向存储桶', 'wpsss');
+                  $bits[] = __('对外地址仍指向存储桶', 'wpsss');
               }
           } else {
               $bits[] = sprintf(__('将写入 %d', 'wpsss'), (int) ($result['ok'] ?? 0));
               $bits[] = sprintf(__('跳过 %d', 'wpsss'), (int) ($result['skip'] ?? 0));
               if ((int) ($result['renamed'] ?? 0) > 0) {
-                  $bits[] = sprintf(__('旁路 %d', 'wpsss'), (int) $result['renamed']);
+                  $bits[] = sprintf(__('改名保留 %d', 'wpsss'), (int) $result['renamed']);
               }
           }
           if ((int) ($result['blocked'] ?? 0) > 0) {
@@ -125,7 +125,7 @@ $exist_modes = [
       <div class="card-foot start">
         <span class="meta"><?php
           if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) {
-              echo esc_html(sprintf(__('下一批次将从编号小于 %d 的附件继续。', 'wpsss'), (int) $pull_cursor));
+              echo esc_html(sprintf(__('已处理到编号 %d，下一批从编号更小的附件继续。', 'wpsss'), (int) $pull_cursor));
           } else {
               echo esc_html__('建议先预览再执行。仅写入磁盘，对外 URL 默认仍指向存储桶。', 'wpsss');
           }
@@ -147,7 +147,7 @@ $exist_modes = [
       <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('改写文章中的媒体地址', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('只替换你填写的来源地址。会改正文、摘要和 post meta（含序列化）。不改 options、theme_mods、磁盘 CSS。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('只替换你填写的来源地址。会写入正文、摘要和文章自定义字段（post meta，含序列化数据）。不会改网站设置（options）、主题设置（theme_mods）和磁盘上的 CSS。', 'wpsss'); ?></p>
       </div>
     </div>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_rewrite_confirm">
@@ -164,7 +164,7 @@ $exist_modes = [
       </div>
       <div class="notice warn">
         <?php echo Wpsss_Icons::svg('info'); ?>
-        <span><?php echo esc_html__('写入正文、摘要和 post meta（含序列化），插件不能撤销。不改 options / theme_mods / 磁盘 CSS。写完请清页面缓存和 CDN。', 'wpsss'); ?></span>
+        <span><?php echo esc_html__('写入正文、摘要和文章自定义字段（post meta，含序列化数据），插件不能撤销。不会改网站设置（options）、主题设置（theme_mods）和磁盘上的 CSS。写完请清页面缓存和 CDN。', 'wpsss'); ?></span>
       </div>
       <p class="wpsss-backup-note"><?php echo esc_html__('备份：先点预览看命中篇数。写入前用主机面板、备份插件或 wp db export 留一份数据库。', 'wpsss'); ?></p>
       <?php if ($rewrite !== []) : ?>
@@ -212,7 +212,7 @@ $exist_modes = [
       <?php wp_nonce_field('wpsss_release'); ?>
       <div class="notice warn">
         <?php echo Wpsss_Icons::svg('info'); ?>
-        <span><?php echo esc_html__('只去掉插件标记，不删桶。前台可能改回本地 uploads 地址。改完请清页面缓存。', 'wpsss'); ?></span>
+        <span><?php echo esc_html__('只去掉插件的进桶标记，不删除桶内对象。前台可能改回本地 uploads 地址。改完请清页面缓存。', 'wpsss'); ?></span>
       </div>
       <p class="wpsss-backup-note"><?php echo $keep_on
           ? esc_html__('备份：本地备份已开启，前台通常会改回 uploads 地址。请先确认本地文件仍在。', 'wpsss')
@@ -223,8 +223,8 @@ $exist_modes = [
             : esc_html__('我确认本地仍有文件，或接受前台图片可能无法显示', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('每批最多 20 个。此操作不删桶。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不删桶。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
+        <span class="meta"><?php echo esc_html__('每批最多 20 个，不会删除桶内对象。', 'wpsss'); ?></span>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不会删除桶内对象。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
       </div>
     </form>
   </section>

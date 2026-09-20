@@ -17,7 +17,7 @@ $pending = (int) ($stats['pending'] ?? 0);
 <div class="wpcy-page-head">
   <div>
     <h1 class="wpcy-h1"><?php echo esc_html__('概览', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶，页面仍在源站。', 'wpsss'); ?></p>
+    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶（存到对象存储桶），页面仍在源站。', 'wpsss'); ?></p>
   </div>
 </div>
 
@@ -93,7 +93,7 @@ $pending = (int) ($stats['pending'] ?? 0);
   </div>
   <?php endif; ?>
   <div class="card-foot start">
-    <span class="meta"><?php echo esc_html__('开关与密钥在设置里。', 'wpsss'); ?></span>
+    <span class="meta"><?php echo esc_html__('开关与密钥在设置页。', 'wpsss'); ?></span>
     <span class="wpsss-actions">
       <a class="btn btn-secondary" href="<?php echo esc_url($url('settings')); ?>"><?php echo esc_html__('设置', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('测试连通', 'wpsss'); ?></a>

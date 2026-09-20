@@ -37,6 +37,9 @@ class Wpsss_Offload
         add_filter('term_description', [$this, 'rewrite_content'], 100);
         add_filter('the_content_feed', [$this, 'rewrite_content'], 100);
         add_filter('the_excerpt_rss', [$this, 'rewrite_content'], 100);
+        // WP 给音视频短网址追加 ?_=时间戳 缓存戳；签名 URL 的 query 一变就 403，这里剥掉。
+        add_filter('wp_audio_shortcode', [$this, 'strip_media_cache_buster'], 100);
+        add_filter('wp_video_shortcode', [$this, 'strip_media_cache_buster'], 100);
         add_filter('comment_text', [$this, 'rewrite_content'], 100);
         add_filter('rest_prepare_attachment', [$this, 'rewrite_rest_attachment'], 20, 3);
     }
@@ -558,6 +561,18 @@ class Wpsss_Offload
     private function is_image_mime(string $mime): bool
     {
         return strpos($mime, 'image/') === 0;
+    }
+
+    /**
+     * @param string|mixed $html
+     * @return string|mixed
+     */
+    public function strip_media_cache_buster($html)
+    {
+        if (!is_string($html)) {
+            return $html;
+        }
+        return preg_replace('/(&#038;|&)_=[0-9]+/', '', $html);
     }
 
     /**

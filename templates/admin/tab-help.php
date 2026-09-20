@@ -7,7 +7,7 @@ $on = (bool) $view['configured'];
 <div class="wpcy-page-head">
   <div>
     <h1 class="wpcy-h1"><?php echo esc_html__('帮助', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html__('媒体库进对象存储，网站页面仍在源站。', 'wpsss'); ?></p>
+    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶（存到对象存储桶），页面仍在源站。', 'wpsss'); ?></p>
   </div>
 </div>
 
@@ -33,7 +33,7 @@ $on = (bool) $view['configured'];
     </li>
     <li>
       <strong><?php echo esc_html__('上传媒体', 'wpsss'); ?></strong>
-      <span><?php echo esc_html__('新上传的附件将自动同步至存储桶；已有附件可在工具页补传。', 'wpsss'); ?></span>
+      <span><?php echo esc_html__('新上传的附件会自动进桶；已有附件可在工具页补传。', 'wpsss'); ?></span>
     </li>
   </ol>
   <?php if ($on) : ?>
@@ -120,7 +120,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('为什么点图片变成下载', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('阿里云 2019 年后默认域名常强制下载。请绑定 HTTPS 自定义域名，或使用签名访问。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('主题或其它插件自己传到 uploads，为什么没进桶', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('只拦 WordPress 媒体库钩子。第三方直传请在桶上开镜像回源到源站，或调用 wpsss_file_upload()。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('只处理经 WordPress 媒体库上传的文件。主题或其它插件直接放进 uploads 的文件不会进桶：可在存储桶开启镜像回源（回源到本站），或让开发者调用 wpsss_file_upload()。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('腾讯云 APPID 填谁的', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('填创建存储桶的主账号 APPID，不是子账户的。桶名已含 APPID 时可留空。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('七牛为什么必须填自定义域名', 'wpsss'); ?></dt>
@@ -128,7 +128,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('自定义域名是不是只能接某一家 CDN', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('不是。插件只改对外主机名。阿里云 CDN、腾讯云 CDN、Cloudflare、自建边缘或 CyberCDN 都是在各自控制台把该域名指到桶或边缘，这里填同一个 HTTPS 地址。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('内容审核做了什么', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会请求万象文本审核；判定违规标为垃圾评论，疑似改待审。接口失败时放行并记日志，避免误杀。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('仅腾讯云 COS。打开后新评论会请求万象文本审核；判定违规标为垃圾评论，疑似改待审。审核接口失败时，评论先按正常发布并记录日志，避免正常评论被误判。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('阿里签名 V1 和 V4 怎么选', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('默认 V4。部分新区域只认 V4。若旧脚本或网关只认 V1，在高级设置改回即可。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('ECS 上能否不填 AccessKey', 'wpsss'); ?></dt>
@@ -136,9 +136,9 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('哪些文件不会进桶', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('php、htaccess 等可执行文件始终拒绝。高级设置「不进桶的扩展名」可再排除 svg、zip 等。打开「远端已有则跳过」后，补传不会覆盖桶里已有对象。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('拉回会不会删掉桶里的文件', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认不会。勾选删除后会出现警示：桶里没有回收站。请先只拉回、在媒体库打开核对，并确认本地还有副本，再勾「本地已经打开核对过」。删桶不能只补缺失。媒体库永久删除附件也会同时删桶，删除前会再问一次。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('默认不会。勾选删除后会出现警示：桶里没有回收站。请先只拉回、在媒体库打开核对，并确认本地还有副本，再勾「本地已经打开核对过」。删除桶内对象时不能选「只补缺失」。媒体库永久删除附件也会同时删除桶内对象，删除前会再问一次。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('本地已有同名文件时拉回会怎样', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('默认只补缺失：仅当 uploads 缺少文件时才从存储桶下载。旁路改名会将本地文件重命名为「原名-local-时间戳」，再写入存储桶中的副本；媒体库条目与对象键不变。覆盖会直接替换 uploads 中的同名文件，且无法从回收站恢复。内容相同时不重复写盘。媒体库单条/批量拉回默认使用旁路改名。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('默认只补缺失：仅当 uploads 缺少文件时才从存储桶下载。旧文件改名保留会先把本地文件改名为「原名-local-时间戳」保留，再写入桶里的文件；媒体库条目与存储路径不变。覆盖会直接替换 uploads 中的同名文件，且无法从回收站恢复。内容相同时不会重复写入。媒体库单条或批量拉回默认使用旧文件改名保留。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('批量拉回与单个附件有何区别', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('「批量拉回」：对已进桶的附件按媒体库编号从新到旧处理，每批最多 20 个，再次执行将处理下一批次。「单个附件」：仅处理媒体库中的指定附件，编号可在打开文件后查看。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('拉回后前台地址会变吗', 'wpsss'); ?></dt>
@@ -152,7 +152,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('想停用插件但先不删桶', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('用「解除进桶标记」。插件不再改写这些附件，对象仍留在桶里。卸载插件才会清掉本机选项。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('文章以外的地址会改吗', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('会。小工具、分类描述、评论、RSS 与附件 REST 接口里的媒体地址，也会按当前对外地址改写。工具页整站改写仍须填写来源地址。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('会。小工具、分类描述、评论、RSS 与附件 REST 接口里的媒体地址，也会实时按当前对外地址改写。要把地址写进数据库，请用迁移页的「改写文章中的媒体地址」（须填写来源地址）。', 'wpsss'); ?></dd>
       </dl>
     </div>
   </details>

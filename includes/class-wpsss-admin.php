@@ -222,10 +222,10 @@ final class Wpsss_Admin
         $verb = $source === 'failed' ? '重试' : '补传';
         $msg = sprintf('%s完成：成功 %d，失败 %d，跳过 %d。', $verb, $result['ok'], $result['fail'], $result['skip']);
         if (!empty($result['stopped'])) {
-            $msg .= ' 本请求已到时间上限，未跑满一批，避免网关超时。';
+            $msg .= ' 为避免请求超时，本批提前结束；剩余附件下次继续。';
         }
         if ($source !== 'failed' && (int) ($result['cursor'] ?? 0) > 0) {
-            $msg .= sprintf(' 下一批次将从 ID <%d> 继续。', (int) $result['cursor']);
+            $msg .= sprintf(' 已处理到编号 %d，下一批从编号更小的附件继续。', (int) $result['cursor']);
         }
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
@@ -311,7 +311,7 @@ final class Wpsss_Admin
         $on_exist = Wpsss_Offload::sanitize_on_exist(isset($_POST['wpsss_pull_exist']) ? (string) wp_unslash($_POST['wpsss_pull_exist']) : 'skip');
         $delete = !empty($_POST['wpsss_pull_delete']);
         if ($delete && $on_exist === 'skip') {
-            wp_send_json_error(['message' => '删桶不能只补缺失。请改用覆盖或旁路改名。']);
+            wp_send_json_error(['message' => '删除桶内对象时不能选「只补缺失」，请改用「覆盖」或「旧文件改名保留」。']);
         }
         if ($on_exist !== 'skip' && empty($_POST['wpsss_pull_confirm'])) {
             wp_send_json_error(['message' => '请先勾选确认项。']);
@@ -386,7 +386,7 @@ final class Wpsss_Admin
             $this->redirect_tools('error', '删除远端须再确认。', 'move');
         }
         if ($delete && $on_exist === 'skip') {
-            $this->redirect_tools('error', '删桶不能只补缺失。请改用覆盖或旁路改名。', 'move');
+            $this->redirect_tools('error', '删除桶内对象时不能选「只补缺失」，请改用「覆盖」或「旧文件改名保留」。', 'move');
         }
         $before = $only_id > 0 ? 0 : (int) get_transient($this->pull_cursor_key());
         $budget = ($apply && $only_id === 0) ? 12.0 : 0.0;
@@ -408,7 +408,7 @@ final class Wpsss_Admin
         ], 10 * MINUTE_IN_SECONDS);
         $msg = $apply
             ? sprintf(
-                '拉回完成：成功 %d 个附件，失败 %d；写入计划 %d，跳过 %d，旁路 %d。',
+                '拉回完成：写入 %d，失败 %d，跳过 %d，改名保留 %d。',
                 $result['ok'],
                 $result['fail'],
                 $result['missing'] + ($on_exist === 'skip' ? 0 : $result['exists']),
@@ -416,7 +416,7 @@ final class Wpsss_Admin
                 $result['renamed']
             )
             : sprintf(
-                '预览：将写入 %d 个文件，跳过 %d，旁路 %d；本地已有 %d，缺失 %d。',
+                '预览：将写入 %d 个文件，跳过 %d，改名保留 %d；本地已有 %d，缺失 %d。',
                 $result['ok'],
                 $result['skip'],
                 $result['renamed'],
@@ -427,13 +427,13 @@ final class Wpsss_Admin
             $msg .= sprintf(' 前缀不符 %d。', (int) $result['blocked']);
         }
         if ($apply && !$delete) {
-            $msg .= ' 只写回了磁盘，前台仍走桶。要改地址请解除标记，或拉回并删除。';
+            $msg .= ' 文件已写回本地，前台地址仍指向存储桶。要改回本地地址，请解除进桶标记，或拉回并删除桶内对象。';
         }
         if (!empty($result['stopped'])) {
-            $msg .= ' 本请求已到时间上限，未跑满一批，避免网关超时。';
+            $msg .= ' 为避免请求超时，本批提前结束；剩余附件下次继续。';
         }
         if ($apply && $only_id === 0 && (int) ($result['cursor'] ?? 0) > 0) {
-            $msg .= sprintf(' 下一批次将从 ID <%d> 继续。', (int) $result['cursor']);
+            $msg .= sprintf(' 已处理到编号 %d，下一批从编号更小的附件继续。', (int) $result['cursor']);
         }
         if ($result['errors'] !== []) {
             $msg .= ' ' . $result['errors'][0];
@@ -566,7 +566,7 @@ final class Wpsss_Admin
         check_admin_referer('wpsss_export');
         $payload = wp_json_encode(Wpsss_Options::export_public(), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         if (!is_string($payload) || $payload === '') {
-            $this->redirect_tools('error', '导出失败。', 'move');
+            $this->redirect_tools('error', '导出失败：无法生成设置文件，请重试；若持续失败，请查看站点日志。', 'move');
         }
         nocache_headers();
         header('Content-Type: application/json; charset=utf-8');
@@ -633,7 +633,7 @@ final class Wpsss_Admin
             wp_safe_redirect($this->url('settings', [
                 'mode' => 'simple',
                 'wpsss_level' => 'error',
-                'wpsss_notice' => '关闭本地备份须管理员批准。',
+                'wpsss_notice' => '本地备份关闭后，服务器不再保留媒体副本，故障时无法从本地恢复。如确认关闭，请在高级设置中操作。',
             ]));
             exit;
         }

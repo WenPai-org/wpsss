@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
 /**
  * WP-CLI：wp sss …
  *
- * Agent 优先走这里，不要在对话里贴密钥。
+ * 密钥建议用 --from-env 从环境文件读入，避免留在命令历史里。
  */
 final class Wpsss_CLI
 {
@@ -79,7 +79,7 @@ final class Wpsss_CLI
      * ## OPTIONS
      *
      * [--from-env]
-     * : 读 ~/.config/linuxjoy/wpsss-test.env（或 --env-file）。
+     * : 从 env 文件读取桶与密钥（WPSSS_OSS_BUCKET / WPSSS_OSS_REGION / WPSSS_OSS_ACCESS_KEY_ID / WPSSS_OSS_ACCESS_KEY_SECRET）。
      *
      * [--env-file=<path>]
      * : env 路径。
@@ -93,7 +93,7 @@ final class Wpsss_CLI
      * [--access-key-secret=<secret>]
      * : RAM Secret。不回显。
      * [--custom-domain=<url>]
-     * : 自定义域。无人批不要填。
+     * : 自定义域名（HTTPS）。请确认 CDN 已指向存储桶再填，填错会导致前台图片无法访问。
      * [--keep-local=<value>]
      * : 1 留本地。0 须同时加 --allow-no-local。
      * [--upload-thumbs=<value>]
@@ -117,17 +117,17 @@ final class Wpsss_CLI
      * [--endpoint=<url>]
      * : S3 兼容 endpoint。空着按预设拼。
      * [--s3-preset=<id>]
-     * : aws / do / r2 / minio / wasabi / tos / custom。不做百度 BOS。
+     * : aws / do / r2 / minio / wasabi / tos / custom。暂不支持百度 BOS。
      * [--force-path-style=<value>]
      * : 1 走 path-style。R2 / MinIO 默认 1。
      * [--site-mode=<mode>]
-     * : domestic / crossborder / mixed。跟文派叶子站点场景。
+     * : 站点场景：domestic（国内）/ crossborder（跨境）/ mixed（混合），影响后台推荐厂商排序。
      * [--url-access=<mode>]
      * : public / signed。
      * [--signed-ttl=<seconds>]
      * : 签名有效期，默认 3600。
      * [--allow-no-local]
-     * : 允许把 keep_local 写成 0。无人批不要用。
+     * : 确认关闭本地备份（服务器不再保留副本）后再使用。
      *
      * ## EXAMPLES
      *
@@ -231,7 +231,7 @@ final class Wpsss_CLI
         if ($result['fail'] > 0) {
             WP_CLI::error('仍有附件未上传成功。');
         }
-        WP_CLI::success($dry ? 'dry-run 结束。' : '补传结束。');
+        WP_CLI::success($dry ? '试运行结束，未做任何更改。' : '补传结束。');
     }
 
     /**
@@ -249,7 +249,7 @@ final class Wpsss_CLI
      * : 只数不写。
      *
      * [--on-exist=<mode>]
-     * : 本地已有时：skip（默认，只补缺失）、rename（旁路改名）、overwrite（覆盖）。
+     * : 本地已有时：skip（默认，只补缺失）、rename（旧文件改名保留）、overwrite（覆盖）。
      *
      * [--delete-remote]
      * : 拉回后删桶里的副本，并清掉 offloaded 标记。须同时加 --yes，且不能与 skip 同用。
@@ -278,7 +278,7 @@ final class Wpsss_CLI
             WP_CLI::error('删除远端须加 --yes。');
         }
         if ($delete && $on_exist === 'skip') {
-            WP_CLI::error('删桶不能 --on-exist=skip。请用 rename 或 overwrite，并加 --yes。');
+            WP_CLI::error('--delete-remote 不能搭配 --on-exist=skip，请用 rename 或 overwrite，并加 --yes。');
         }
         $result = wpsss()->library()->pull_batch($limit, $dry, $id, $delete, $on_exist, $before);
         WP_CLI::log(
@@ -293,7 +293,7 @@ final class Wpsss_CLI
             . ' on-exist=' . $on_exist
         );
         if (!$delete && !$dry) {
-            WP_CLI::log('只写回磁盘，前台仍走桶。要改地址请解除标记或 --delete-remote。');
+            WP_CLI::log('文件已写回本地，前台地址仍指向存储桶。要改回本地地址，请解除标记或使用 --delete-remote。');
         }
         foreach ($result['errors'] as $line) {
             WP_CLI::warning($line);
@@ -301,7 +301,7 @@ final class Wpsss_CLI
         if ($result['fail'] > 0) {
             WP_CLI::error('仍有附件未拉回成功。');
         }
-        WP_CLI::success($dry ? 'dry-run 结束。' : '拉回结束。');
+        WP_CLI::success($dry ? '试运行结束，未做任何更改。' : '拉回结束。');
     }
 
     /**
@@ -323,7 +323,7 @@ final class Wpsss_CLI
         unset($assoc_args);
         $id = isset($args[0]) ? (int) $args[0] : 0;
         if ($id <= 0) {
-            WP_CLI::error('要附件 ID。');
+            WP_CLI::error('请提供附件 ID。');
         }
         $url = wp_get_attachment_url($id);
         WP_CLI::log('url=' . (is_string($url) ? $url : ''));
@@ -418,7 +418,7 @@ final class Wpsss_CLI
         $stats = wpsss()->library()->stats();
         WP_CLI::log('attachments=' . $stats['total'] . ' offloaded=' . $stats['offloaded'] . ' pending=' . $stats['pending']);
         if ($report['blockers'] === []) {
-            WP_CLI::success('doctor 无阻断。');
+            WP_CLI::success('体检完成：无阻断项。');
             return;
         }
         WP_CLI::error('doctor 有阻断：' . implode(' / ', $report['blockers']));
@@ -637,6 +637,7 @@ final class Wpsss_CLI
             '阿里默认域名 2019 年后常强制下载不预览。请配自定义域或改签名访问。' => '阿里默认域名常强制下载，请配自定义域或改签名访问',
             'COS 的 APPID 是桶创建者的，不是子账户的。' => 'COS 的 APPID 须填桶主账号，不是子账户',
             'upload_url_path 不能是「.」，删除远端会失败。' => '媒体地址前缀不能是「.」，否则删除远端会失败',
+            '实例 RAM 角色名为空时，会向 ECS 元数据询问；失败则无法进桶。' => 'RAM 角色未填写，插件会向服务器元数据接口取临时密钥；取不到就无法进桶',
         ];
         if (isset($map[$line])) {
             return $map[$line];
@@ -745,7 +746,7 @@ final class Wpsss_CLI
         WP_CLI::log('host_mismatch=' . count($report['host_mismatch']));
         WP_CLI::log('http=' . count($report['http']));
         WP_CLI::log('failed=' . count($report['failed']));
-        WP_CLI::success('scan 结束。');
+        WP_CLI::success('扫描结束。');
     }
 
     /**
@@ -788,7 +789,7 @@ final class Wpsss_CLI
     {
         $key = isset($args[0]) ? ltrim((string) $args[0], '/') : '';
         if ($key === '') {
-            WP_CLI::error('要对象键。');
+            WP_CLI::error('请提供对象键。');
         }
         if (empty($assoc_args['yes'])) {
             WP_CLI::error('删除对象须加 --yes。');

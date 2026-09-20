@@ -103,10 +103,10 @@ wpsss_assert(strpos($tools, 'wpsss_pull_reset') !== false, 'tools pull resume re
 wpsss_assert(strpos($tools, 'wpsss_offload_reset') !== false, 'tools offload resume reset');
 wpsss_assert(strpos($tools, 'js-wpsss-offload-form') !== false, 'tools offload ajax form');
 wpsss_assert(strpos($tools, '开始补传') !== false, 'tools offload start label');
-wpsss_assert(strpos($tools, '前缀不对') !== false, 'tools scan prefix mismatch');
-wpsss_assert(strpos($tools, '旁路改名') !== false, 'tools pull rename mode');
+wpsss_assert(strpos($tools, '前缀不符') !== false, 'tools scan prefix mismatch');
+wpsss_assert(strpos($tools, '旧文件改名保留') !== false, 'tools pull rename mode');
 wpsss_assert(strpos($tools, 'name="wpsss_pull_apply"') !== false, 'tools pull preview');
-wpsss_assert(strpos($tools, '到迁移用「只补缺失」拉回') !== false, 'tools scan/diagnose cta');
+wpsss_assert(strpos($tools, '到「工具 → 迁移」，选「只补缺失」拉回') !== false, 'tools scan/diagnose cta');
 $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin.css');
 wpsss_assert(strpos($css, '.wpsss-gate-extra[hidden]') !== false, 'css hides extra confirm');
 wpsss_assert(strpos($css, '.wpsss-caution') !== false, 'css caution panel');
@@ -126,8 +126,8 @@ wpsss_assert(strpos($js, 'data.busy') !== false, 'js offload busy retry');
 $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
 wpsss_assert(strpos($admin, '删除远端须再确认') !== false, 'admin rejects pull delete without second confirm');
 wpsss_assert(strpos($admin, 'function redirect_tools') !== false, 'admin returns to tools panel');
-wpsss_assert(strpos($admin, '删桶不能只补缺失') !== false, 'admin rejects delete+skip');
-wpsss_assert(strpos($admin, '只写回了磁盘，前台仍走桶') !== false, 'admin pull message disk vs url');
+wpsss_assert(strpos($admin, '删除桶内对象时不能选「只补缺失」') !== false, 'admin rejects delete+skip');
+wpsss_assert(strpos($admin, '文件已写回本地，前台地址仍指向存储桶') !== false, 'admin pull message disk vs url');
 wpsss_assert(strpos($admin, '选择「单个附件」时请填写媒体库编号') !== false, 'admin rejects empty one-scope');
 wpsss_assert(strpos($admin, 'pull_cursor_key') !== false, 'admin pull cursor');
 wpsss_assert(strpos($admin, 'handle_offload_tick') !== false, 'admin offload tick');
@@ -163,9 +163,9 @@ $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.
 wpsss_assert(strpos($cli, '删除远端须加 --yes') !== false, 'cli pull delete needs yes');
 wpsss_assert(strpos($cli, '删除对象须加 --yes') !== false, 'cli delete needs yes');
 wpsss_assert(strpos($cli, '--on-exist') !== false, 'cli pull on-exist');
-wpsss_assert(strpos($cli, '删桶不能 --on-exist=skip') !== false, 'cli rejects delete+skip');
+wpsss_assert(strpos($cli, '--delete-remote 不能搭配 --on-exist=skip') !== false, 'cli rejects delete+skip');
 wpsss_assert(strpos($cli, '--before') !== false, 'cli pull/offload before cursor');
-wpsss_assert(strpos($cli, '只写回磁盘，前台仍走桶') !== false, 'cli pull disk vs url');
+wpsss_assert(strpos($cli, '文件已写回本地，前台地址仍指向存储桶') !== false, 'cli pull disk vs url');
 
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");

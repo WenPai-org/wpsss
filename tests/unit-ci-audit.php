@@ -29,7 +29,7 @@ wpsss_assert(strpos($help, '批量拉回与单个附件有何区别') !== false,
 wpsss_assert(strpos($help, '拉回后前台地址会变吗') !== false, 'help pull does not change url');
 wpsss_assert(strpos($help, '改写会动序列化字段吗') !== false, 'help rewrite serialized honesty');
 wpsss_assert(strpos($help, '换过桶或前缀再拉回会怎样') !== false, 'help prefix mismatch');
-wpsss_assert(strpos($help, '旁路改名') !== false, 'help pull rename');
+wpsss_assert(strpos($help, '旧文件改名保留') !== false, 'help pull rename');
 wpsss_assert(strpos($help, '没有回收站') !== false, 'help pull delete no trash');
 wpsss_assert(strpos($help, '诊断一条地址') !== false, 'help diagnose tool');
 wpsss_assert(strpos($help, '默认 V4') !== false, 'help oss v4');
@@ -40,7 +40,7 @@ wpsss_assert(strpos($settings, '创建桶的主账号 APPID') !== false, 'settin
 wpsss_assert(strpos($settings, '仅记录功能开关') === false, 'settings no 仅记录功能开关');
 wpsss_assert(strpos($settings, 'oss_signature') !== false, 'settings oss signature');
 wpsss_assert(strpos($settings, 'ECS 实例 RAM 角色') !== false, 'settings ram option');
-wpsss_assert(strpos($settings, '任意 CDN') !== false, 'settings custom domain any cdn');
+wpsss_assert(strpos($settings, 'CDN 已经指向存储桶') !== false, 'settings custom domain any cdn');
 wpsss_assert(strpos($settings, 'data-wpsss-preview') === false, 'settings no preview reload');
 wpsss_assert(strpos($settings, 'data-wpsss-disclose="site_mode"') !== false, 'settings disclose scene');
 wpsss_assert(strpos($settings, 'data-wpsss-disclose="driver"') !== false, 'settings disclose driver');
