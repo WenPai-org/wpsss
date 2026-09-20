@@ -128,7 +128,7 @@ final class Wpsss_Admin
             'stats' => $this->plugin->library()->stats(),
             'history' => Wpsss_History::all(),
             'rewrite' => get_transient($this->rewrite_transient_key()) ?: [],
-            'doctor' => $configured ? Wpsss_CLI::doctor_report($opts) : [],
+            'doctor' => ($configured && in_array($tab, ['overview', 'setup'], true)) ? Wpsss_CLI::doctor_report($opts) : [],
             'url' => [$this, 'url'],
             'setup_step' => $tab === 'setup' ? $this->setup_step() : 0,
             'setup_done_rows' => Wpsss_Options::setup_done_rows(
@@ -267,6 +267,9 @@ final class Wpsss_Admin
         }
         $from = isset($_POST['wpsss_rewrite_from']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_from'])) : '';
         $to = isset($_POST['wpsss_rewrite_to']) ? esc_url_raw(wp_unslash((string) $_POST['wpsss_rewrite_to'])) : '';
+        if ($from === '') {
+            $this->redirect('tools', 'error', '请填写要替换的来源地址。');
+        }
         $result = $this->plugin->library()->rewrite_posts($apply, $from, $to);
         set_transient($this->rewrite_transient_key(), [
             'from' => $from,
@@ -345,6 +348,18 @@ final class Wpsss_Admin
                 'mode' => 'simple',
                 'wpsss_level' => 'error',
                 'wpsss_notice' => '关掉本地备份须人批。',
+            ]));
+            exit;
+        }
+        if (
+            isset($_POST['origin_protect'])
+            && (string) wp_unslash($_POST['origin_protect']) === '1'
+            && trim((string) ($opts['image_style'] ?? '')) === ''
+        ) {
+            wp_safe_redirect($this->url('settings', [
+                'mode' => 'simple',
+                'wpsss_level' => 'error',
+                'wpsss_notice' => '须先在高级设置填写图片样式。',
             ]));
             exit;
         }

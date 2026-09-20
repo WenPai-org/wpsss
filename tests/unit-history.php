@@ -56,6 +56,12 @@ wpsss_assert(
     Wpsss_History::format_time('2026-09-19 03:47:00') === '2026-09-19 03:47',
     'format_time gmt to local helper'
 );
+$collapsed = Wpsss_History::collapsed([
+    ['event' => 'offload', 'detail' => '附件 #6 · 01-overview', 't' => '2026-09-19 03:58:01'],
+    ['event' => 'offload', 'detail' => '附件 #6 · 01-overview', 't' => '2026-09-19 03:58:00'],
+    ['event' => 'fail', 'detail' => '附件 #9 · 权限不足', 't' => '2026-09-19 03:48:00'],
+]);
+wpsss_assert(count($collapsed) === 2 && (int) $collapsed[0]['count'] === 2, 'collapsed merges consecutive same events');
 
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");

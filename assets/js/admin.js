@@ -169,6 +169,40 @@
     }
   }
 
+  function syncProtectHint(form) {
+    if (!form) {
+      return;
+    }
+    var style = form.querySelector(".js-wpsss-style");
+    var hint = form.querySelector(".js-wpsss-protect-hint");
+    var toggle = form.querySelector(".js-wpsss-protect-toggle");
+    var hasStyle = !!(style && style.value.trim() !== "");
+    if (hint) {
+      hint.hidden = hasStyle;
+    }
+    if (toggle) {
+      var hidden = toggle.parentNode ? toggle.parentNode.querySelector('input[type="hidden"]') : null;
+      var on = hidden ? hidden.value === "1" : toggle.classList.contains("on");
+      toggle.disabled = !hasStyle && !on;
+    }
+  }
+
+  function syncOssExtras(form) {
+    if (!form) {
+      return;
+    }
+    var region = form.querySelector(".js-wpsss-region");
+    var origin = form.querySelector(".js-wpsss-origin-region");
+    if (region && origin) {
+      origin.hidden = String(region.value || "").indexOf("accelerate") === -1;
+    }
+    var auth = form.querySelector(".js-wpsss-oss-auth");
+    var role = form.querySelector(".js-wpsss-ram-role");
+    if (auth && role) {
+      role.hidden = auth.value !== "ram";
+    }
+  }
+
   function fillCosAppId(form) {
     if (!form) {
       return;
@@ -333,11 +367,31 @@
   if (settingsForm) {
     restoreDraft(settingsForm);
     syncTtl(settingsForm);
+    syncOssExtras(settingsForm);
+    syncProtectHint(settingsForm);
     fillCosAppId(settingsForm);
+    var styleInput = settingsForm.querySelector(".js-wpsss-style");
+    if (styleInput) {
+      styleInput.addEventListener("input", function () {
+        syncProtectHint(settingsForm);
+      });
+    }
     var access = settingsForm.querySelector(".js-wpsss-access");
     if (access) {
       access.addEventListener("change", function () {
         syncTtl(settingsForm);
+      });
+    }
+    var region = settingsForm.querySelector(".js-wpsss-region");
+    if (region) {
+      region.addEventListener("change", function () {
+        syncOssExtras(settingsForm);
+      });
+    }
+    var ossAuth = settingsForm.querySelector(".js-wpsss-oss-auth");
+    if (ossAuth) {
+      ossAuth.addEventListener("change", function () {
+        syncOssExtras(settingsForm);
       });
     }
     var bucket = settingsForm.querySelector(".js-wpsss-bucket");
@@ -385,6 +439,7 @@
             var region = field(settingsForm, "region");
             if (region && data.region) {
               setSelectValue(region, data.region);
+              syncOssExtras(settingsForm);
             }
             var accessEl = settingsForm.querySelector(".js-wpsss-access");
             if (accessEl && data.url_access) {

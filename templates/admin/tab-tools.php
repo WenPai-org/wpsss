@@ -3,6 +3,7 @@ defined('ABSPATH') || exit;
 /** @var array<string, mixed> $view */
 $stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : ['total' => 0, 'offloaded' => 0, 'pending' => 0, 'failed' => 0];
 $history = isset($view['history']) && is_array($view['history']) ? $view['history'] : [];
+$history = Wpsss_History::collapsed($history);
 $opts = $view['opts'];
 $rewrite = isset($view['rewrite']) && is_array($view['rewrite']) ? $view['rewrite'] : [];
 $pending = (int) ($stats['pending'] ?? 0);
@@ -85,15 +86,15 @@ $rewrite_to = (string) ($rewrite['to'] ?? $view['public_base'] ?? '');
       <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('改写文章中的媒体地址', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('将正文、摘要及普通字段中的 uploads 地址替换为当前对外地址；序列化字段不修改。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('只替换你填写的来源地址。不会自动扫整站 uploads。序列化字段不修改。', 'wpsss'); ?></p>
       </div>
     </div>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_rewrite_confirm">
       <input type="hidden" name="action" value="wpsss_rewrite" />
       <?php wp_nonce_field('wpsss_rewrite'); ?>
       <div class="field">
-        <div><div class="field-label"><?php echo esc_html__('来源地址', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('留空则使用本站 uploads 地址', 'wpsss'); ?></div></div>
-        <div class="field-ctl"><input type="text" name="wpsss_rewrite_from" value="<?php echo esc_attr($rewrite_from); ?>" placeholder="https://example.com/wp-content/uploads" /></div>
+        <div><div class="field-label"><?php echo esc_html__('来源地址', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('必须填写要替换的旧地址，例如本站 uploads 或旧 CDN。', 'wpsss'); ?></div></div>
+        <div class="field-ctl"><input type="text" name="wpsss_rewrite_from" value="<?php echo esc_attr($rewrite_from); ?>" placeholder="https://example.com/wp-content/uploads" required /></div>
       </div>
       <div class="field">
         <div><div class="field-label"><?php echo esc_html__('目标地址', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('留空则使用当前对外地址', 'wpsss'); ?></div></div>
@@ -149,7 +150,7 @@ $rewrite_to = (string) ($rewrite['to'] ?? $view['public_base'] ?? '');
         <?php foreach ($history as $row) : ?>
           <?php $event = (string) ($row['event'] ?? ''); ?>
           <li>
-            <div class="n"><span class="pill <?php echo esc_attr(Wpsss_History::event_tone($event)); ?>"><?php echo esc_html(Wpsss_History::event_label($event)); ?></span></div>
+            <div class="n"><span class="pill <?php echo esc_attr(Wpsss_History::event_tone($event)); ?>"><?php echo esc_html(Wpsss_History::event_label($event)); ?></span><?php if ((int) ($row['count'] ?? 1) > 1) : ?><span class="meta"> ×<?php echo (int) $row['count']; ?></span><?php endif; ?></div>
             <div class="p"><?php
                 $detail = Wpsss_History::format_detail($event, (string) ($row['detail'] ?? ''));
                 $time = Wpsss_History::format_time((string) ($row['t'] ?? ''));
@@ -161,17 +162,4 @@ $rewrite_to = (string) ($rewrite['to'] ?? $view['public_base'] ?? '');
     <?php endif; ?>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('flash'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('按 URL 清除边缘缓存', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('接入自定义域名与 CDN 后，可按 URL 清除边缘缓存。', 'wpsss'); ?></p>
-      </div>
-      <span class="pill"><?php echo esc_html__('即将提供', 'wpsss'); ?></span>
-    </div>
-    <div class="card-foot">
-      <button class="btn btn-secondary" type="button" disabled><?php echo esc_html__('按 URL 清除边缘缓存', 'wpsss'); ?></button>
-    </div>
-  </section>
 </div>

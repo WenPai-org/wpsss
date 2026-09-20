@@ -324,6 +324,15 @@ $to = 'https://cdn.example/uploads';
 $lib = new Wpsss_Library(new Wpsss_Plugin(), new Wpsss_Offload());
 
 wpsss_reset_store();
+$GLOBALS['wpdb']->post_rows[1] = [
+    'post_status' => 'publish',
+    'post_content' => '<img src="' . $from . '/x.jpg">',
+    'post_excerpt' => '',
+];
+$empty_from = $lib->rewrite_posts(false, '', $to);
+wpsss_assert($empty_from['scanned'] === 0 && $empty_from['changed'] === 0, 'empty from does not default to uploads');
+
+wpsss_reset_store();
 for ($i = 1; $i <= 250; $i++) {
     $GLOBALS['wpdb']->post_rows[$i] = [
         'post_status' => 'publish',

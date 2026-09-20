@@ -58,7 +58,7 @@ $on = (bool) $view['configured'];
         <dt><?php echo esc_html__('概览', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('当前连接状态、对外地址、本地备份与运行体检摘要。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('设置 · 简单', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('站点场景与常用开关；保存后即时生效。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('当前组合与日常开关；保存后即时生效。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('设置 · 高级', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('云厂商、桶名、区域、密钥、对象前缀、图片样式等完整选项。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('工具', 'wpsss'); ?></dt>
@@ -105,6 +105,10 @@ $on = (bool) $view['configured'];
         <dd><?php echo esc_html__('公开读模式下，请确认存储桶允许匿名访问或已配置 HTTPS 自定义域名。签名模式下前台由插件生成签名 URL。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('运行体检提示匿名访问受限', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('若已启用签名访问，匿名 403 为正常结果，不代表上传失败。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('图片样式填什么', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('填存储桶的图片处理参数，接到图片地址后面。阿里云常用 ?x-oss-process=image/quality,q_80 或样式路径。GIF 与 SVG 不会追加。', 'wpsss'); ?></dd>
+        <dt><?php echo esc_html__('原图保护做什么', 'wpsss'); ?></dt>
+        <dd><?php echo esc_html__('打开后，媒体库和文章里的原图也会带上图片样式，避免直接打开未处理文件。须先填写图片样式，否则不生效。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('本地备份是什么', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('开启后，文件进桶的同时保留服务器 uploads 目录中的副本，便于回滚与插件兼容。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('已有附件如何进桶', 'wpsss'); ?></dt>

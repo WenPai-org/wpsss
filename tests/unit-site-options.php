@@ -125,6 +125,24 @@ $bad = Wpsss_Options::sanitize([
 ]);
 wpsss_assert($bad['oss_signature'] === 'v4', 'bad signature falls to v4');
 wpsss_assert($bad['oss_auth'] === 'ak', 'bad auth falls to ak');
+$protect_off = Wpsss_Options::sanitize([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'mybucket',
+    'region' => 'oss-cn-hangzhou',
+    'keep_local' => '1',
+    'image_style' => '',
+    'origin_protect' => '1',
+]);
+wpsss_assert($protect_off['origin_protect'] === '0', 'origin_protect off without image_style');
+$protect_on = Wpsss_Options::sanitize([
+    'driver' => 'aliyun-oss',
+    'bucket' => 'mybucket',
+    'region' => 'oss-cn-hangzhou',
+    'keep_local' => '1',
+    'image_style' => '?x-oss-process=image/quality,q_80',
+    'origin_protect' => '1',
+]);
+wpsss_assert($protect_on['origin_protect'] === '1', 'origin_protect on with image_style');
 wpsss_assert(
     in_array('实例 RAM 角色名为空时，会向 ECS 元数据询问；失败则无法进桶。', Wpsss_Options::runtime_warnings([
         'driver' => 'aliyun-oss',

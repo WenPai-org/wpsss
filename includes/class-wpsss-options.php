@@ -217,7 +217,7 @@ class Wpsss_Options
             'object_prefix' => $prefix,
             'auto_rename' => $rename,
             'image_style' => $style,
-            'origin_protect' => (isset($input['origin_protect']) && (string) $input['origin_protect'] === '1') ? '1' : '0',
+            'origin_protect' => ($style !== '' && isset($input['origin_protect']) && (string) $input['origin_protect'] === '1') ? '1' : '0',
             'rewrite_from' => $rewrite_from,
             'ci_slim' => (isset($input['ci_slim']) && (string) $input['ci_slim'] === '1') ? '1' : '0',
             'ci_preview' => (isset($input['ci_preview']) && (string) $input['ci_preview'] === '1') ? '1' : '0',

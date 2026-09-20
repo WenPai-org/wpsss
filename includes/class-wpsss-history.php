@@ -20,6 +20,35 @@ class Wpsss_History
         return is_array($rows) ? $rows : [];
     }
 
+    /**
+     * 连续相同事件合并为一条，带 count。
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function collapsed(array $rows = []): array
+    {
+        if ($rows === []) {
+            $rows = self::all();
+        }
+        $out = [];
+        $prev = null;
+        foreach ($rows as $row) {
+            $event = (string) ($row['event'] ?? '');
+            $detail = (string) ($row['detail'] ?? '');
+            $key = $event . "\n" . $detail;
+            if ($prev !== null && $prev['key'] === $key) {
+                $out[$prev['i']]['count'] = (int) ($out[$prev['i']]['count'] ?? 1) + 1;
+                continue;
+            }
+            $row['count'] = 1;
+            $out[] = $row;
+            $prev = ['key' => $key, 'i' => count($out) - 1];
+        }
+
+        return $out;
+    }
+
     public static function add_offload(int $post_id, string $key = ''): void
     {
         self::add_row('offload', self::attachment_detail($post_id, $key !== '' ? self::short_key($key) : ''));

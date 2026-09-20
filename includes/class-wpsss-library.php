@@ -194,8 +194,7 @@ final class Wpsss_Library
      */
     public function rewrite_posts(bool $apply, string $from = '', string $to = ''): array
     {
-        $uploads = wp_upload_dir();
-        $from = $from !== '' ? untrailingslashit($from) : untrailingslashit((string) $uploads['baseurl']);
+        $from = $from !== '' ? untrailingslashit($from) : '';
         $extra = (string) Wpsss_Options::get()['rewrite_from'];
         $to = $to !== '' ? untrailingslashit($to) : untrailingslashit(Wpsss_Options::public_base());
         $scanned = 0;

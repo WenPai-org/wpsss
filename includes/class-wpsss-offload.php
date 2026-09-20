@@ -417,14 +417,14 @@ class Wpsss_Offload
         if ($to === '' || !$this->plugin->active_driver()->is_configured($opts)) {
             return $content;
         }
-        $uploads = $this->uploads();
-        $from = untrailingslashit((string) $uploads['baseurl']);
-        $style = Wpsss_Url::style_suffix($opts);
-        $content = Wpsss_Url::rewrite_text($content, $from, $to, $style);
+        // 不要把整站 uploads 主机换成自定义域：未进桶的旧图会 404。
+        // 新附件走 wp_get_attachment_*。工具页改写走 library，不走这条。
         $extra = (string) ($opts['rewrite_from'] ?? '');
-        if ($extra !== '') {
-            $content = Wpsss_Url::rewrite_text($content, $extra, $to, $style);
+        if ($extra === '') {
+            return $content;
         }
+        $style = Wpsss_Url::style_suffix($opts);
+        $content = Wpsss_Url::rewrite_text($content, $extra, $to, $style);
         return Wpsss_Url::sign_rewritten_text($content, $to, $opts);
     }
 

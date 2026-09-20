@@ -90,10 +90,12 @@ body.wpsss-admin .wpcy-app .notice {
 body.wpsss-admin .wpcy-app .hero-l {
   min-width: 0;
 }
-body.wpsss-admin .wpcy-app .hero-l h1 {
+body.wpsss-admin .wpcy-app .hero-l h1,
+body.wpsss-admin .wpcy-app .hero-l .hero-title {
   font-size: 28px;
   line-height: 38px;
   font-weight: 600;
+  margin: 8px 0 10px;
 }
 body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"],
 body.wpsss-admin .wpcy-app input[type="text"],
@@ -217,6 +219,51 @@ body.wpsss-admin .wpcy-app .svc-stack .svc-r .btn-ghost {
 .choice-cards.is-vendors {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.choice-cards.is-vendors.is-compact {
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 8px;
+}
+body.wpsss-admin .wpcy-app .choice-cards.is-vendors.is-compact .choice {
+  padding: 8px 10px;
+  align-items: center;
+}
+body.wpsss-admin .wpcy-app .choice-cards.is-compact .choice {
+  padding: 10px 12px;
+}
+.wpsss-vendor-more {
+  margin: 0;
+}
+.wpsss-vendor-more > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.wpsss-vendor-more > summary::-webkit-details-marker {
+  display: none;
+}
+.wpsss-vendor-more > summary.simple-row {
+  border-top: 0;
+  padding-top: 8px;
+}
+.wpsss-vendor-more[open] > summary.simple-row {
+  margin-bottom: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--wpcy-line-soft);
+}
+.wpsss-vendor-more > summary .when-open {
+  display: none;
+}
+.wpsss-vendor-more[open] > summary .when-closed {
+  display: none;
+}
+.wpsss-vendor-more[open] > summary .when-open {
+  display: inline;
+}
+.wpsss-vendor-grid .choice-group {
+  margin: 16px 0 8px;
+}
+.wpsss-vendor-grid .choice-group:first-child {
+  margin-top: 8px;
+}
 /* 向导 680px：跟 E onboarding 一致，单列卡片；勿被 .is-vendors 三列盖掉 */
 .wizard .choice-cards,
 .wizard .choice-cards.is-vendors {
@@ -266,6 +313,9 @@ body.wpsss-admin .wpcy-app .svc-stack .svc-r .btn-ghost {
 }
 body.wpsss-admin .wpcy-app .field {
   align-items: start;
+}
+body.wpsss-admin .wpcy-app .field[hidden] {
+  display: none;
 }
 .field-ctl-row {
   display: flex;
@@ -896,7 +946,8 @@ body.wpsss-admin .wpcy-app .hero-svc {
   padding-top: 16px;
   margin-top: 20px;
 }
-body.wpsss-admin .wpcy-app .hero-l h1 {
+body.wpsss-admin .wpcy-app .hero-l h1,
+body.wpsss-admin .wpcy-app .hero-l .hero-title {
   font-size: 24px;
   line-height: 32px;
   margin: 8px 0 10px;
