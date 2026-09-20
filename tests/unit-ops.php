@@ -128,6 +128,8 @@ wpsss_assert(strpos($js, 'wpsss_offload_tick') !== false, 'js offload tick');
 wpsss_assert(strpos($js, 'wpsss_pull_tick') !== false, 'js pull tick');
 wpsss_assert(strpos($js, 'bindPullQueue') !== false, 'js pull queue binder');
 wpsss_assert(strpos($js, 'data.busy') !== false, 'js offload busy retry');
+wpsss_assert(strpos($js, 'js-wpsss-offload-bar') !== false, 'js offload progress bar');
+wpsss_assert(strpos($js, 'setBar') !== false, 'js offload bar percent math');
 
 $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
 wpsss_assert(strpos($admin, '删除远端须再确认') !== false, 'admin rejects pull delete without second confirm');
@@ -152,6 +154,8 @@ wpsss_assert(strpos($tools, 'js-wpsss-pull-progress') !== false, 'tools pull aja
 wpsss_assert(strpos($tools, 'js-wpsss-pull-stop') !== false, 'tools pull pause button');
 wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-time copy');
 wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
+wpsss_assert(strpos($tools, 'js-wpsss-offload-bar') !== false, 'tools offload bar element');
+wpsss_assert(strpos($tools, 'js-wpsss-pull-bar') !== false, 'tools pull bar element');
 
 $entry = (string) file_get_contents(dirname(__DIR__) . '/wpsss.php');
 wpsss_assert(strpos($entry, 'str_ends_with') !== false && strpos($entry, 'PHP_VERSION_ID') !== false, 'php 7.4 polyfill present');

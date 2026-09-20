@@ -788,6 +788,8 @@
     var runBtn = form.querySelector(".js-wpsss-offload-run");
     var stopBtn = form.querySelector(".js-wpsss-offload-stop");
     var progress = form.querySelector(".js-wpsss-offload-progress");
+    var bar = form.querySelector(".js-wpsss-offload-bar");
+    var barFill = bar ? bar.querySelector("span") : null;
     if (!runBtn || !cfg.ajaxUrl || !cfg.offloadNonce) {
       return;
     }
@@ -795,6 +797,17 @@
     var halt = false;
     var failStreak = 0;
     var totals = { ok: 0, fail: 0, skip: 0 };
+    var baseline = 0;
+
+    function setBar(done, remaining) {
+      if (!bar || !barFill) {
+        return;
+      }
+      bar.hidden = false;
+      var pct = baseline > 0 ? Math.min(100, Math.round((done / baseline) * 100)) : 0;
+      barFill.style.width = pct + "%";
+      return pct;
+    }
 
     function setProgress(text) {
       if (progress) {
@@ -856,6 +869,12 @@
           totals.ok += data.ok || 0;
           totals.fail += data.fail || 0;
           totals.skip += data.skip || 0;
+          var left = body.get("source") === "failed" ? (data.failed || 0) : (data.pending || 0);
+          var processed = totals.ok + totals.fail + totals.skip;
+          if (baseline === 0 && (processed + left) > 0) {
+            baseline = processed + left;
+          }
+          var pct = setBar(processed, left);
           if ((data.fail || 0) > 0 && !(data.ok > 0)) {
             failStreak++;
           } else {
@@ -868,13 +887,16 @@
             return;
           }
           var left = body.get("source") === "failed" ? data.failed : data.pending;
-          setProgress("本轮成功 " + totals.ok + "，失败 " + totals.fail + "，还剩 " + (left || 0) + "。");
+          setProgress((typeof pct === "number" ? pct + "% · " : "") + "本轮成功 " + totals.ok + "，失败 " + totals.fail + "，还剩 " + (left || 0) + "。");
           if (data.error) {
             setProgress((progress ? progress.textContent + " " : "") + data.error);
           }
           if (data.done) {
             running = false;
             idle();
+            if (barFill) {
+              barFill.style.width = "100%";
+            }
             setProgress("补传结束。成功 " + totals.ok + "，失败 " + totals.fail + "，跳过 " + totals.skip + "。");
             if (runBtn && (left || 0) === 0) {
               runBtn.disabled = true;
@@ -925,6 +947,10 @@
         }
         totals = { ok: 0, fail: 0, skip: 0 };
         failStreak = 0;
+        baseline = 0;
+        if (barFill) {
+          barFill.style.width = "0%";
+        }
         halt = false;
         running = true;
         form.classList.add("is-busy");
@@ -953,6 +979,7 @@
     var runBtn = form.querySelector(".js-wpsss-pull-run");
     var stopBtn = form.querySelector(".js-wpsss-pull-stop");
     var progress = form.querySelector(".js-wpsss-pull-progress");
+    var bar = form.querySelector(".js-wpsss-pull-bar");
     if (!runBtn || !cfg.ajaxUrl || !cfg.pullNonce) {
       return;
     }
@@ -979,6 +1006,9 @@
       if (stopBtn) {
         stopBtn.hidden = true;
         stopBtn.disabled = false;
+      }
+      if (bar) {
+        bar.hidden = true;
       }
     }
 
@@ -1096,6 +1126,9 @@
         if (stopBtn) {
           stopBtn.hidden = false;
           stopBtn.disabled = false;
+        }
+        if (bar) {
+          bar.hidden = false;
         }
         setProgress("开始拉回…");
         tick();

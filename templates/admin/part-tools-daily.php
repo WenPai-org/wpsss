@@ -43,6 +43,7 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="action" value="wpsss_offload" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_offload'); ?>
+      <div class="wpsss-progress js-wpsss-offload-bar" hidden aria-hidden="true"><span></span></div>
       <p class="meta js-wpsss-offload-progress" aria-live="polite"></p>
       <div class="card-foot start">
         <span class="meta js-wpsss-offload-hint"><?php

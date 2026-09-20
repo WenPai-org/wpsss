@@ -1298,3 +1298,31 @@ body.wpsss-admin .wpcy-app .wpcy-tab:focus-visible {
   outline: none;
   box-shadow: inset 0 -2px 0 var(--wpcy-accent);
 }
+
+/* 队列进度条：补传为确定性百分比，拉回为流动动画（无总量可算）。 */
+.wpsss-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--wp--preset--color--neutral, #e5e7eb);
+  overflow: hidden;
+  margin: 0 0 8px;
+}
+
+.wpsss-progress > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--wp--preset--color--primary, #2271b1);
+  transition: width 0.3s ease;
+}
+
+.wpsss-progress.is-indeterminate > span {
+  width: 35%;
+  animation: wpsss-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes wpsss-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(286%); }
+}

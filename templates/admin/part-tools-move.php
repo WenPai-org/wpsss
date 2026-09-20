@@ -121,6 +121,7 @@ $exist_modes = [
           <label><input type="checkbox" name="wpsss_pull_delete_confirm" value="1" /> <?php echo esc_html__('本地已经打开核对过，可以丢掉桶里那份', 'wpsss'); ?></label>
         </div>
       </div>
+      <div class="wpsss-progress is-indeterminate js-wpsss-pull-bar" hidden aria-hidden="true"><span></span></div>
       <p class="meta js-wpsss-pull-progress" aria-live="polite"></p>
       <div class="card-foot start">
         <span class="meta"><?php
