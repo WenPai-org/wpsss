@@ -557,10 +557,11 @@ class Wpsss_Offload
         $ext = (string) pathinfo($filename, PATHINFO_EXTENSION);
         $stem = pathinfo($filename, PATHINFO_FILENAME);
         $driver = $this->plugin->active_driver();
-        for ($i = 1; $i <= 20; $i++) {
-            $name = ($i === 1) ? $filename : $stem . '-' . $i . ($ext !== '' ? '.' . $ext : '');
-            $candidate_rel = preg_replace('#/[^/]*$#', '', $rel) . '/' . $name;
-            $key = Wpsss_Options::apply_object_prefix($candidate_rel, $opts);
+        // 候选序列与 WordPress 本地查重一致：原名、原名-1、原名-2……
+        $folder = preg_replace('#/[^/]*$#', '', $rel);
+        for ($i = 0; $i <= 20; $i++) {
+            $name = ($i === 0) ? $filename : $stem . '-' . $i . ($ext !== '' ? '.' . $ext : '');
+            $key = Wpsss_Options::apply_object_prefix($folder . '/' . $name, $opts);
             if (is_wp_error($driver->head_object($opts, $key))) {
                 return $name;
             }
