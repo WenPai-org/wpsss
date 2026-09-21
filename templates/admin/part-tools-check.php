@@ -160,12 +160,12 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="action" value="wpsss_clear_errors" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_clear_errors'); ?>
-      <div class="chk wpsss-gate">
+      <div class="chk wenpai-gate">
         <label><input type="checkbox" name="wpsss_clear_confirm" value="1" /> <?php echo esc_html__('我确认清除失败标记', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('每批最多 50 条。', 'wpsss'); ?></span>
-        <span class="wpsss-actions">
+        <span class="wenpai-actions">
           <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('去日常重试', 'wpsss'); ?></a>
           <button class="btn btn-ghost" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认清除失败标记？不会重新上传。', 'wpsss'); ?>"><?php echo esc_html__('清除失败标记', 'wpsss'); ?></button>
         </span>

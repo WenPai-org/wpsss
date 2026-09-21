@@ -45,7 +45,7 @@ $tabs = [
         $cls = 'warn';
     }
     ?>
-  <div class="wenpai-wrap wpsss-notice-wrap">
+  <div class="wenpai-wrap wenpai-notice-wrap">
     <div class="notice <?php echo esc_attr($cls); ?>">
       <?php echo Wpsss_Icons::svg('info'); ?>
       <span><?php echo esc_html((string) $view['notice']); ?></span>

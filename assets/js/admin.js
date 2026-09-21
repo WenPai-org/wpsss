@@ -64,7 +64,7 @@
     );
   }
 
-  var app = document.querySelector(".wpcy-app");
+  var app = document.querySelector(".wenpai-app");
   if (!app) {
     return;
   }
@@ -1179,10 +1179,10 @@
     );
   });
 
-  var flash = app.querySelector(".wpsss-notice-wrap .notice.ok");
+  var flash = app.querySelector(".wenpai-notice-wrap .notice.ok");
   if (flash) {
     window.setTimeout(function () {
-      var wrap = closest(flash, ".wpsss-notice-wrap");
+      var wrap = closest(flash, ".wenpai-notice-wrap");
       if (wrap) {
         wrap.classList.add("is-gone");
       }

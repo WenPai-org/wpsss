@@ -433,13 +433,13 @@ body.wpsss-admin .wenpai-app .wpsss-doctor-card.card {
   font-size: 13px;
   line-height: 20px;
 }
-.wpsss-gate {
+.wenpai-gate {
   margin: 16px 0 0;
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--wenpai-line-soft);
 }
-.wpsss-actions {
+.wenpai-actions {
   display: flex;
   gap: 8px;
 }
@@ -570,10 +570,10 @@ body.wpsss-admin .wenpai-app input.js-wpsss-pull-id {
 .wpsss-caution .chk {
   margin-top: 0;
 }
-.wpsss-notice-wrap {
+.wenpai-notice-wrap {
   transition: opacity 0.35s ease;
 }
-.wpsss-notice-wrap.is-gone {
+.wenpai-notice-wrap.is-gone {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.35s ease, visibility 0s linear 0.35s;
@@ -976,7 +976,7 @@ details > .wpsss-doctor-summary {
   line-height: 18px;
   color: var(--wenpai-ink-3);
 }
-.wpsss-notice-wrap {
+.wenpai-notice-wrap {
   padding-top: 16px;
 }
 .upload-php .column-wpsss .pill {
@@ -1197,7 +1197,7 @@ body.wpsss-admin .wenpai-app .simple-row .d.is-url {
   word-break: break-all;
 }
 body.wpsss-admin .wenpai-app .chk input:focus-visible,
-body.wpsss-admin .wenpai-app .wpsss-gate input:focus-visible {
+body.wpsss-admin .wenpai-app .wenpai-gate input:focus-visible {
   outline: 2px solid var(--wenpai-accent);
   outline-offset: 2px;
 }

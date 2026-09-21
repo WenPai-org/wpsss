@@ -1,7 +1,7 @@
 ## Unreleased
 
 ### 界面
-- 后台壳 vendor `lib/wenpai-admin-ui/` **0.1.0**（handle `wenpai-admin-ui`）。`.wpcy-*` 改 `.wenpai-*`。根目录 `e.css` 不再 enqueue。
+- 后台壳 vendor `lib/wenpai-admin-ui/` **0.2.2**（handle `wenpai-admin-ui`，含 kit JS）。`.wpcy-*` 改 `.wenpai-*`。确认门/钮组/成功条改 kit 类名。`e.css` 不再 enqueue。产品 JS 依赖 kit handle。
 
 ## Unreleased
 

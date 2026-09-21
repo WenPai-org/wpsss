@@ -76,7 +76,7 @@ final class Wpsss_Admin
             Wenpai_Admin_Loader::enqueue(array('full' => $this->is_screen()));
         }
         wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', array('wenpai-admin-ui'), (string) filemtime(WPSSS_DIR . 'assets/css/admin.css'));
-        wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', [], (string) filemtime(WPSSS_DIR . 'assets/js/admin.js'), true);
+        wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', array('wenpai-admin-ui'), (string) filemtime(WPSSS_DIR . 'assets/js/admin.js'), true);
         $ui = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'inspectNonce' => wp_create_nonce('wpsss_inspect'),

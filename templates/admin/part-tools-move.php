@@ -100,7 +100,7 @@ $exist_modes = [
           ?>
         <p class="wpsss-pull-result"><?php echo esc_html(implode(' · ', $bits)); ?></p>
       <?php endif; ?>
-      <div class="chk wpsss-gate js-wpsss-pull-gate"<?php echo $pull_exist === 'skip' ? ' hidden' : ''; ?>>
+      <div class="chk wenpai-gate js-wpsss-pull-gate"<?php echo $pull_exist === 'skip' ? ' hidden' : ''; ?>>
         <label><input type="checkbox" name="wpsss_pull_confirm" value="1" /> <span class="js-wpsss-pull-confirm-text"><?php echo esc_html($exist_modes[$pull_exist]['confirm']); ?></span></label>
         <label class="js-wpsss-pull-delete-wrap"><input type="checkbox" name="wpsss_pull_delete" value="1" class="js-wpsss-pull-delete" /> <?php echo esc_html__('还要永久删除桶内对象', 'wpsss'); ?></label>
       </div>
@@ -131,7 +131,7 @@ $exist_modes = [
               echo esc_html__('建议先预览再执行。仅写入磁盘，对外 URL 默认仍指向存储桶。', 'wpsss');
           }
         ?></span>
-        <span class="wpsss-actions">
+        <span class="wenpai-actions">
           <?php if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) : ?>
             <button class="btn btn-ghost" type="submit" name="wpsss_pull_reset" value="1" title="<?php echo esc_attr__('清掉续传位置，下一轮从最新的附件重新扫起；本地已有的会按上面的规则处理。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
           <?php endif; ?>
@@ -186,12 +186,12 @@ $exist_modes = [
           )); ?><?php echo $samples !== [] ? ' ' . esc_html(sprintf(__('示例附件 #%s', 'wpsss'), implode('、#', $samples))) : ''; ?></span>
         </div>
       <?php endif; ?>
-      <div class="chk wpsss-gate">
+      <div class="chk wenpai-gate">
         <label><input type="checkbox" name="wpsss_rewrite_confirm" value="1" /> <?php echo esc_html__('我已经预览过，并且有数据库备份', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('没有预览结果时，不要写入。', 'wpsss'); ?></span>
-        <span class="wpsss-actions">
+        <span class="wenpai-actions">
           <button class="btn btn-ghost" type="submit" name="wpsss_rewrite_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
           <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('会写入数据库，插件不能撤销。确认已经预览，并且有数据库备份？', 'wpsss'); ?>"><?php echo esc_html__('写入数据库', 'wpsss'); ?></button>
         </span>
@@ -218,7 +218,7 @@ $exist_modes = [
       <p class="wpsss-backup-note"><?php echo $keep_on
           ? esc_html__('备份：本地备份已开启，前台通常会改回 uploads 地址。请先确认本地文件仍在。', 'wpsss')
           : esc_html__('备份：本地备份已关闭。解除后若本地无文件，前台图片可能无法显示。请先拉回，或确认本地仍有副本。', 'wpsss'); ?></p>
-      <div class="chk wpsss-gate">
+      <div class="chk wenpai-gate">
         <label><input type="checkbox" name="wpsss_release_confirm" value="1" /> <?php echo $keep_on
             ? esc_html__('我明白前台会改回本地地址', 'wpsss')
             : esc_html__('我确认本地仍有文件，或接受前台图片可能无法显示', 'wpsss'); ?></label>

@@ -59,7 +59,7 @@ defined('ABSPATH') || exit;
               echo esc_html__('全部附件已进桶，新上传会自动进桶。', 'wpsss');
           }
         ?></span>
-        <span class="wpsss-actions">
+        <span class="wenpai-actions">
           <?php if ($pending > 0 && (int) ($offload_cursor ?? 0) > 0) : ?>
             <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1" title="<?php echo esc_attr__('清掉续传位置，下一轮从最新的附件重新扫起；已进桶的会自动跳过。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
           <?php endif; ?>
