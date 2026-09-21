@@ -207,6 +207,7 @@ class Wpsss_Offload
                 if ($defer_sizes) {
                     update_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING, '1');
                     Wpsss_Library::set_main_only($aid, true);
+                    Wpsss_Library::arm_offload_cron();
                 } elseif ($thumbs_pending) {
                     // 队列补传完成：摘掉两个标记，尺寸地址随下次渲染改写到桶域。
                     delete_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING);

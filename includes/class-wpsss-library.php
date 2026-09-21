@@ -116,6 +116,14 @@ final class Wpsss_Library
                 WHERE fs.meta_key = '_wpsss_filesize') AS offloaded_bytes";
         $row = $wpdb->get_row($wpdb->prepare($sql, self::META_OFFLOADED, self::META_ERROR, self::META_LOCAL_ONLY, self::META_OFFLOADED), 'ARRAY_A');
         $row = is_array($row) ? $row : [];
+        $thumbs_pending = 0;
+        if (isset($wpdb) && is_object($wpdb) && method_exists($wpdb, 'get_var')) {
+            $thumbs_pending = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$posts} p JOIN {$postmeta} m ON m.post_id = p.ID AND m.meta_key = %s AND m.meta_value = '1'
+                    WHERE p.post_type = 'attachment' AND p.post_status = 'inherit'",
+                self::META_THUMBS_PENDING
+            ));
+        }
         $total = (int) ($row['total'] ?? 0);
         $offloaded = (int) ($row['offloaded'] ?? 0);
         $local_only = (int) ($row['local_only'] ?? 0);
@@ -125,6 +133,7 @@ final class Wpsss_Library
             'pending' => max(0, $total - $offloaded - $local_only),
             'failed' => (int) ($row['failed'] ?? 0),
             'local_only' => $local_only,
+            'thumbs_pending' => $thumbs_pending,
             'offloaded_bytes' => (int) ($row['offloaded_bytes'] ?? 0),
         ];
     }
@@ -390,7 +399,7 @@ final class Wpsss_Library
             return;
         }
         $stats = $this->stats();
-        if ((int) $stats['pending'] <= 0) {
+        if ((int) $stats['pending'] <= 0 && (int) ($stats['thumbs_pending'] ?? 0) <= 0) {
             self::disarm_offload_cron();
             return;
         }
@@ -407,7 +416,8 @@ final class Wpsss_Library
         }
         self::run_lock_release('cron');
         $worked = ((int) $result['ok'] + (int) $result['fail'] + (int) $result['skip']) > 0;
-        if (!$worked || $this->pending_ids(1, $cursor) === []) {
+        $more = $this->pending_ids(1, $cursor) !== [] || (int) ($this->stats()['thumbs_pending'] ?? 0) > 0;
+        if (!$worked || !$more) {
             self::disarm_offload_cron();
             // 队列排干但统计上还有待传：余下全是连续失败退避项，别静默停车。
             if ($worked && (int) $stats['pending'] > 0) {
