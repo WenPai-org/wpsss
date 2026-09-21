@@ -22,6 +22,9 @@ class Wpsss_Offload
         add_filter('wp_update_attachment_metadata', [$this, 'on_generate_metadata'], 100, 2);
         add_filter('wp_save_image_editor_file', [$this, 'on_save_image_editor'], 101);
         add_action('delete_attachment', [$this, 'on_delete_attachment']);
+        // 媒体域不在 WP 重定向主机白名单时，wp_safe_redirect 会回退到 /wp-admin/
+        // （SEO 插件的附件页 301→文件直链因此被弹进后台）。媒体域必须放行。
+        add_filter('allowed_redirect_hosts', [$this, 'allow_media_host']);
         add_filter('wp_get_attachment_url', [$this, 'rewrite_url'], 30, 2);
         add_filter('wp_get_attachment_thumb_url', [$this, 'rewrite_url'], 30, 2);
         add_filter('wp_get_original_image_url', [$this, 'rewrite_url'], 30, 2);
@@ -466,6 +469,16 @@ class Wpsss_Offload
             return '';
         }
         return untrailingslashit($value);
+    }
+
+    public function allow_media_host($hosts)
+    {
+        $base = Wpsss_Options::public_base();
+        $host = $base !== '' ? (string) wp_parse_url($base, PHP_URL_HOST) : '';
+        if ($host !== '' && is_array($hosts) && !in_array($host, $hosts, true)) {
+            $hosts[] = $host;
+        }
+        return $hosts;
     }
 
     public function rewrite_url(string $url, int $post_id): string
