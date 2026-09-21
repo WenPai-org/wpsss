@@ -3,7 +3,7 @@
  * Plugin Name: WPSSS
  * Plugin URI: https://wpcy.com/
  * Description: 文派智储。媒体进桶，页面仍在源站。支持国内云、S3 兼容与自定义 CDN 域名。
- * Version: 0.9.0
+ * Version: 0.9.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: 文派
@@ -39,7 +39,7 @@ if (PHP_VERSION_ID < 80000) {
     }
 }
 
-define('WPSSS_VERSION', '0.9.0');
+define('WPSSS_VERSION', '0.9.1');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
 define('WPSSS_PRODUCT_URL', 'https://wpcy.com/');
