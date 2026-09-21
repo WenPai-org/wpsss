@@ -262,8 +262,10 @@ class Wpsss_Offload
         }
         $meta = wp_get_attachment_metadata($post_id);
         if (is_array($meta) && !empty($meta['file'])) {
+            // 队列重试轮才把「pending 仍在」当失败记退避；全新上传 defer 设标记是正常路径。
+            $was_pending = get_post_meta($post_id, Wpsss_Library::META_THUMBS_PENDING, true) === '1';
             $this->on_generate_metadata($meta, $post_id);
-            if (get_post_meta($post_id, Wpsss_Library::META_THUMBS_PENDING, true) === '1') {
+            if ($was_pending && get_post_meta($post_id, Wpsss_Library::META_THUMBS_PENDING, true) === '1') {
                 return new WP_Error('wpsss_thumbs_failed', '尺寸文件进桶失败，稍后自动重试。');
             }
             if (!Wpsss_Library::is_offloaded($post_id)) {
