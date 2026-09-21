@@ -942,17 +942,20 @@ details > .wpsss-doctor-summary {
   font-size: 13px;
   line-height: 20px;
   color: var(--wpcy-ink);
-  font-weight: 400;
-  margin-top: 12px;
+  font-weight: 600;
+  margin-top: 18px;
 }
 .wpsss-help-dl dt:first-child {
   margin-top: 0;
 }
 .wpsss-help-dl dd {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 19px;
   color: var(--wpcy-ink-3);
+}
+.wpsss-help-details .wpsss-help-body .wpsss-help-dl dd {
+  margin-bottom: 2px;
 }
 .wpsss-help-code {
   margin: 12px 0 0;
