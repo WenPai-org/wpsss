@@ -186,15 +186,22 @@ class Wpsss_Offload
             && $aid > 0
             && !is_wp_error($ok);
 
+        $sizes_failed = false;
         if (!$defer_sizes) {
             if (!empty($metadata['original_image'])) {
-                $this->put_local_file($dir_abs . $metadata['original_image'], '');
+                $r = $this->put_local_file($dir_abs . $metadata['original_image'], '');
+                if (is_wp_error($r)) {
+                    $sizes_failed = true;
+                }
             }
             foreach ($sizes as $size) {
                 if (empty($size['file'])) {
                     continue;
                 }
-                $this->put_local_file($dir_abs . $size['file'], (string) ($size['mime-type'] ?? ''));
+                $r = $this->put_local_file($dir_abs . $size['file'], (string) ($size['mime-type'] ?? ''));
+                if (is_wp_error($r)) {
+                    $sizes_failed = true;
+                }
             }
         }
 
@@ -209,9 +216,14 @@ class Wpsss_Offload
                     Wpsss_Library::set_main_only($aid, true);
                     Wpsss_Library::arm_offload_cron();
                 } elseif ($thumbs_pending) {
-                    // 队列补传完成：摘掉两个标记，尺寸地址随下次渲染改写到桶域。
-                    delete_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING);
-                    Wpsss_Library::set_main_only($aid, $sizes === []);
+                    if ($sizes_failed) {
+                        // 有尺寸没进桶：标记留着，尺寸地址保持本地，下轮队列重试。
+                        Wpsss_Library::set_main_only($aid, true);
+                    } else {
+                        // 队列补传完成：摘掉两个标记，尺寸地址随下次渲染改写到桶域。
+                        delete_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING);
+                        Wpsss_Library::set_main_only($aid, $sizes === []);
+                    }
                 } else {
                     // 尺寸文件没进桶（thumbs 关闭或本来就没有）就打主文件标记，尺寸 URL 不改写。
                     Wpsss_Library::set_main_only($aid, $sizes === []);
