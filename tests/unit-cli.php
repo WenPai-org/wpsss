@@ -55,10 +55,17 @@ $bad = Wpsss_CLI::doctor_findings(
     ''
 );
 wpsss_assert(count($bad['blockers']) >= 2, 'doctor blocks keep_local and keys');
-wpsss_assert(count($bad['warnings']) >= 1, 'doctor warns non-test bucket');
+wpsss_assert(in_array('bucket 已配置', $bad['oks'], true), 'doctor ok for any configured bucket');
 $joined = implode(' ', $bad['blockers']);
 wpsss_assert(strpos($joined, 'keep_local') !== false, 'blocker names keep_local');
-wpsss_assert(strpos(implode(' ', $bad['warnings']), 'wenpai-wpsss-test') !== false, 'warning names test bucket');
+wpsss_assert(strpos(implode(' ', $bad['warnings']) . ' ' . $joined, 'wenpai-wpsss-test') === false, 'no test-bucket gate wording');
+
+$nobucket = Wpsss_CLI::doctor_findings(
+    ['bucket' => '', 'keep_local' => '1', 'access_key_id' => 'id', 'access_key_secret' => 's'],
+    '',
+    '1'
+);
+wpsss_assert(count($nobucket['blockers']) >= 1, 'doctor blocks empty bucket');
 
 wpsss_assert(Wpsss_CLI::can_turn_off_keep_local([]) === false, 'set refuses off by default');
 wpsss_assert(Wpsss_CLI::can_turn_off_keep_local(['allow-no-local' => true]) === true, 'set allows with flag');

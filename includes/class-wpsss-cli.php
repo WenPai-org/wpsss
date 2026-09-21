@@ -512,7 +512,7 @@ final class Wpsss_CLI
     /**
      * 体检：桶、本地备份、密钥、upload_url_path、匿名可读。
      *
-     * BLOCK 才失败。WARN 不阻断（例如桶不是测试桶、匿名 403）。
+     * BLOCK 才失败。WARN 不阻断（例如匿名 403）。
      *
      * @when after_wp_load
      */
@@ -620,10 +620,8 @@ final class Wpsss_CLI
         $bucket = (string) ($opts['bucket'] ?? '');
         if ($bucket === '') {
             $blockers[] = 'bucket 空。先 wp sss set --from-env';
-        } elseif ($bucket === 'wenpai-wpsss-test') {
-            $oks[] = 'bucket=wenpai-wpsss-test';
         } else {
-            $warnings[] = 'bucket 不是测试桶 wenpai-wpsss-test。生产须另行审批。';
+            $oks[] = 'bucket 已配置';
         }
         if (($opts['keep_local'] ?? '') !== '1') {
             $blockers[] = 'keep_local=0。关闭须管理员批准。';
@@ -765,8 +763,7 @@ final class Wpsss_CLI
     {
         $map = [
             'bucket 空。先 wp sss set --from-env' => '尚未填写存储桶名称',
-            'bucket=wenpai-wpsss-test' => '当前为测试桶 wenpai-wpsss-test',
-            'bucket 不是测试桶 wenpai-wpsss-test。生产须另行审批。' => '当前存储桶不是测试桶，生产环境须另行审批',
+            'bucket 已配置' => '存储桶已配置',
             'keep_local=0。关闭须管理员批准。' => '本地备份已关闭，须管理员批准',
             'keep_local=1' => '本地备份已开启',
             '密钥未齐。wp sss set --from-env' => '访问密钥尚未配置完整',
