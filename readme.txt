@@ -5,8 +5,8 @@ Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
 Stable tag: 0.9.2
-License: Apache-2.0
-License URI: https://www.apache.org/licenses/LICENSE-2.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 文派智储（WPSSS）。一个插件：国内四家 + 火山 TOS + Amazon S3 兼容：阿里云 OSS / 腾讯云 COS / 七牛云 KODO / 华为云 OBS。
 

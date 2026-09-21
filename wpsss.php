@@ -8,8 +8,8 @@
  * Requires PHP: 7.4
  * Author: 文派
  * Author URI: https://wpcy.com/
- * License: Apache-2.0
- * License URI: https://www.apache.org/licenses/LICENSE-2.0
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wpsss
  */
 

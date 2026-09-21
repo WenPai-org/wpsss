@@ -1,3 +1,8 @@
+## Unreleased
+
+### 许可
+- 插件头 / readme.txt / LICENSE 更正为 GPLv2 or later（此前误写 Apache-2.0）。
+
 ## 0.9.2（2026-09-21）
 
 上传体验与后台一致性整轮。
