@@ -101,7 +101,7 @@ final class Wpsss_CLI
      * [--use-internal=<value>]
      * : 1 走内网。
      * [--driver=<id>]
-     * : aliyun-oss / qcloud-cos / qiniu-kodo / huawei-obs / volc-tos / s3-compat。
+     * : aliyun-oss / qcloud-cos / qiniu-kodo / huawei-obs / volc-tos / s3-compat / gcs。
      * [--app-id=<id>]
      * : COS APPID，可选。
      * [--object-prefix=<path>]
