@@ -293,7 +293,8 @@ final class Wpsss_Library
                 break;
             }
             $last = $id;
-            if (self::is_offloaded($id) && $only_id === 0) {
+            // 已进桶但尺寸待补的附件也要过：补完摘标记，不能在这里跳过。
+            if (self::is_offloaded($id) && get_post_meta($id, self::META_THUMBS_PENDING, true) !== '1' && $only_id === 0) {
                 $skip++;
                 continue;
             }
