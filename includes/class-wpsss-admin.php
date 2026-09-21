@@ -216,7 +216,7 @@ final class Wpsss_Admin
         }
         if (!empty($_POST['wpsss_offload_reset'])) {
             delete_transient($this->offload_cursor_key());
-            $this->redirect_tools('ok', '已从头开始补传。', 'daily');
+            $this->redirect_tools('ok', '已清掉续传位置，下一轮从最新的附件重新扫起（已进桶的自动跳过）。', 'daily');
         }
         $source = !empty($_POST['wpsss_retry']) ? 'failed' : 'pending';
         $result = $this->run_offload_slice($source, 20);

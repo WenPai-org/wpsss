@@ -60,8 +60,8 @@ defined('ABSPATH') || exit;
           }
         ?></span>
         <span class="wpsss-actions">
-          <?php if ((int) ($offload_cursor ?? 0) > 0) : ?>
-            <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1"><?php echo esc_html__('从头', 'wpsss'); ?></button>
+          <?php if ($pending > 0 && (int) ($offload_cursor ?? 0) > 0) : ?>
+            <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1" title="<?php echo esc_attr__('清掉续传位置，下一轮从最新的附件重新扫起；已进桶的会自动跳过。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
           <?php endif; ?>
           <button class="btn btn-ghost js-wpsss-offload-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
           <button class="btn btn-secondary js-wpsss-offload-run" type="submit" name="wpsss_offload" value="1" <?php disabled($pending <= 0); ?>><?php echo esc_html__('开始补传', 'wpsss'); ?></button>
