@@ -118,6 +118,7 @@ class wpsss_cron_wpdb_base
             'offloaded' => (string) $offloaded,
             'failed' => (string) $failed,
             'local_only' => '0',
+            'offloaded_bytes' => '1048576',
         ];
     }
 }

@@ -552,6 +552,13 @@ final class Wpsss_CLI
         WP_CLI::log('owns=' . $report['owns']);
         $stats = wpsss()->library()->stats();
         WP_CLI::log('attachments=' . $stats['total'] . ' offloaded=' . $stats['offloaded'] . ' pending=' . $stats['pending']);
+        if (!empty($stats['offloaded_bytes'])) {
+            WP_CLI::log('offloaded_bytes=' . size_format((int) $stats['offloaded_bytes']));
+        }
+        $queue = wpsss()->library()->queue_snapshot();
+        WP_CLI::log(sprintf('queue: 待传 %d，失败 %d，后台任务 %s，运行锁 %s。', $queue['pending'], $queue['failed'], $queue['cron'], $queue['lock']));
+        $queue = wpsss()->library()->queue_snapshot();
+        WP_CLI::log(sprintf('队列：待传 %d，失败 %d，后台任务 %s，运行锁 %s。', $queue['pending'], $queue['failed'], $queue['cron'], $queue['lock']));
         if ($report['blockers'] === []) {
             WP_CLI::success('体检完成：无阻断项。');
             return;

@@ -70,6 +70,9 @@ wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '403') !== false, 'a
 wpsss_assert(strpos(Wpsss_CLI::anonymous_read_message(403), '图片可能无法显示') !== false, 'anon message says broken image');
 wpsss_assert(Wpsss_CLI::classify_anonymous_http(403, 'signed') === 'ok', 'signed 403 is ok');
 
+wpsss_assert(strpos($cli_src ?? (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php'), 'queue_snapshot') !== false, 'cli shows queue snapshot');
+wpsss_assert(strpos((string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php'), 'offloaded_bytes') !== false, 'cli shows byte stats');
+
 if ($failed > 0) {
     fwrite(STDERR, $failed . " failed\n");
     exit(1);

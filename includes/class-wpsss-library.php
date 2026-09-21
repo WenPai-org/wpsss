@@ -108,8 +108,12 @@ final class Wpsss_Library
                 WHERE p.post_type = 'attachment' AND p.post_status = 'inherit') AS failed,
             (SELECT COUNT(*) FROM {$posts} p JOIN {$postmeta} m ON m.post_id = p.ID
                 AND m.meta_key = %s
-                WHERE p.post_type = 'attachment' AND p.post_status = 'inherit') AS local_only";
-        $row = $wpdb->get_row($wpdb->prepare($sql, self::META_OFFLOADED, self::META_ERROR, self::META_LOCAL_ONLY), 'ARRAY_A');
+                WHERE p.post_type = 'attachment' AND p.post_status = 'inherit') AS local_only,
+            (SELECT COALESCE(SUM(CAST(fs.meta_value AS UNSIGNED)), 0) FROM {$postmeta} fs
+                JOIN {$postmeta} od ON od.post_id = fs.post_id
+                    AND od.meta_key = %s AND od.meta_value = '1'
+                WHERE fs.meta_key = '_wpsss_filesize') AS offloaded_bytes";
+        $row = $wpdb->get_row($wpdb->prepare($sql, self::META_OFFLOADED, self::META_ERROR, self::META_LOCAL_ONLY, self::META_OFFLOADED), 'ARRAY_A');
         $row = is_array($row) ? $row : [];
         $total = (int) ($row['total'] ?? 0);
         $offloaded = (int) ($row['offloaded'] ?? 0);
@@ -120,6 +124,7 @@ final class Wpsss_Library
             'pending' => max(0, $total - $offloaded - $local_only),
             'failed' => (int) ($row['failed'] ?? 0),
             'local_only' => $local_only,
+            'offloaded_bytes' => (int) ($row['offloaded_bytes'] ?? 0),
         ];
     }
 
@@ -292,6 +297,34 @@ final class Wpsss_Library
         }
         $cursor = $last;
         return compact('ok', 'fail', 'skip', 'cursor', 'errors', 'stopped');
+    }
+
+    /**
+     * 队列观测一行话：待传/失败、后台任务下次触发、运行锁占用。
+     *
+     * @return array{pending: int, failed: int, cron: string, lock: string}
+     */
+    public function queue_snapshot(): array
+    {
+        $stats = $this->stats();
+        $cron = '未排期';
+        if (function_exists('wp_next_scheduled')) {
+            $next = wp_next_scheduled(self::CRON_HOOK);
+            if (is_int($next) && $next > 0) {
+                $cron = human_time_diff(time(), $next) . '后';
+            }
+        }
+        $lock = '空闲';
+        $holder = (string) get_transient(self::RUN_LOCK_KEY);
+        if ($holder !== '') {
+            $lock = $holder === 'cron' ? '后台任务占用中' : '浏览器占用中';
+        }
+        return [
+            'pending' => (int) $stats['pending'],
+            'failed' => (int) $stats['failed'],
+            'cron' => $cron,
+            'lock' => $lock,
+        ];
     }
 
     private static function budget_hit(float $started, float $budget_seconds): bool
