@@ -156,22 +156,22 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
       <div class="r"><span class="pill<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo $opts['bucket'] !== '' ? esc_html($opts['bucket']) : esc_html__('未设置', 'wpsss'); ?></span></div>
     </div>
     <div class="simple-row is-static">
-      <div class="tile"><?php echo Wpsss_Icons::svg('external'); ?></div>
+      <div class="tile<?php echo $opts['custom_domain'] !== '' ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('external'); ?></div>
       <div>
         <div class="t"><?php echo esc_html__('对外地址', 'wpsss'); ?></div>
-        <div class="d<?php echo ($opts['custom_domain'] !== '' || $public_base !== '') ? ' is-url' : ''; ?>"><?php
+        <div class="d<?php echo $public_base !== '' ? ' is-url' : ''; ?>"><?php
           if ($opts['custom_domain'] !== '') {
               echo esc_html($opts['custom_domain']);
           } elseif ($public_base !== '') {
               echo esc_html($public_base);
           } else {
-              echo esc_html__('未设置自定义域名时，使用存储桶默认域名', 'wpsss');
+              echo esc_html__('未设置自定义域名时，前台将使用存储桶默认域名。', 'wpsss');
           }
         ?></div>
       </div>
       <div class="r">
         <?php if ($opts['custom_domain'] !== '') : ?>
-          <span class="scope"><?php echo esc_html($opts['custom_domain']); ?></span>
+          <span class="pill ok"><?php echo esc_html__('自定义域名', 'wpsss'); ?></span>
         <?php else : ?>
           <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
         <?php endif; ?>

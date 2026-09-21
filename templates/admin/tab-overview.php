@@ -46,17 +46,17 @@ $pending = (int) ($stats['pending'] ?? 0);
     <div class="r"><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span></div>
   </div>
   <div class="simple-row is-static">
-    <div class="tile"><?php echo Wpsss_Icons::svg('external'); ?></div>
+    <div class="tile<?php echo $public_base !== '' ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('external'); ?></div>
     <div>
       <div class="t"><?php echo esc_html__('对外地址', 'wpsss'); ?></div>
       <?php if ($public_base !== '') : ?>
         <div class="d is-url"><?php echo esc_html($public_base); ?></div>
-      <?php elseif (!$custom) : ?>
-        <div class="d"><?php echo esc_html__('未设置自定义域名时使用存储桶默认域名', 'wpsss'); ?></div>
+      <?php else : ?>
+        <div class="d"><?php echo esc_html__('未设置自定义域名时，前台将使用存储桶默认域名。', 'wpsss'); ?></div>
       <?php endif; ?>
     </div>
     <div class="r">
-      <span class="pill"><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : ($custom ? esc_html__('自定义域名', 'wpsss') : esc_html__('默认域名', 'wpsss')); ?></span>
+      <span class="pill<?php echo $public_base !== '' ? ' ok' : ' warn'; ?>"><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : ($custom ? esc_html__('自定义域名', 'wpsss') : esc_html__('默认域名', 'wpsss')); ?></span>
       <?php if (!$custom) : ?>
         <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
       <?php endif; ?>
@@ -74,7 +74,7 @@ $pending = (int) ($stats['pending'] ?? 0);
   </div>
   <?php if ($stats !== []) : ?>
   <div class="simple-row is-static">
-    <div class="tile<?php echo $pending === 0 ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('server'); ?></div>
+    <div class="tile<?php echo $pending === 0 && (int) ($stats['failed'] ?? 0) === 0 ? ' ok' : ($pending > 0 ? '' : ' warn'); ?>"><?php echo Wpsss_Icons::svg('server'); ?></div>
     <div>
       <div class="t"><?php echo esc_html__('媒体库附件', 'wpsss'); ?></div>
       <div class="d"><?php echo esc_html(sprintf(

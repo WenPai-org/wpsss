@@ -76,7 +76,7 @@ body.wpsss-admin .wpcy-app button.toggle:active {
 }
 body.wpsss-admin .wpcy-app button.toggle[disabled],
 body.wpsss-admin .wpcy-app button.toggle[disabled]:hover {
-  opacity: 0.55;
+  opacity: 1;
   cursor: default;
   color: var(--wpcy-ink-2, #50575e);
   background: transparent;
@@ -1257,7 +1257,7 @@ body.wpsss-admin .wpcy-app button.toggle.is-locked i {
 }
 body.wpsss-admin .wpcy-app button.toggle[disabled].on i,
 body.wpsss-admin .wpcy-app button.toggle.is-locked.on i {
-  background: #8c8f94;
+  background: var(--wpcy-accent-soft, #a7aaad);
 }
 body.wpsss-admin .wpcy-app .simple-row {
   margin: 0 -8px;
@@ -1326,3 +1326,7 @@ body.wpsss-admin .wpcy-app .wpcy-tab:focus-visible {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(286%); }
 }
+
+/* 简单模式：对外地址行去掉 .scope 重复 URL（概览页和 .is-url 已展示）；tile 色跟 pill 语义 */
+.simple-row.is-static .scope { display: none; }
+.simple-row.is-static .tile { transition: background 0.2s ease, color 0.2s ease; }
