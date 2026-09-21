@@ -24,6 +24,7 @@
 /* --- 基础 --- */
 .wpcy-app { font-family: var(--wpcy-font); color: var(--wpcy-ink); -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 22px; }
 .wpcy-app a { text-decoration: none; }
+.wpcy-app [hidden] { display: none !important; }
 .wpcy-app h1, .wpcy-app h2, .wpcy-app h3 { color: var(--wpcy-ink); }
 .wpcy-app svg { max-width: 24px; max-height: 24px; }
 .ph { display: inline-block; flex: none; vertical-align: -0.2em; }
