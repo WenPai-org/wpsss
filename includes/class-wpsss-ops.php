@@ -208,7 +208,7 @@ final class Wpsss_Ops
         } elseif ($kind === 'unknown') {
             $notes[] = '无法识别。请用数字 ID，或 http(s) 开头的地址。';
         } elseif (!$found) {
-            $notes[] = '媒体库里没有对应附件。可能是主题直传、旧 CDN 或已删条目。';
+            $notes[] = '媒体库里没有对应附件。请输入媒体库编号，或粘贴一张图片的完整地址再试。可能是主题直传、旧 CDN 或已删条目。';
         }
         if ($found && $expected !== '' && $host !== '' && $host !== $expected) {
             $notes[] = '访问域名与当前设置不一致。文章若仍是旧地址，用工具页改写。';

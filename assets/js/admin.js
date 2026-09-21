@@ -1186,7 +1186,7 @@
       if (wrap) {
         wrap.classList.add("is-gone");
       }
-    }, 3200);
+    }, 8000);
   }
 
   var setupForm = document.getElementById("wpsss-setup-step2");

@@ -18,7 +18,7 @@ defined('ABSPATH') || exit;
       <div class="notice info">
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html(sprintf(
-            '已检查 %d 个：本地文件缺失 %d，访问域名不一致 %d，http 明文 %d，失败 %d，前缀不符 %d。',
+            '已检查 %d 个：本地文件缺失 %d，访问域名不一致 %d，http 明文 %d，失败 %d，前缀不符 %d。未发现问题就是这里全部为 0。',
             (int) ($scan['checked'] ?? 0),
             count($scan['local_missing'] ?? []),
             count($scan['host_mismatch'] ?? []),
@@ -127,7 +127,7 @@ defined('ABSPATH') || exit;
       <div class="notice <?php echo empty($head['missing']) ? 'ok' : 'warn'; ?>">
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html(sprintf(
-            '抽检 %d 个，远端还在 %d，异常 %d。',
+            '抽检 %d 个，远端还在 %d，异常 %d。抽检的是最新进桶的附件，对象都在桶里。',
             (int) ($head['checked'] ?? 0),
             (int) ($head['ok'] ?? 0),
             count($head['missing'] ?? [])
