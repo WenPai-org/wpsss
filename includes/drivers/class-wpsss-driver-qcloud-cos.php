@@ -142,7 +142,10 @@ class Wpsss_Driver_Qcloud_Cos implements Wpsss_Driver
             $now,
             $now + 3600
         );
-        $headers['Authorization'] = $auth;
+        $headers['Authorization'] = $auth;        if ($body === '' && $method === 'PUT') {
+            $headers['Content-Length'] = '0';
+        }
+
         $url = rtrim(Wpsss_Options::api_host($settings), '/') . '/?' . $subresource;
         $response = wp_remote_request(
             $url,

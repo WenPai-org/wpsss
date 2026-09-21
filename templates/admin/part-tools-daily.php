@@ -31,9 +31,9 @@ defined('ABSPATH') || exit;
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html(sprintf(
-            '媒体库共 %d 个附件，已进桶 %d，待上传 %d，失败 %d。每次上传 1 个附件。',
-            (int) $stats['total'],
+            '已进桶 %d / 共 %d 个附件，待上传 %d，失败 %d。',
             (int) $stats['offloaded'],
+            (int) $stats['total'],
             (int) $stats['pending'],
             (int) ($stats['failed'] ?? 0)
         )); ?></p>
@@ -47,12 +47,16 @@ defined('ABSPATH') || exit;
       <p class="meta js-wpsss-offload-progress" aria-live="polite"></p>
       <div class="card-foot start">
         <span class="meta js-wpsss-offload-hint"><?php
-          if ((int) ($offload_cursor ?? 0) > 0) {
-              echo esc_html(sprintf('已补到编号 %d，下次从编号更小的附件继续。新上传会自动进桶。', (int) $offload_cursor));
+          if ($pending > 0 && (int) ($failed ?? 0) > 0) {
+              echo esc_html(sprintf(__('待上传 %d 个，其中 %d 个上次失败。失败项会自动退出队列，点「重试失败项」单独处理。', 'wpsss'), (int) $pending, (int) $failed));
+          } elseif ($pending > 0 && (int) ($offload_cursor ?? 0) > 0) {
+              echo esc_html(sprintf(__('接着上次的位置（编号 %d）继续，从新到旧。关掉页面，后台每分钟最多补 2 个。', 'wpsss'), (int) $offload_cursor));
           } elseif ($pending > 0) {
               echo esc_html__('开始后一次传一个。关掉页面，后台每分钟最多补 2 个，补完自动停；点「暂停」立即全停。', 'wpsss');
+          } elseif ((int) ($failed ?? 0) > 0) {
+              echo esc_html(sprintf(__('待传已清完，剩 %d 个失败项。到「体检」查明原因，再点「重试失败项」。', 'wpsss'), (int) $failed));
           } else {
-              echo esc_html__('当前没有待补传的附件。', 'wpsss');
+              echo esc_html__('全部附件已进桶，新上传会自动进桶。', 'wpsss');
           }
         ?></span>
         <span class="wpsss-actions">
@@ -78,7 +82,7 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_offload'); ?>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html(sprintf('有 %d 个上次失败的附件，可只重试这些。', $failed)); ?></span>
+        <span class="meta"><?php echo esc_html(sprintf(__('有 %d 个附件进桶失败。点「重试失败项」只处理它们。', 'wpsss'), $failed)); ?></span>
         <button class="btn btn-ghost js-wpsss-offload-run" type="submit"><?php echo esc_html__('重试失败项', 'wpsss'); ?></button>
       </div>
     </form>

@@ -897,7 +897,13 @@
             if (barFill) {
               barFill.style.width = "100%";
             }
-            setProgress("补传结束。成功 " + totals.ok + "，失败 " + totals.fail + "，跳过 " + totals.skip + "。");
+            setProgress("本轮结束：成功 " + totals.ok + "，失败 " + totals.fail + "，跳过 " + totals.skip + "。");
+            var hint = form.querySelector(".js-wpsss-offload-hint");
+            if (hint && (left || 0) === 0) {
+              hint.textContent = (data.failed || 0) > 0
+                ? "待传已清完，剩 " + (data.failed || 0) + " 个失败项。到「体检」查明原因，再点「重试失败项」。"
+                : "全部附件已进桶，新上传会自动进桶。";
+            }
             if (runBtn && (left || 0) === 0) {
               runBtn.disabled = true;
             }

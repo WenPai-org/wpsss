@@ -199,6 +199,9 @@ class Wpsss_Driver_Huawei_Obs implements Wpsss_Driver
             'Date' => $date,
             'Authorization' => $auth,
         ];
+        if ($body === '' && $method === 'PUT') {
+            $headers['Content-Length'] = '0';
+        }
         if ($md5 !== '') {
             $headers['Content-MD5'] = $md5;
         }

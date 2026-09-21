@@ -329,6 +329,10 @@ class Wpsss_Driver_Aliyun_Oss implements Wpsss_Driver
         if ($md5 !== '') {
             $oss_headers['Content-MD5'] = $md5;
         }
+        // 0 字节文件的 PUT 不带 Content-Length 会被 OSS 拒绝（MissingContentLength）。
+        if ($body === '' && $method === 'PUT') {
+            $oss_headers['Content-Length'] = '0';
+        }
         if (Wpsss_Options::oss_sign_version($settings) === 'v4') {
             $headers = $this->v4_headers($settings, $method, $object, $mime, $oss_headers, $query);
         } else {

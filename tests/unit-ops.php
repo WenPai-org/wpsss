@@ -153,6 +153,8 @@ wpsss_assert(strpos($lib, 'ID > %d') !== false, 'rewrite uses keyset pagination'
 wpsss_assert(strpos($tools, 'js-wpsss-pull-progress') !== false, 'tools pull ajax progress');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-stop') !== false, 'tools pull pause button');
 wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-time copy');
+wpsss_assert(strpos($tools, '待传已清完') !== false, 'tools queue-drained copy');
+wpsss_assert(strpos($tools, '点「重试失败项」只处理它们') !== false, 'tools retry copy');
 wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
 wpsss_assert(strpos($tools, 'js-wpsss-offload-bar') !== false, 'tools offload bar element');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-bar') !== false, 'tools pull bar element');

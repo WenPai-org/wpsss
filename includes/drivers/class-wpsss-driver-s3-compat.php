@@ -336,6 +336,9 @@ class Wpsss_Driver_S3_Compat implements Wpsss_Driver
         if ($mime !== '') {
             $headers['content-type'] = $mime;
         }
+        if ($body === '' && $method === 'PUT') {
+            $headers['content-length'] = '0';
+        }
         foreach ($extra as $name => $value) {
             $headers[strtolower((string) $name)] = (string) $value;
         }
