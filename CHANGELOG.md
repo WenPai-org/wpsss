@@ -1,5 +1,10 @@
 ## Unreleased
 
+### 界面
+- 后台壳 vendor `lib/wenpai-admin-ui/` **0.1.0**（handle `wenpai-admin-ui`）。`.wpcy-*` 改 `.wenpai-*`。根目录 `e.css` 不再 enqueue。
+
+## Unreleased
+
 ### 许可
 - 插件头 / readme.txt / LICENSE 更正为 GPLv2 or later（此前误写 Apache-2.0）。
 

@@ -7,10 +7,10 @@ $docs = static function (string $slug): string {
     return WPSSS_DOCS_URL . '/' . $slug;
 };
 ?>
-<div class="wpcy-page-head">
+<div class="wenpai-page-head">
   <div>
-    <h1 class="wpcy-h1"><?php echo esc_html__('帮助', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶，网页仍从自己的服务器打开。', 'wpsss'); ?></p>
+    <h1 class="wenpai-h1"><?php echo esc_html__('帮助', 'wpsss'); ?></h1>
+    <p class="wenpai-lede"><?php echo esc_html__('媒体进桶，网页仍从自己的服务器打开。', 'wpsss'); ?></p>
   </div>
 </div>
 

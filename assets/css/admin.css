@@ -2,7 +2,7 @@
 body.wpsss-admin #wpcontent,
 body.wpsss-admin #wpbody,
 body.wpsss-admin #wpbody-content {
-  background: var(--wpcy-bg, #f0f0f1);
+  background: var(--wenpai-bg, #f0f0f1);
 }
 body.wpsss-admin #wpcontent {
   padding: 0;
@@ -19,36 +19,36 @@ body.wpsss-admin #wpbody-content > .updated,
 body.wpsss-admin #wpbody-content > .error {
   margin: 16px 32px 0;
 }
-body.wpsss-admin .wpcy-app,
-body.wpsss-admin .wpcy-app *,
-body.wpsss-admin .wpcy-app *::before,
-body.wpsss-admin .wpcy-app *::after {
+body.wpsss-admin .wenpai-app,
+body.wpsss-admin .wenpai-app *,
+body.wpsss-admin .wenpai-app *::before,
+body.wpsss-admin .wenpai-app *::after {
   box-sizing: border-box;
 }
-body.wpsss-admin .wpcy-app a,
-body.wpsss-admin .wpcy-app a:hover,
-body.wpsss-admin .wpcy-app a:focus,
-body.wpsss-admin .wpcy-app a:active {
+body.wpsss-admin .wenpai-app a,
+body.wpsss-admin .wenpai-app a:hover,
+body.wpsss-admin .wenpai-app a:focus,
+body.wpsss-admin .wenpai-app a:active {
   text-decoration: none;
 }
-body.wpsss-admin .wpcy-app .card {
+body.wpsss-admin .wenpai-app .card {
   max-width: none;
   margin-top: 0;
   min-width: 0;
 }
-body.wpsss-admin .wpcy-app .wpcy-stack,
-body.wpsss-admin .wpcy-app .wpcy-stack > form {
+body.wpsss-admin .wenpai-app .wenpai-stack,
+body.wpsss-admin .wenpai-app .wenpai-stack > form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-body.wpsss-admin .wpcy-app h1,
-body.wpsss-admin .wpcy-app h2,
-body.wpsss-admin .wpcy-app h3 {
-  color: var(--wpcy-ink, #1e1e1e);
+body.wpsss-admin .wenpai-app h1,
+body.wpsss-admin .wenpai-app h2,
+body.wpsss-admin .wenpai-app h3 {
+  color: var(--wenpai-ink, #1e1e1e);
 }
-body.wpsss-admin .wpcy-app button.toggle,
-body.wpsss-admin .wpcy-app .toggle {
+body.wpsss-admin .wenpai-app button.toggle,
+body.wpsss-admin .wenpai-app .toggle {
   appearance: none;
   -webkit-appearance: none;
   background: transparent;
@@ -57,37 +57,37 @@ body.wpsss-admin .wpcy-app .toggle {
   padding: 0;
   margin: 0;
   min-height: 0;
-  color: var(--wpcy-ink, #1e1e1e);
+  color: var(--wenpai-ink, #1e1e1e);
   font: inherit;
   line-height: 20px;
   cursor: pointer;
 }
-body.wpsss-admin .wpcy-app button.toggle:hover,
-body.wpsss-admin .wpcy-app button.toggle:focus,
-body.wpsss-admin .wpcy-app button.toggle:active {
+body.wpsss-admin .wenpai-app button.toggle:hover,
+body.wpsss-admin .wenpai-app button.toggle:focus,
+body.wpsss-admin .wenpai-app button.toggle:active {
   background: transparent;
   border: 0;
   box-shadow: none;
-  color: var(--wpcy-ink, #1e1e1e);
+  color: var(--wenpai-ink, #1e1e1e);
 }
-body.wpsss-admin .wpcy-app button.toggle[disabled],
-body.wpsss-admin .wpcy-app button.toggle[disabled]:hover {
+body.wpsss-admin .wenpai-app button.toggle[disabled],
+body.wpsss-admin .wenpai-app button.toggle[disabled]:hover {
   opacity: 1;
   cursor: default;
-  color: var(--wpcy-ink-2, #50575e);
+  color: var(--wenpai-ink-2, #50575e);
   background: transparent;
   border: 0;
 }
-body.wpsss-admin .wpcy-app .notice {
+body.wpsss-admin .wenpai-app .notice {
   margin: 0;
   border: 0;
   box-shadow: none;
 }
-body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"],
-body.wpsss-admin .wpcy-app input[type="text"],
-body.wpsss-admin .wpcy-app input[type="password"],
-body.wpsss-admin .wpcy-app input[type="number"],
-body.wpsss-admin .wpcy-app select {
+body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"],
+body.wpsss-admin .wenpai-app input[type="text"],
+body.wpsss-admin .wenpai-app input[type="password"],
+body.wpsss-admin .wenpai-app input[type="number"],
+body.wpsss-admin .wenpai-app select {
   width: 100%;
   max-width: 28rem;
   height: 36px;
@@ -99,11 +99,11 @@ body.wpsss-admin .wpcy-app select {
   border-radius: 6px;
   font: inherit;
   font-size: 14px;
-  color: var(--wpcy-ink);
+  color: var(--wenpai-ink);
   background-color: #fff;
   box-shadow: none;
 }
-body.wpsss-admin .wpcy-app select {
+body.wpsss-admin .wenpai-app select {
   appearance: none;
   -webkit-appearance: none;
   padding-right: 32px;
@@ -111,7 +111,7 @@ body.wpsss-admin .wpcy-app select {
   background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23646970'%3E%3Cpath d='M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z'/%3E%3C/svg%3E") no-repeat right 10px center / 16px 16px;
 }
 /* 跟 WPCY 4.0 E：系统原生圆点 + accent，不自绘 18px 圈。 */
-body.wpsss-admin .wpcy-app .choice input[type="radio"] {
+body.wpsss-admin .wenpai-app .choice input[type="radio"] {
   appearance: auto;
   -webkit-appearance: radio;
   width: 13px;
@@ -125,31 +125,31 @@ body.wpsss-admin .wpcy-app .choice input[type="radio"] {
   background: none;
   background-image: none;
   box-shadow: none;
-  accent-color: var(--wpcy-accent, #3858e9);
+  accent-color: var(--wenpai-accent, #3858e9);
   flex: none;
   cursor: pointer;
 }
-body.wpsss-admin .wpcy-app .choice input[type="radio"]:checked,
-body.wpsss-admin .wpcy-app .choice.is-on input[type="radio"] {
+body.wpsss-admin .wenpai-app .choice input[type="radio"]:checked,
+body.wpsss-admin .wenpai-app .choice.is-on input[type="radio"] {
   border: 0 !important;
   background: none !important;
   background-image: none !important;
   box-shadow: none !important;
-  accent-color: var(--wpcy-accent, #3858e9);
+  accent-color: var(--wenpai-accent, #3858e9);
 }
-body.wpsss-admin .wpcy-app .choice input[type="radio"]::before {
+body.wpsss-admin .wenpai-app .choice input[type="radio"]::before {
   display: none !important;
   content: none !important;
 }
-body.wpsss-admin .wpcy-app input[type="number"] {
+body.wpsss-admin .wenpai-app input[type="number"] {
   appearance: textfield;
   -moz-appearance: textfield;
 }
-body.wpsss-admin .wpcy-app input::placeholder {
-  color: var(--wpcy-ink-3);
+body.wpsss-admin .wenpai-app input::placeholder {
+  color: var(--wenpai-ink-3);
 }
-body.wpsss-admin .wpcy-app button.btn,
-body.wpsss-admin .wpcy-app a.btn,
+body.wpsss-admin .wenpai-app button.btn,
+body.wpsss-admin .wenpai-app a.btn,
 .wpsss-metabox-actions .btn {
   appearance: none;
   -webkit-appearance: none;
@@ -162,32 +162,32 @@ body.wpsss-admin .wpcy-app a.btn,
   box-sizing: border-box;
   border-radius: 6px;
 }
-body.wpsss-admin .wpcy-app button.btn:hover,
-body.wpsss-admin .wpcy-app button.btn:focus,
-body.wpsss-admin .wpcy-app button.btn:active,
-body.wpsss-admin .wpcy-app a.btn:hover,
-body.wpsss-admin .wpcy-app a.btn:focus,
+body.wpsss-admin .wenpai-app button.btn:hover,
+body.wpsss-admin .wenpai-app button.btn:focus,
+body.wpsss-admin .wenpai-app button.btn:active,
+body.wpsss-admin .wenpai-app a.btn:hover,
+body.wpsss-admin .wenpai-app a.btn:focus,
 .wpsss-metabox-actions .btn:hover,
 .wpsss-metabox-actions .btn:focus {
   box-shadow: none;
   text-decoration: none;
 }
-body.wpsss-admin .wpcy-app button.btn-primary:hover,
-body.wpsss-admin .wpcy-app button.btn-primary:focus {
-  background: var(--wpcy-accent-hover);
+body.wpsss-admin .wenpai-app button.btn-primary:hover,
+body.wpsss-admin .wenpai-app button.btn-primary:focus {
+  background: var(--wenpai-accent-hover);
   color: #fff;
   border-color: transparent;
 }
-body.wpsss-admin .wpcy-app button.btn-secondary,
-body.wpsss-admin .wpcy-app button.btn-secondary:focus {
+body.wpsss-admin .wenpai-app button.btn-secondary,
+body.wpsss-admin .wenpai-app button.btn-secondary:focus {
   background: #fff;
-  color: var(--wpcy-ink);
+  color: var(--wenpai-ink);
   border: 1px solid #c3c4c7;
 }
-body.wpsss-admin .wpcy-app button.btn-secondary:hover {
+body.wpsss-admin .wenpai-app button.btn-secondary:hover {
   background: #fff;
-  color: var(--wpcy-ink);
-  border-color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink);
+  border-color: var(--wenpai-ink-3);
 }
 .choice.is-soon {
   opacity: 0.55;
@@ -214,13 +214,13 @@ body.wpsss-admin .wpcy-app button.btn-secondary:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
-body.wpsss-admin .wpcy-app .choice-cards.is-vendors .choice,
-body.wpsss-admin .wpcy-app .choice-cards.is-vendors.is-compact .choice {
+body.wpsss-admin .wenpai-app .choice-cards.is-vendors .choice,
+body.wpsss-admin .wenpai-app .choice-cards.is-vendors.is-compact .choice {
   padding: 16px 18px;
   align-items: flex-start;
   min-height: 72px;
 }
-body.wpsss-admin .wpcy-app .choice-cards.is-compact:not(.is-vendors) .choice {
+body.wpsss-admin .wenpai-app .choice-cards.is-compact:not(.is-vendors) .choice {
   padding: 14px 16px;
 }
 .wpsss-vendor-more {
@@ -240,7 +240,7 @@ body.wpsss-admin .wpcy-app .choice-cards.is-compact:not(.is-vendors) .choice {
 .wpsss-vendor-more[open] > summary.simple-row {
   margin-bottom: 4px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--wpcy-line-soft);
+  border-bottom: 1px solid var(--wenpai-line-soft);
 }
 .wpsss-vendor-more > summary .when-open {
   display: none;
@@ -252,7 +252,7 @@ body.wpsss-admin .wpcy-app .choice-cards.is-compact:not(.is-vendors) .choice {
   display: inline;
 }
 .wpsss-vendor-grid .js-wpsss-vendor-group[hidden],
-body.wpsss-admin .wpcy-app .choice .d[hidden] {
+body.wpsss-admin .wenpai-app .choice .d[hidden] {
   display: none;
 }
 .wpsss-vendor-grid .js-wpsss-vendor-group {
@@ -300,8 +300,8 @@ body.wpsss-admin .wpcy-app .choice .d[hidden] {
   display: block;
 }
 .choice.is-on .vendor-tile {
-  background: var(--wpcy-accent-soft);
-  color: var(--wpcy-accent);
+  background: var(--wenpai-accent-soft);
+  color: var(--wenpai-accent);
 }
 .choice-cards.is-vendors .choice input {
   margin: 3px 3px 0 5px;
@@ -311,10 +311,10 @@ body.wpsss-admin .wpcy-app .choice .d[hidden] {
   height: 20px;
   color: inherit;
 }
-body.wpsss-admin .wpcy-app .field {
+body.wpsss-admin .wenpai-app .field {
   align-items: start;
 }
-body.wpsss-admin .wpcy-app .field[hidden] {
+body.wpsss-admin .wenpai-app .field[hidden] {
   display: none;
 }
 .field-ctl-row {
@@ -333,18 +333,18 @@ body.wpsss-admin .wpcy-app .field[hidden] {
   flex: none;
   white-space: nowrap;
 }
-body.wpsss-admin .wpcy-app input[type="number"]::-webkit-outer-spin-button,
-body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
+body.wpsss-admin .wenpai-app input[type="number"]::-webkit-outer-spin-button,
+body.wpsss-admin .wenpai-app input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-body.wpsss-admin .wpcy-app .wpcy-page-head {
+body.wpsss-admin .wenpai-app .wenpai-page-head {
   align-items: center;
 }
-body.wpsss-admin .wpcy-main > .wpcy-stack {
+body.wpsss-admin .wenpai-main > .wenpai-stack {
   gap: 20px;
 }
-body.wpsss-admin .wpcy-app .mode .btn-primary {
+body.wpsss-admin .wenpai-app .mode .btn-primary {
   height: 32px;
   min-height: 32px;
   padding: 0 12px;
@@ -353,65 +353,65 @@ body.wpsss-admin .wpcy-app .mode .btn-primary {
 body.js .wpsss-scene-foot {
   display: none;
 }
-body.wpsss-admin .wpcy-app .wpsss-preview-banner {
+body.wpsss-admin .wenpai-app .wpsss-preview-banner {
   align-items: center;
 }
 /* 说明退到标题后面：12/18 + 淡色，别和 14 标题抢视线。 */
-body.wpsss-admin .wpcy-app .wpcy-lede {
+body.wpsss-admin .wenpai-app .wenpai-lede {
   font-size: 13px;
   line-height: 20px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
-body.wpsss-admin .wpcy-app .section-desc,
-body.wpsss-admin .wpcy-app .card-sub,
-body.wpsss-admin .wpcy-app .field-help,
-body.wpsss-admin .wpcy-app .field-ctl .hint,
-body.wpsss-admin .wpcy-app .choice .d,
-body.wpsss-admin .wpcy-app .simple-row .d,
-body.wpsss-admin .wpcy-app .opt .d,
-body.wpsss-admin .wpcy-app .rows .d,
-body.wpsss-admin .wpcy-app .meta,
-body.wpsss-admin .wpcy-app .wpsss-savebar .meta,
-body.wpsss-admin .wpcy-app .sec-h p {
+body.wpsss-admin .wenpai-app .section-desc,
+body.wpsss-admin .wenpai-app .card-sub,
+body.wpsss-admin .wenpai-app .field-help,
+body.wpsss-admin .wenpai-app .field-ctl .hint,
+body.wpsss-admin .wenpai-app .choice .d,
+body.wpsss-admin .wenpai-app .simple-row .d,
+body.wpsss-admin .wenpai-app .opt .d,
+body.wpsss-admin .wenpai-app .rows .d,
+body.wpsss-admin .wenpai-app .meta,
+body.wpsss-admin .wenpai-app .wpsss-savebar .meta,
+body.wpsss-admin .wenpai-app .sec-h p {
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
-body.wpsss-admin .wpcy-app .section-desc {
+body.wpsss-admin .wenpai-app .section-desc {
   margin-bottom: 8px;
 }
-body.wpsss-admin .wpcy-app .notice {
+body.wpsss-admin .wenpai-app .notice {
   font-size: 12px;
   line-height: 18px;
 }
-body.wpsss-admin .wpcy-app .field {
+body.wpsss-admin .wenpai-app .field {
   padding: 14px 0;
   gap: 20px;
 }
-body.wpsss-admin .wpcy-app .field:first-of-type {
+body.wpsss-admin .wenpai-app .field:first-of-type {
   padding-top: 8px;
 }
-body.wpsss-admin .wpcy-app .choice {
+body.wpsss-admin .wenpai-app .choice {
   padding: 12px 14px;
   gap: 10px;
 }
-body.wpsss-admin .wpcy-app .choice-cards {
+body.wpsss-admin .wenpai-app .choice-cards {
   gap: 16px;
 }
-body.wpsss-admin .wpcy-app .simple-row {
+body.wpsss-admin .wenpai-app .simple-row {
   padding: 12px 0;
 }
-body.wpsss-admin .wpcy-app .card {
+body.wpsss-admin .wenpai-app .card {
   padding: 20px 24px;
 }
-body.wpsss-admin .wpcy-app .wpsss-doctor-card.card {
+body.wpsss-admin .wenpai-app .wpsss-doctor-card.card {
   padding: 0;
 }
 .field-ctl .hint {
   margin-top: 8px;
 }
 .field-ctl .hint.is-bad {
-  color: var(--wpcy-bad, #d63638);
+  color: var(--wenpai-bad, #d63638);
 }
 .field-ctl .hint.is-ok {
   color: #007017;
@@ -425,11 +425,11 @@ body.wpsss-admin .wpcy-app .wpsss-doctor-card.card {
   padding: 16px 24px;
   background: #fff;
   border: 1px solid #e5e5e5;
-  border-radius: var(--wpcy-radius, 12px);
+  border-radius: var(--wenpai-radius, 12px);
 }
 .wpsss-savebar .meta {
   margin: 0;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
   font-size: 13px;
   line-height: 20px;
 }
@@ -437,7 +437,7 @@ body.wpsss-admin .wpcy-app .wpsss-doctor-card.card {
   margin: 16px 0 0;
   padding: 12px 14px;
   border-radius: 10px;
-  background: var(--wpcy-line-soft);
+  background: var(--wenpai-line-soft);
 }
 .wpsss-actions {
   display: flex;
@@ -454,11 +454,11 @@ form[data-wpsss-need="wpsss_release_confirm"]:not(:has(input[name="wpsss_release
 .wpsss-gate-extra {
   margin-top: 8px;
 }
-body.wpsss-admin .wpcy-app .chk label[hidden],
-body.wpsss-admin .wpcy-app .js-wpsss-pull-gate[hidden],
-body.wpsss-admin .wpcy-app .js-wpsss-pull-delete-wrap[hidden],
-body.wpsss-admin .wpcy-app .wpsss-gate-extra[hidden],
-body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
+body.wpsss-admin .wenpai-app .chk label[hidden],
+body.wpsss-admin .wenpai-app .js-wpsss-pull-gate[hidden],
+body.wpsss-admin .wenpai-app .js-wpsss-pull-delete-wrap[hidden],
+body.wpsss-admin .wenpai-app .wpsss-gate-extra[hidden],
+body.wpsss-admin .wenpai-app .wpsss-caution[hidden] {
   display: none;
 }
 .wpsss-pull-seg {
@@ -472,7 +472,7 @@ body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
   height: 32px;
   display: inline-flex;
   align-items: center;
-  color: var(--wpcy-ink-2);
+  color: var(--wenpai-ink-2);
   border-left: 1px solid #c3c4c7;
   font-size: 13px;
   line-height: 20px;
@@ -482,13 +482,13 @@ body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
   border-left: 0;
 }
 .wpsss-pull-seg label:hover {
-  color: var(--wpcy-ink);
-  background: var(--wpcy-line-soft);
+  color: var(--wenpai-ink);
+  background: var(--wenpai-line-soft);
 }
 .wpsss-pull-seg label.on,
 .wpsss-pull-seg label:has(input:checked) {
-  background: var(--wpcy-accent-soft);
-  color: var(--wpcy-accent);
+  background: var(--wenpai-accent-soft);
+  color: var(--wenpai-accent);
 }
 .wpsss-pull-seg input {
   position: absolute;
@@ -504,7 +504,7 @@ body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
 }
 .wpsss-pull-kicker {
   margin: 0 0 8px;
-  color: var(--wpcy-ink-2);
+  color: var(--wenpai-ink-2);
   font-size: 13px;
   line-height: 20px;
 }
@@ -516,7 +516,7 @@ body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
 }
 .wpsss-pull-hint {
   margin: 0 0 16px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
   font-size: 13px;
   line-height: 20px;
 }
@@ -526,13 +526,13 @@ body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
 .wpsss-pull-result {
   margin: 0 0 16px;
   padding: 8px 12px;
-  border: 1px solid var(--wpcy-line, #e0e0e0);
+  border: 1px solid var(--wenpai-line, #e0e0e0);
   border-radius: 8px;
-  color: var(--wpcy-ink-2);
+  color: var(--wenpai-ink-2);
   font-size: 13px;
   line-height: 20px;
 }
-body.wpsss-admin .wpcy-app input.js-wpsss-pull-id {
+body.wpsss-admin .wenpai-app input.js-wpsss-pull-id {
   width: 88px;
   max-width: 88px;
   height: 36px;
@@ -543,16 +543,16 @@ body.wpsss-admin .wpcy-app input.js-wpsss-pull-id {
   margin: 10px 0 0;
   font-size: 13px;
   line-height: 20px;
-  color: var(--wpcy-ink-2, #50575e);
+  color: var(--wenpai-ink-2, #50575e);
 }
 .wpsss-caution {
   margin-top: 12px;
   padding: 12px 14px;
-  border: 1px solid var(--wpcy-bad, #d63638);
+  border: 1px solid var(--wenpai-bad, #d63638);
   border-radius: 10px;
-  background: var(--wpcy-bad-soft, #fbe9ea);
+  background: var(--wenpai-bad-soft, #fbe9ea);
 }
-.wpcy-app .wpsss-caution .notice {
+.wenpai-app .wpsss-caution .notice {
   margin: 0;
   padding: 0;
   background: transparent;
@@ -565,7 +565,7 @@ body.wpsss-admin .wpcy-app input.js-wpsss-pull-id {
   padding: 0;
   font-size: 13px;
   line-height: 22px;
-  color: var(--wpcy-ink, #1d2327);
+  color: var(--wenpai-ink, #1d2327);
 }
 .wpsss-caution .chk {
   margin-top: 0;
@@ -582,18 +582,18 @@ body.wpsss-admin .wpcy-app input.js-wpsss-pull-id {
   height: 22px;
   font-size: 12px;
 }
-body.wpsss-admin .wpcy-app input[type="number"]::-webkit-outer-spin-button,
-body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
+body.wpsss-admin .wenpai-app input[type="number"]::-webkit-outer-spin-button,
+body.wpsss-admin .wenpai-app input[type="number"]::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
 }
 .wpsss-toggle-form {
   margin: 0;
 }
-.wpcy-app.is-ready .wpsss-scene-foot {
+.wenpai-app.is-ready .wpsss-scene-foot {
   display: none;
 }
-.wpcy-app form.is-busy {
+.wenpai-app form.is-busy {
   opacity: 0.65;
 }
 .wpsss-toggle-form button:not(.btn) {
@@ -612,7 +612,7 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
 }
 .wpsss-log li {
   padding: 12px 0;
-  border-top: 1px solid var(--wpcy-line-soft);
+  border-top: 1px solid var(--wenpai-line-soft);
 }
 .wpsss-log li:first-child {
   border-top: 0;
@@ -626,7 +626,7 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
 .wpsss-log .p {
   font-size: 13px;
   line-height: 20px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .next-actions {
   margin-left: auto;
@@ -638,7 +638,7 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
 .next-actions .btn {
   margin-left: 0;
 }
-.wpsss-setup-wizard .wpcy-main {
+.wpsss-setup-wizard .wenpai-main {
   max-width: none;
 }
 .wpsss-setup-exit-wrap {
@@ -655,7 +655,7 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
   line-height: 20px;
 }
 .wpsss-setup-hint a {
-  color: var(--wpcy-accent);
+  color: var(--wenpai-accent);
   text-decoration: none;
 }
 .wpsss-setup-hint a:hover {
@@ -683,20 +683,20 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
   gap: 12px;
   align-items: start;
   padding: 14px 16px;
-  border: 1px solid var(--wpcy-line-soft);
-  border-radius: var(--wpcy-radius);
-  background: var(--wpcy-card);
+  border: 1px solid var(--wenpai-line-soft);
+  border-radius: var(--wenpai-radius);
+  background: var(--wenpai-card);
 }
 .wpsss-done-list .t {
   font-size: 14px;
   line-height: 22px;
   font-weight: 400;
-  color: var(--wpcy-ink);
+  color: var(--wenpai-ink);
 }
 .wpsss-done-list .d {
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
   margin-top: 2px;
 }
 .wpsss-setup-summary {
@@ -746,7 +746,7 @@ details > .wpsss-doctor-summary {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: var(--wpcy-accent);
+  color: var(--wenpai-accent);
   font-size: 12px;
   line-height: 18px;
   font-weight: 400;
@@ -771,7 +771,7 @@ details > .wpsss-doctor-summary {
 }
 .wpsss-doctor-body {
   padding: 16px 24px 20px;
-  border-top: 1px solid var(--wpcy-line-soft);
+  border-top: 1px solid var(--wenpai-line-soft);
 }
 .wpsss-doctor-card--alert .wpsss-doctor-summary {
   padding-top: 20px;
@@ -779,14 +779,14 @@ details > .wpsss-doctor-summary {
 }
 .wpsss-doctor-list li.is-block,
 .wpsss-doctor-list li.is-warn {
-  border-left: 3px solid var(--wpcy-accent, #3858e9);
+  border-left: 3px solid var(--wenpai-accent, #3858e9);
   padding-left: 10px;
 }
 .wpsss-doctor-list li.is-block {
-  border-left-color: var(--wpcy-bad, #d63638);
+  border-left-color: var(--wenpai-bad, #d63638);
 }
 .wpsss-doctor-list li.is-warn {
-  border-left-color: var(--wpcy-warn, #bdb35a);
+  border-left-color: var(--wenpai-warn, #bdb35a);
 }
 .wpsss-edge-list {
   margin: 0;
@@ -797,7 +797,7 @@ details > .wpsss-doctor-summary {
   line-height: 1.7;
 }
 .wpsss-edge-list li::marker {
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .wpsss-doctor-list {
   list-style: none;
@@ -810,10 +810,10 @@ details > .wpsss-doctor-summary {
   gap: 10px;
   align-items: start;
   padding: 10px 0;
-  border-top: 1px solid var(--wpcy-line-soft);
+  border-top: 1px solid var(--wenpai-line-soft);
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .wpsss-doctor-list li:first-child {
   border-top: 0;
@@ -824,8 +824,8 @@ details > .wpsss-doctor-summary {
   font-size: 12px;
 }
 
-.wpcy-head-right .btn-ghost.is-active {
-  color: var(--wpcy-accent);
+.wenpai-head-right .btn-ghost.is-active {
+  color: var(--wenpai-accent);
 }
 .wpsss-help-stack {
   display: flex;
@@ -848,10 +848,10 @@ details > .wpsss-doctor-summary {
   gap: 4px 12px;
   align-items: start;
   padding: 14px 0;
-  border-top: 1px solid var(--wpcy-line-soft);
+  border-top: 1px solid var(--wenpai-line-soft);
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .wpsss-help-steps li:first-child {
   border-top: 0;
@@ -863,8 +863,8 @@ details > .wpsss-doctor-summary {
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: var(--wpcy-accent-soft);
-  color: var(--wpcy-accent);
+  background: var(--wenpai-accent-soft);
+  color: var(--wenpai-accent);
   font-size: 12px;
   font-weight: 400;
   line-height: 24px;
@@ -875,7 +875,7 @@ details > .wpsss-doctor-summary {
   grid-column: 2;
   font-size: 13px;
   line-height: 20px;
-  color: var(--wpcy-ink);
+  color: var(--wenpai-ink);
 }
 .wpsss-help-steps span {
   grid-column: 2;
@@ -905,8 +905,8 @@ details > .wpsss-doctor-summary {
   content: "";
   width: 8px;
   height: 8px;
-  border-right: 2px solid var(--wpcy-ink-3);
-  border-bottom: 2px solid var(--wpcy-ink-3);
+  border-right: 2px solid var(--wenpai-ink-3);
+  border-bottom: 2px solid var(--wenpai-ink-3);
   transform: rotate(45deg);
   transition: transform 0.15s ease;
   margin-left: 8px;
@@ -924,16 +924,16 @@ details > .wpsss-doctor-summary {
 .wpsss-help-summary-text strong {
   font-size: 14px;
   line-height: 20px;
-  color: var(--wpcy-ink);
+  color: var(--wenpai-ink);
 }
 .wpsss-help-summary-text span {
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .wpsss-help-body {
   padding: 0 16px 16px 52px;
-  border-top: 1px solid var(--wpcy-line-soft);
+  border-top: 1px solid var(--wenpai-line-soft);
 }
 .wpsss-help-dl {
   margin: 12px 0 0;
@@ -941,7 +941,7 @@ details > .wpsss-doctor-summary {
 .wpsss-help-dl dt {
   font-size: 13px;
   line-height: 20px;
-  color: var(--wpcy-ink);
+  color: var(--wenpai-ink);
   font-weight: 600;
   margin-top: 18px;
 }
@@ -952,7 +952,7 @@ details > .wpsss-doctor-summary {
   margin: 6px 0 0;
   font-size: 12px;
   line-height: 19px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .wpsss-help-details .wpsss-help-body .wpsss-help-dl dd {
   margin-bottom: 2px;
@@ -961,20 +961,20 @@ details > .wpsss-doctor-summary {
   margin: 12px 0 0;
   padding: 12px 14px;
   border-radius: 8px;
-  background: var(--wpcy-line-soft);
+  background: var(--wenpai-line-soft);
   overflow-x: auto;
 }
 .wpsss-help-code code {
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-2);
+  color: var(--wenpai-ink-2);
   white-space: pre;
 }
 .wpsss-help-note {
   margin: 10px 0 0;
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
 }
 .wpsss-notice-wrap {
   padding-top: 16px;
@@ -985,7 +985,7 @@ details > .wpsss-doctor-summary {
 .upload-php .column-wpsss .p {
   font-size: 12px;
   line-height: 18px;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
   max-width: 18rem;
   word-break: break-word;
 }
@@ -1005,7 +1005,7 @@ details > .wpsss-doctor-summary {
 }
 .wpsss-metabox-meta {
   margin: 0;
-  color: var(--wpcy-bad, #d63638);
+  color: var(--wenpai-bad, #d63638);
   word-break: break-word;
 }
 .wpsss-metabox-key {
@@ -1016,8 +1016,8 @@ details > .wpsss-doctor-summary {
   display: block;
   padding: 8px 10px;
   border-radius: 6px;
-  background: var(--wpcy-line-soft, #f0f0f1);
-  color: var(--wpcy-ink-2, #50575e);
+  background: var(--wenpai-line-soft, #f0f0f1);
+  color: var(--wenpai-ink-2, #50575e);
   font-size: 12px;
   line-height: 18px;
   word-break: break-all;
@@ -1029,7 +1029,7 @@ details > .wpsss-doctor-summary {
   margin: 0;
 }
 .wpsss-metabox-link a {
-  color: var(--wpcy-accent, #3858e9);
+  color: var(--wenpai-accent, #3858e9);
   text-decoration: none;
 }
 .wpsss-metabox-link a:hover {
@@ -1058,15 +1058,15 @@ details > .wpsss-doctor-summary {
   box-shadow: none;
 }
 .wpsss-flash.info {
-  background: var(--wpcy-accent-soft, #eef1fd);
+  background: var(--wenpai-accent-soft, #eef1fd);
   color: #2c47c5;
 }
 .wpsss-flash.ok {
-  background: var(--wpcy-ok-soft, #edfaef);
+  background: var(--wenpai-ok-soft, #edfaef);
   color: #007017;
 }
 .wpsss-flash.warn {
-  background: var(--wpcy-warn-soft, #fbf3dc);
+  background: var(--wenpai-warn-soft, #fbf3dc);
   color: #7a5a06;
 }
 .wpsss-flash svg {
@@ -1077,146 +1077,146 @@ details > .wpsss-doctor-summary {
 }
 
 @media (max-width: 1100px) {
-  body.wpsss-admin .wpcy-app .wpcy-wrap {
+  body.wpsss-admin .wenpai-app .wenpai-wrap {
     padding-left: 20px;
     padding-right: 20px;
   }
 }
 @media (max-width: 782px) {
-  body.wpsss-admin .wpcy-head {
+  body.wpsss-admin .wenpai-head {
     height: auto;
     min-height: 56px;
     flex-wrap: wrap;
     padding: 8px 0 0;
     row-gap: 0;
   }
-  body.wpsss-admin .wpcy-tabs {
+  body.wpsss-admin .wenpai-tabs {
     width: 100%;
     height: 44px;
     order: 3;
   }
-  body.wpsss-admin .wpcy-head-right {
+  body.wpsss-admin .wenpai-head-right {
     margin-left: auto;
   }
-  body.wpsss-admin .wpcy-app .choice-cards,
-  body.wpsss-admin .wpcy-app .choice-cards.is-vendors,
-  body.wpsss-admin .wpcy-app .choice-cards.is-vendors.is-compact {
+  body.wpsss-admin .wenpai-app .choice-cards,
+  body.wpsss-admin .wenpai-app .choice-cards.is-vendors,
+  body.wpsss-admin .wenpai-app .choice-cards.is-vendors.is-compact {
     grid-template-columns: 1fr;
   }
 }
 
 /* 控件反馈：点进去能看见，锁住的和能改的一眼分开。 */
-body.wpsss-admin .wpcy-app input[type="text"],
-body.wpsss-admin .wpcy-app input[type="password"],
-body.wpsss-admin .wpcy-app input[type="number"],
-body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"],
-body.wpsss-admin .wpcy-app select {
+body.wpsss-admin .wenpai-app input[type="text"],
+body.wpsss-admin .wenpai-app input[type="password"],
+body.wpsss-admin .wenpai-app input[type="number"],
+body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"],
+body.wpsss-admin .wenpai-app select {
   transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
 }
-body.wpsss-admin .wpcy-app input[type="text"]:hover,
-body.wpsss-admin .wpcy-app input[type="password"]:hover,
-body.wpsss-admin .wpcy-app input[type="number"]:hover,
-body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"]:hover,
-body.wpsss-admin .wpcy-app select:hover {
+body.wpsss-admin .wenpai-app input[type="text"]:hover,
+body.wpsss-admin .wenpai-app input[type="password"]:hover,
+body.wpsss-admin .wenpai-app input[type="number"]:hover,
+body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"]:hover,
+body.wpsss-admin .wenpai-app select:hover {
   border-color: #8c8f94;
 }
-body.wpsss-admin .wpcy-app input[type="text"]:focus,
-body.wpsss-admin .wpcy-app input[type="password"]:focus,
-body.wpsss-admin .wpcy-app input[type="number"]:focus,
-body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"]:focus,
-body.wpsss-admin .wpcy-app select:focus,
-body.wpsss-admin .wpcy-app input[type="text"].is-focused,
-body.wpsss-admin .wpcy-app input[type="password"].is-focused,
-body.wpsss-admin .wpcy-app input[type="number"].is-focused,
-body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"].is-focused,
-body.wpsss-admin .wpcy-app select.is-focused {
+body.wpsss-admin .wenpai-app input[type="text"]:focus,
+body.wpsss-admin .wenpai-app input[type="password"]:focus,
+body.wpsss-admin .wenpai-app input[type="number"]:focus,
+body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"]:focus,
+body.wpsss-admin .wenpai-app select:focus,
+body.wpsss-admin .wenpai-app input[type="text"].is-focused,
+body.wpsss-admin .wenpai-app input[type="password"].is-focused,
+body.wpsss-admin .wenpai-app input[type="number"].is-focused,
+body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"].is-focused,
+body.wpsss-admin .wenpai-app select.is-focused {
   border-color: #3858e9 !important;
   box-shadow: 0 0 0 1px #3858e9, 0 0 0 3px #eef1fd !important;
   outline: none;
   background-color: #fff;
 }
-body.wpsss-admin .wpcy-app button.btn:hover,
-body.wpsss-admin .wpcy-app a.btn:hover {
+body.wpsss-admin .wenpai-app button.btn:hover,
+body.wpsss-admin .wenpai-app a.btn:hover {
   box-shadow: none;
 }
-body.wpsss-admin .wpcy-app button.btn:focus-visible,
-body.wpsss-admin .wpcy-app a.btn:focus-visible {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--wpcy-accent);
+body.wpsss-admin .wenpai-app button.btn:focus-visible,
+body.wpsss-admin .wenpai-app a.btn:focus-visible {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--wenpai-accent);
   outline: none;
 }
-body.wpsss-admin .wpcy-app button.btn[disabled],
-body.wpsss-admin .wpcy-app button.btn[disabled]:hover {
+body.wpsss-admin .wenpai-app button.btn[disabled],
+body.wpsss-admin .wenpai-app button.btn[disabled]:hover {
   cursor: not-allowed;
   opacity: 0.5;
 }
-body.wpsss-admin .wpcy-app button.toggle:hover:not([disabled]) i,
-body.wpsss-admin .wpcy-app button.toggle:focus-visible:not([disabled]) i {
-  box-shadow: 0 0 0 4px var(--wpcy-accent-soft);
+body.wpsss-admin .wenpai-app button.toggle:hover:not([disabled]) i,
+body.wpsss-admin .wenpai-app button.toggle:focus-visible:not([disabled]) i {
+  box-shadow: 0 0 0 4px var(--wenpai-accent-soft);
 }
-body.wpsss-admin .wpcy-app button.toggle:focus-visible {
+body.wpsss-admin .wenpai-app button.toggle:focus-visible {
   outline: none;
   box-shadow: none;
 }
-body.wpsss-admin .wpcy-app button.toggle:active:not([disabled]) i::after {
+body.wpsss-admin .wenpai-app button.toggle:active:not([disabled]) i::after {
   transform: scale(0.92);
 }
-body.wpsss-admin .wpcy-app button.toggle[disabled],
-body.wpsss-admin .wpcy-app button.toggle.is-locked,
-body.wpsss-admin .wpcy-app button.toggle[disabled]:hover,
-body.wpsss-admin .wpcy-app button.toggle.is-locked:hover {
+body.wpsss-admin .wenpai-app button.toggle[disabled],
+body.wpsss-admin .wenpai-app button.toggle.is-locked,
+body.wpsss-admin .wenpai-app button.toggle[disabled]:hover,
+body.wpsss-admin .wenpai-app button.toggle.is-locked:hover {
   opacity: 1;
   cursor: not-allowed;
-  color: var(--wpcy-ink-3);
+  color: var(--wenpai-ink-3);
   background: transparent;
   border: 0;
   box-shadow: none;
 }
-body.wpsss-admin .wpcy-app button.toggle[disabled] i,
-body.wpsss-admin .wpcy-app button.toggle.is-locked i {
+body.wpsss-admin .wenpai-app button.toggle[disabled] i,
+body.wpsss-admin .wenpai-app button.toggle.is-locked i {
   background: #dcdcde;
 }
-body.wpsss-admin .wpcy-app button.toggle[disabled].on i,
-body.wpsss-admin .wpcy-app button.toggle.is-locked.on i {
-  background: var(--wpcy-accent-soft, #a7aaad);
+body.wpsss-admin .wenpai-app button.toggle[disabled].on i,
+body.wpsss-admin .wenpai-app button.toggle.is-locked.on i {
+  background: var(--wenpai-accent-soft, #a7aaad);
 }
-body.wpsss-admin .wpcy-app .simple-row {
+body.wpsss-admin .wenpai-app .simple-row {
   margin: 0 -8px;
   padding-left: 8px;
   padding-right: 8px;
   border-radius: 8px;
 }
-body.wpsss-admin .wpcy-app .simple-row.is-static {
+body.wpsss-admin .wenpai-app .simple-row.is-static {
   cursor: default;
 }
-body.wpsss-admin .wpcy-app .simple-row.is-action:hover {
-  background: var(--wpcy-line-soft);
+body.wpsss-admin .wenpai-app .simple-row.is-action:hover {
+  background: var(--wenpai-line-soft);
 }
-body.wpsss-admin .wpcy-app .simple-row .d.is-url {
+body.wpsss-admin .wenpai-app .simple-row .d.is-url {
   max-width: none;
   overflow-wrap: anywhere;
   word-break: break-all;
 }
-body.wpsss-admin .wpcy-app .chk input:focus-visible,
-body.wpsss-admin .wpcy-app .wpsss-gate input:focus-visible {
-  outline: 2px solid var(--wpcy-accent);
+body.wpsss-admin .wenpai-app .chk input:focus-visible,
+body.wpsss-admin .wenpai-app .wpsss-gate input:focus-visible {
+  outline: 2px solid var(--wenpai-accent);
   outline-offset: 2px;
 }
-body.wpsss-admin .wpcy-app .wpsss-help-details > summary {
+body.wpsss-admin .wenpai-app .wpsss-help-details > summary {
   transition: background-color 0.12s ease;
 }
-body.wpsss-admin .wpcy-app .wpsss-help-details > summary:hover {
-  background: var(--wpcy-line-soft);
+body.wpsss-admin .wenpai-app .wpsss-help-details > summary:hover {
+  background: var(--wenpai-line-soft);
 }
-body.wpsss-admin .wpcy-app .wpsss-help-details > summary:focus-visible {
+body.wpsss-admin .wenpai-app .wpsss-help-details > summary:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px var(--wpcy-accent);
+  box-shadow: inset 0 0 0 2px var(--wenpai-accent);
 }
-body.wpsss-admin .wpcy-app .wpcy-tab:hover {
+body.wpsss-admin .wenpai-app .wenpai-tab:hover {
   background: transparent;
 }
-body.wpsss-admin .wpcy-app .wpcy-tab:focus-visible {
+body.wpsss-admin .wenpai-app .wenpai-tab:focus-visible {
   outline: none;
-  box-shadow: inset 0 -2px 0 var(--wpcy-accent);
+  box-shadow: inset 0 -2px 0 var(--wenpai-accent);
 }
 
 /* 队列进度条：补传为确定性百分比，拉回为流动动画（无总量可算）。 */
