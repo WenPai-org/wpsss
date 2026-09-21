@@ -100,8 +100,9 @@ defined('ABSPATH') || exit;
     <?php if ($history === []) : ?>
       <div class="empty">
         <div class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></div>
-        <p><?php echo esc_html__('暂无记录', 'wpsss'); ?></p>
+        <p><?php echo esc_html__('还没有操作记录', 'wpsss'); ?></p>
         <p class="meta"><?php echo esc_html__('补传、拉回或删除附件后将显示在此。', 'wpsss'); ?></p>
+        <a class="btn btn-secondary" href="<?php echo esc_url($url('overview')); ?>"><?php echo esc_html__('查看概览', 'wpsss'); ?></a>
       </div>
     <?php else : ?>
       <ul class="wpsss-log">

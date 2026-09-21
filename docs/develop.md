@@ -29,7 +29,7 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 | 要改 | 文件 | 注意 |
 |------|------|------|
 | 后台壳 / tab | `includes/class-wpsss-admin.php` + `templates/admin/` | query `tab=` `mode=`；不要 hash |
-| 4.0 外观 | `assets/css/e.css` + `admin.css` | token 跟 `~/wt/wpcy-proto/E/e.css`。不要另起一套色 |
+| 4.0 外观 | `lib/wenpai-admin-ui/` + `assets/css/admin.css` | kit 0.2.3。不要再 enqueue `e.css`。产品类才留 `.wpsss-*` |
 | 选项 | `class-wpsss-options.php` | `upload_url_path` 只在空或自有旗时改 |
 | 上传/删/URL | `class-wpsss-offload.php` | 图走 metadata；非图走 `wp_handle_upload` |
 | 已有附件 / 文章 URL | `class-wpsss-library.php` | `wp sss offload` / `rewrite` |
@@ -72,6 +72,15 @@ Mac 上 linuxjoy 有一份同步稿 `office/cursor/wpsss-aliyun-20260918/`，**�
 | 关 `keep_local` | sanitize / 简单页 / `wp sss set` 都挡住；须 `--allow-no-local` 且人批 |
 | FeiCode 端口 | `:2222`，不要 apex |
 | leftover GC | 只报不删 |
+
+
+## 后台壳门
+
+```bash
+python3 lib/wenpai-admin-ui/scripts/wenpai-admin-lint.py --plugin-root .
+```
+
+0 个模板写 SKIP，不写 PASS。换壳页不准 `form-table` / `wpcy-app`。Update URI 不改（本插件头没有这一行，不要补成别的地址）。
 
 ## 验证
 

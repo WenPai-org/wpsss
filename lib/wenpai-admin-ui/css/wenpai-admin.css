@@ -29,7 +29,7 @@
 
 .wenpai-app { font-family: var(--wenpai-font); color: var(--wenpai-ink); -webkit-font-smoothing: antialiased; font-size: 14px; line-height: 22px; }
 .wenpai-app a { text-decoration: none; }
-.wenpai-app [hidden] { display: none; }
+.wenpai-app [hidden] { display: none !important; } /* stylelint-disable-line declaration-no-important */
 .wenpai-app h1, .wenpai-app h2, .wenpai-app h3 { color: var(--wenpai-ink); }
 .wenpai-app svg { max-width: 24px; max-height: 24px; }
 .wenpai-ico { display: inline-block; flex: none; vertical-align: -0.2em; }

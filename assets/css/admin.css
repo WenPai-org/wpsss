@@ -1,4 +1,4 @@
-/* WP 后台里套 4.0 壳。token 在 e.css。 */
+/* WP 后台里套 4.0 壳。token 在 lib/wenpai-admin-ui。assets/css/e.css 已不 enqueue，回退用，发版 zip 不要打进去。 */
 body.wpsss-admin #wpcontent,
 body.wpsss-admin #wpbody,
 body.wpsss-admin #wpbody-content {
