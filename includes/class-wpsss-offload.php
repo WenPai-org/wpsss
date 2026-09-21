@@ -170,13 +170,27 @@ class Wpsss_Offload
         $dir = dirname((string) $metadata['file']);
         $dir_abs = $dir !== '.' ? $basedir . '/' . $dir . '/' : $basedir . '/';
 
-        if (!empty($metadata['original_image'])) {
-            $this->put_local_file($dir_abs . $metadata['original_image'], '');
-        }
-
         $opts = Wpsss_Options::get();
-        if ($opts['upload_thumbs'] === '1' && !empty($metadata['sizes']) && is_array($metadata['sizes'])) {
-            foreach ($metadata['sizes'] as $size) {
+        $aid = (int) $attachment_id;
+        $sizes = ($opts['upload_thumbs'] === '1' && !empty($metadata['sizes']) && is_array($metadata['sizes']))
+            ? $metadata['sizes']
+            : [];
+        // 尺寸文件已在补传队列里 → 本次是队列来补传，同步传完并摘标记。
+        $thumbs_pending = $aid > 0 && get_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING, true) === '1';
+        // 上传请求里只同步传主文件（地址改写依赖它）；原图和尺寸交给后台队列，
+        // 否则 N 个尺寸 = N 次串行 OSS PUT（每次 ~300ms 握手）全堵在上传请求里。
+        // 仅 keep_local=1 可延后：尺寸留在本地，主文件标记期间尺寸地址不改写，前台不 404。
+        $defer_sizes = !$thumbs_pending
+            && $sizes !== []
+            && ($opts['keep_local'] ?? '1') === '1'
+            && $aid > 0
+            && !is_wp_error($ok);
+
+        if (!$defer_sizes) {
+            if (!empty($metadata['original_image'])) {
+                $this->put_local_file($dir_abs . $metadata['original_image'], '');
+            }
+            foreach ($sizes as $size) {
                 if (empty($size['file'])) {
                     continue;
                 }
@@ -184,17 +198,25 @@ class Wpsss_Offload
             }
         }
 
-        if ((int) $attachment_id > 0) {
+        if ($aid > 0) {
             if (!is_wp_error($ok)) {
                 if ($filesize !== '') {
-                    update_post_meta((int) $attachment_id, '_wpsss_filesize', $filesize);
+                    update_post_meta($aid, '_wpsss_filesize', $filesize);
                 }
-                $this->mark_offloaded((int) $attachment_id, $this->object_key($primary));
-                // 尺寸文件没进桶（thumbs 关闭或本来就没有）就打主文件标记，尺寸 URL 不改写。
-                $thumbs_uploaded = ($opts['upload_thumbs'] ?? '1') === '1' && !empty($metadata['sizes']) && is_array($metadata['sizes']);
-                Wpsss_Library::set_main_only((int) $attachment_id, !$thumbs_uploaded);
+                $this->mark_offloaded($aid, $this->object_key($primary));
+                if ($defer_sizes) {
+                    update_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING, '1');
+                    Wpsss_Library::set_main_only($aid, true);
+                } elseif ($thumbs_pending) {
+                    // 队列补传完成：摘掉两个标记，尺寸地址随下次渲染改写到桶域。
+                    delete_post_meta($aid, Wpsss_Library::META_THUMBS_PENDING);
+                    Wpsss_Library::set_main_only($aid, $sizes === []);
+                } else {
+                    // 尺寸文件没进桶（thumbs 关闭或本来就没有）就打主文件标记，尺寸 URL 不改写。
+                    Wpsss_Library::set_main_only($aid, $sizes === []);
+                }
             } elseif ($ok->get_error_code() !== 'wpsss_skip_type' && $ok->get_error_code() !== 'wpsss_woo_exclude') {
-                $this->mark_failed((int) $attachment_id, $ok->get_error_message());
+                $this->mark_failed($aid, $ok->get_error_message());
             }
         }
 
@@ -228,6 +250,9 @@ class Wpsss_Offload
         $meta = wp_get_attachment_metadata($post_id);
         if (is_array($meta) && !empty($meta['file'])) {
             $this->on_generate_metadata($meta, $post_id);
+            if (get_post_meta($post_id, Wpsss_Library::META_THUMBS_PENDING, true) === '1') {
+                return new WP_Error('wpsss_thumbs_failed', '尺寸文件进桶失败，稍后自动重试。');
+            }
             if (!Wpsss_Library::is_offloaded($post_id)) {
                 $this->mark_offloaded($post_id, $this->object_key($file));
             }

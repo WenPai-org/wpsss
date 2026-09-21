@@ -487,6 +487,9 @@ class Wpsss_Options
                 delete_metadata('post', 0, '_wpsss_key', '', true);
                 delete_metadata('post', 0, '_wpsss_error', '', true);
                 delete_metadata('post', 0, '_wpsss_filesize', '', true);
+                delete_metadata('post', 0, '_wpsss_main_only', '', true);
+                delete_metadata('post', 0, '_wpsss_fail_count', '', true);
+                delete_metadata('post', 0, '_wpsss_thumbs_pending', '', true);
             }
         };
         if (function_exists('is_multisite') && is_multisite() && function_exists('get_sites')) {

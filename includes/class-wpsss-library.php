@@ -14,6 +14,7 @@ final class Wpsss_Library
     public const META_ERROR = '_wpsss_error';
     public const META_LOCAL_ONLY = '_wpsss_local_only';
     public const META_MAIN_ONLY = '_wpsss_main_only';
+    public const META_THUMBS_PENDING = '_wpsss_thumbs_pending';
     public const META_FAIL_COUNT = '_wpsss_fail_count';
     public const FAIL_BACKOFF_THRESHOLD = 3;
     public const CRON_HOOK = 'wpsss_offload_cron_event';
@@ -248,6 +249,10 @@ final class Wpsss_Library
                         'key' => self::META_OFFLOADED,
                         'value' => '1',
                         'compare' => '!=',
+                    ],
+                    [
+                        'key' => self::META_THUMBS_PENDING,
+                        'value' => '1',
                     ],
                 ],
             ],
