@@ -61,7 +61,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
   <div class="notice info wpsss-preview-banner" hidden>
     <?php echo Wpsss_Icons::svg('info'); ?>
     <span class="js-wpsss-preview-text"></span>
-    <button type="button" class="btn btn-ghost js-wpsss-revert"><?php echo esc_html__('回到已保存', 'wpsss'); ?></button>
+    <button type="button" class="btn btn-ghost js-wpsss-revert"><?php echo esc_html__('恢复已保存值', 'wpsss'); ?></button>
   </div>
 <?php endif; ?>
 
@@ -102,7 +102,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
     </div>
     <?php if (!$adv) : ?>
       <div class="card-foot wpsss-scene-foot">
-        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('应用场景', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('应用所选场景', 'wpsss'); ?></button>
       </div>
     </form>
     <?php endif; ?>

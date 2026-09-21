@@ -857,7 +857,7 @@
           if (!json || !json.success) {
             running = false;
             idle();
-            setProgress((json && json.data && json.data.message) || "补传中断。");
+            setProgress((json && json.data && json.data.message) || "补传已停止：服务器没有返回结果，请稍后重试。");
             return;
           }
           var data = json.data || {};
@@ -883,7 +883,7 @@
           if (failStreak >= 5) {
             running = false;
             idle();
-            setProgress("连续失败 5 次，已暂停。请先用「体检」查明原因，或用 CLI 小批量试。");
+            setProgress("连续失败 5 次，已暂停。请到「工具 → 排障 → 体检」查明原因后再重试。");
             return;
           }
           var left = body.get("source") === "failed" ? data.failed : data.pending;
@@ -915,7 +915,7 @@
         .catch(function () {
           running = false;
           idle();
-          setProgress("网络中断，已暂停。可再点开始继续。");
+          setProgress("网络中断，已暂停。可再点「开始补传」继续。");
         });
     }
 
@@ -1047,7 +1047,7 @@
           if (!json || !json.success) {
             running = false;
             idle();
-            setProgress((json && json.data && json.data.message) || "拉回中断。");
+            setProgress((json && json.data && json.data.message) || "拉回已停止：服务器没有返回结果，请稍后重试。");
             return;
           }
           var data = json.data || {};

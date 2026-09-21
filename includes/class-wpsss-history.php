@@ -94,7 +94,7 @@ class Wpsss_History
             'offload' => __('进桶', 'wpsss'),
             'upload' => __('上传', 'wpsss'),
             'pull' => __('拉回', 'wpsss'),
-            'delete' => __('删远端', 'wpsss'),
+            'delete' => __('删除桶内对象', 'wpsss'),
             'fail' => __('失败', 'wpsss'),
         ];
 

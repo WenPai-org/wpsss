@@ -370,7 +370,7 @@ final class Wpsss_Admin
         }
         if (!empty($_POST['wpsss_pull_reset'])) {
             delete_transient($this->pull_cursor_key());
-            $this->redirect_tools('ok', '已从头开始拉回。', 'move');
+            $this->redirect_tools('ok', '已清掉续传位置，下一轮从最新的附件重新扫起。', 'move');
         }
         $apply = !empty($_POST['wpsss_pull_apply']);
         $on_exist = Wpsss_Offload::sanitize_on_exist(isset($_POST['wpsss_pull_exist']) ? (string) wp_unslash($_POST['wpsss_pull_exist']) : 'skip');

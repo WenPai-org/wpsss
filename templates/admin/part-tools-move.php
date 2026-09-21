@@ -133,7 +133,7 @@ $exist_modes = [
         ?></span>
         <span class="wpsss-actions">
           <?php if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) : ?>
-            <button class="btn btn-ghost" type="submit" name="wpsss_pull_reset" value="1"><?php echo esc_html__('从头', 'wpsss'); ?></button>
+            <button class="btn btn-ghost" type="submit" name="wpsss_pull_reset" value="1" title="<?php echo esc_attr__('清掉续传位置，下一轮从最新的附件重新扫起；本地已有的会按上面的规则处理。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
           <?php endif; ?>
           <button class="btn btn-ghost js-wpsss-pull-go" type="submit" name="wpsss_pull_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
           <button class="btn btn-ghost js-wpsss-pull-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
@@ -225,7 +225,7 @@ $exist_modes = [
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('每批最多 20 个，不会删除桶内对象。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不会删除桶内对象。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除一批', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不会删除桶内对象。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除标记', 'wpsss'); ?></button>
       </div>
     </form>
   </section>
