@@ -27,7 +27,7 @@ defined('ABSPATH') || exit;
 
   <section class="card">
     <div class="card-head">
-      <span class="tile<?php echo ($pending > 0) ? ' warn' : ' ok'; ?>"><?php echo Wpsss_Icons::svg('image'); ?></span>
+      <span class="tile<?php echo $failed > 0 ? ' warn' : ($pending > 0 ? '' : ' ok'); ?>"><?php echo Wpsss_Icons::svg('image'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html(sprintf(

@@ -886,7 +886,6 @@
             setProgress("页面补传连续 5 轮失败，已暂停。请到「工具 → 排障」查明原因后再重试。");
             return;
           }
-          var left = body.get("source") === "failed" ? data.failed : data.pending;
           setProgress((typeof pct === "number" ? pct + "% · " : "") + "本轮成功 " + totals.ok + "，失败 " + totals.fail + "，还剩 " + (left || 0) + "。");
           if (data.error) {
             setProgress((progress ? progress.textContent + " " : "") + data.error);

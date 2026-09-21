@@ -327,13 +327,6 @@ a.scope:hover { color: var(--wpcy-accent); }
 .wizard .choice-cards { grid-template-columns: 1fr; }
 .wizard .actions { display: flex; align-items: center; gap: 16px; margin-top: 28px; }
 
-/* --- 原型专用 --- */
-/* 原型专用，不进产品 */
-.proto-sw { position: fixed; right: 16px; bottom: 16px; z-index: 9; display: inline-flex; align-items: center; gap: 8px; padding: 6px 8px 6px 12px; background: #1e1e1e; color: #ccc; border-radius: 8px; font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,.25); }
-.proto-sw .seg { border-color: #444; }
-.proto-sw .seg a { height: 24px; font-size: 11px; color: #ccc; border-color: #444; padding: 0 10px; }
-.proto-sw .seg a.on { background: #3858e9; color: #fff; }
-
 /* --- 响应式 --- */
 @media (max-width: 1100px) {
   .wpcy-grid-2 { grid-template-columns: 1fr; }

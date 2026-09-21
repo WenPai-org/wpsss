@@ -1,5 +1,4 @@
-/* WP 后台里套 4.0 壳。token 在 e.css。
- * forms.css 的 .card { max-width: 520px } 会把 hero 左栏挤成一字一列。 */
+/* WP 后台里套 4.0 壳。token 在 e.css。 */
 body.wpsss-admin #wpcontent,
 body.wpsss-admin #wpbody,
 body.wpsss-admin #wpbody-content {
@@ -43,9 +42,6 @@ body.wpsss-admin .wpcy-app .wpcy-stack > form {
   flex-direction: column;
   gap: 20px;
 }
-body.wpsss-admin .wpcy-app .card.hero-w {
-  padding: 0;
-}
 body.wpsss-admin .wpcy-app h1,
 body.wpsss-admin .wpcy-app h2,
 body.wpsss-admin .wpcy-app h3 {
@@ -86,16 +82,6 @@ body.wpsss-admin .wpcy-app .notice {
   margin: 0;
   border: 0;
   box-shadow: none;
-}
-body.wpsss-admin .wpcy-app .hero-l {
-  min-width: 0;
-}
-body.wpsss-admin .wpcy-app .hero-l h1,
-body.wpsss-admin .wpcy-app .hero-l .hero-title {
-  font-size: 28px;
-  line-height: 38px;
-  font-weight: 400;
-  margin: 8px 0 10px;
 }
 body.wpsss-admin .wpcy-app .field-ctl-row input[type="text"],
 body.wpsss-admin .wpcy-app input[type="text"],
@@ -202,12 +188,6 @@ body.wpsss-admin .wpcy-app button.btn-secondary:hover {
   background: #fff;
   color: var(--wpcy-ink);
   border-color: var(--wpcy-ink-3);
-}
-body.wpsss-admin .wpcy-app .svc-stack .svc-r .btn-ghost {
-  height: 28px;
-  min-height: 28px;
-  padding: 0 8px;
-  font-size: 13px;
 }
 .choice.is-soon {
   opacity: 0.55;
@@ -392,8 +372,7 @@ body.wpsss-admin .wpcy-app .opt .d,
 body.wpsss-admin .wpcy-app .rows .d,
 body.wpsss-admin .wpcy-app .meta,
 body.wpsss-admin .wpcy-app .wpsss-savebar .meta,
-body.wpsss-admin .wpcy-app .sec-h p,
-body.wpsss-admin .wpcy-app .svc-stack .p {
+body.wpsss-admin .wpcy-app .sec-h p {
   font-size: 12px;
   line-height: 18px;
   color: var(--wpcy-ink-3);
@@ -443,10 +422,10 @@ body.wpsss-admin .wpcy-app .wpsss-doctor-card.card {
   align-items: center;
   gap: 16px;
   margin: 0;
-  padding: 16px 28px;
+  padding: 16px 24px;
   background: #fff;
   border: 1px solid #e5e5e5;
-  border-radius: 16px;
+  border-radius: var(--wpcy-radius, 12px);
 }
 .wpsss-savebar .meta {
   margin: 0;
@@ -553,16 +532,7 @@ body.wpsss-admin .wpcy-app .wpsss-caution[hidden] {
   font-size: 13px;
   line-height: 20px;
 }
-.wpsss-pull-id {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: var(--wpcy-ink-3);
-  font-size: 13px;
-  line-height: 20px;
-}
-body.wpsss-admin .wpcy-app .wpsss-pull-id input[type="number"] {
+body.wpsss-admin .wpcy-app input.js-wpsss-pull-id {
   width: 88px;
   max-width: 88px;
   height: 36px;
@@ -582,7 +552,7 @@ body.wpsss-admin .wpcy-app .wpsss-pull-id input[type="number"] {
   border-radius: 10px;
   background: var(--wpcy-bad-soft, #fbe9ea);
 }
-.wpsss-caution .notice {
+.wpcy-app .wpsss-caution .notice {
   margin: 0;
   padding: 0;
   background: transparent;
@@ -605,6 +575,8 @@ body.wpsss-admin .wpcy-app .wpsss-pull-id input[type="number"] {
 }
 .wpsss-notice-wrap.is-gone {
   opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
 }
 .wpsss-log .n .pill {
   height: 22px;
@@ -690,7 +662,7 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
   text-decoration: underline;
 }
 .wpsss-setup-block {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 .wpsss-setup-block .section-title {
   margin-bottom: 8px;
@@ -735,9 +707,6 @@ body.wpsss-admin .wpcy-app input[type="number"]::-webkit-inner-spin-button {
 }
 .wpsss-setup-finish-actions form {
   display: inline;
-}
-.wpsss-setup-doctor {
-  margin-bottom: 8px;
 }
 .wpsss-doctor-details {
   padding: 0;
@@ -807,6 +776,28 @@ details > .wpsss-doctor-summary {
 .wpsss-doctor-card--alert .wpsss-doctor-summary {
   padding-top: 20px;
   padding-bottom: 20px;
+}
+.wpsss-doctor-list li.is-block,
+.wpsss-doctor-list li.is-warn {
+  border-left: 3px solid var(--wpcy-accent, #3858e9);
+  padding-left: 10px;
+}
+.wpsss-doctor-list li.is-block {
+  border-left-color: var(--wpcy-bad, #d63638);
+}
+.wpsss-doctor-list li.is-warn {
+  border-left-color: var(--wpcy-warn, #bdb35a);
+}
+.wpsss-edge-list {
+  margin: 0;
+  padding-left: 1.3em;
+}
+.wpsss-edge-list li {
+  margin: 0 0 0.5em;
+  line-height: 1.7;
+}
+.wpsss-edge-list li::marker {
+  color: var(--wpcy-ink-3);
 }
 .wpsss-doctor-list {
   list-style: none;
@@ -1082,80 +1073,6 @@ details > .wpsss-doctor-summary {
   margin-top: 1px;
 }
 
-body.wpsss-admin .wpcy-app .hero-w {
-  container-type: inline-size;
-  container-name: wpsss-hero;
-}
-/* 概览默认：单栏（≈900px 叠列效果）。营销页加 hero-body-v6--split 切回左右栏。 */
-body.wpsss-admin .wpcy-app .hero-body,
-body.wpsss-admin .wpcy-app .hero-body-v6 {
-  grid-template-columns: 1fr;
-  gap: 0;
-  padding: 24px 24px 20px;
-  align-items: start;
-}
-body.wpsss-admin .wpcy-app .hero-svc {
-  border-left: 0;
-  padding-left: 0;
-  border-top: 1px solid var(--wpcy-line-soft);
-  padding-top: 16px;
-  margin-top: 20px;
-}
-body.wpsss-admin .wpcy-app .hero-l h1,
-body.wpsss-admin .wpcy-app .hero-l .hero-title {
-  font-size: 24px;
-  line-height: 32px;
-  margin: 8px 0 10px;
-}
-body.wpsss-admin .wpcy-app .hero-l p {
-  max-width: none;
-  margin-bottom: 20px;
-}
-body.wpsss-admin .wpcy-app .hero-body.hero-body--split,
-body.wpsss-admin .wpcy-app .hero-body-v6.hero-body-v6--split {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
-  gap: 40px;
-  padding: 32px 36px 32px;
-}
-body.wpsss-admin .wpcy-app .hero-body.hero-body--split .hero-svc,
-body.wpsss-admin .wpcy-app .hero-body-v6.hero-body-v6--split .hero-svc {
-  border-left: 1px solid var(--wpcy-line-soft);
-  padding-left: 36px;
-  border-top: 0;
-  padding-top: 0;
-  margin-top: 0;
-}
-body.wpsss-admin .wpcy-app .hero-body.hero-body--split .hero-l h1,
-body.wpsss-admin .wpcy-app .hero-body-v6.hero-body-v6--split .hero-l h1 {
-  font-size: 28px;
-  line-height: 38px;
-}
-body.wpsss-admin .wpcy-app .svc-stack .p {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-}
-@container wpsss-hero (max-width: 980px) {
-  body.wpsss-admin .wpcy-app .hero-body.hero-body--split,
-  body.wpsss-admin .wpcy-app .hero-body-v6.hero-body-v6--split {
-    grid-template-columns: 1fr;
-    gap: 0;
-    padding: 24px 24px 20px;
-  }
-  body.wpsss-admin .wpcy-app .hero-body.hero-body--split .hero-svc,
-  body.wpsss-admin .wpcy-app .hero-body-v6.hero-body-v6--split .hero-svc {
-    border-left: 0;
-    padding-left: 0;
-    border-top: 1px solid var(--wpcy-line-soft);
-    padding-top: 16px;
-    margin-top: 20px;
-  }
-  body.wpsss-admin .wpcy-app .hero-body.hero-body--split .hero-l h1,
-  body.wpsss-admin .wpcy-app .hero-body-v6.hero-body-v6--split .hero-l h1 {
-    font-size: 24px;
-    line-height: 32px;
-  }
-}
 @media (max-width: 1100px) {
   body.wpsss-admin .wpcy-app .wpcy-wrap {
     padding-left: 20px;

@@ -113,7 +113,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
         )); ?></span>
       </div>
     <?php endif; ?>
-    <form id="wpsss-setup-step2" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="wpsss-setup-form">
+    <form id="wpsss-setup-step2" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_setup" />
       <input type="hidden" name="wpsss_setup_action" value="step2" />
       <input type="hidden" name="s3_preset" value="<?php echo esc_attr($s3_preset); ?>" />

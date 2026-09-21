@@ -160,7 +160,7 @@ wp sss copy --to-bucket=新桶 --dry-run</code></pre>
         <p class="card-sub"><?php echo esc_html__('这些场景目前不支持或有限制，使用前请先了解。', 'wpsss'); ?></p>
       </div>
     </div>
-    <ul>
+    <ul class="wpsss-edge-list">
       <li><?php echo esc_html__('多站点（Multisite）暂不支持；不要在网络层激活。', 'wpsss'); ?></li>
       <li><?php echo esc_html__('COS / OBS / 七牛云的超大文件上传是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。', 'wpsss'); ?></li>
     </ul>

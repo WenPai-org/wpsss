@@ -9,10 +9,10 @@ $warnings = (array) ($doctor['warnings'] ?? []);
 $oks = (array) ($doctor['oks'] ?? []);
 $has_issue = $tone !== 'ok';
 $show_body = $context === 'setup' || $has_issue;
-$show_foot = $context === 'overview' && $has_issue;
+$show_foot = isset($doctor_show_foot) ? (bool) $doctor_show_foot : ($context === 'overview' && $has_issue);
 $expanded = $show_body && (!isset($doctor_expanded) || $doctor_expanded);
-$pill_cls = $tone === 'ok' ? 'ok' : 'warn';
-$tile_cls = $tone === 'ok' ? ' ok' : ($tone === 'block' ? ' warn' : '');
+$pill_cls = $tone === 'ok' ? 'ok' : ($tone === 'block' ? 'bad' : 'warn');
+$tile_cls = $tone === 'ok' ? ' ok' : ($tone === 'block' ? ' bad' : ' warn');
 $card_mod = $has_issue ? ' wpsss-doctor-card--alert' : '';
 if ($blockers !== []) {
     $summary = sprintf(__('%d 项阻断，须先处理', 'wpsss'), count($blockers));
@@ -59,10 +59,10 @@ if ($blockers !== []) {
     <div class="wpsss-doctor-body">
       <ul class="wpsss-doctor-list">
         <?php foreach ($blockers as $line) : ?>
-          <li class="is-block"><span class="pill warn"><?php echo esc_html__('阻断', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
+          <li class="is-block"><span class="pill bad"><?php echo esc_html__('阻断', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
         <?php endforeach; ?>
         <?php foreach ($warnings as $line) : ?>
-          <li class="is-warn"><span class="pill"><?php echo esc_html__('警告', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
+          <li class="is-warn"><span class="pill warn"><?php echo esc_html__('警告', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
         <?php endforeach; ?>
         <?php if ($context === 'setup') : ?>
           <?php foreach ($oks as $line) : ?>

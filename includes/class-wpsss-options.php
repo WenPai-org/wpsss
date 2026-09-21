@@ -231,7 +231,7 @@ class Wpsss_Options
             's3_preset' => $preset,
             'force_path_style' => $path_style,
             'site_mode' => self::sanitize_site_mode($input['site_mode'] ?? $current['site_mode'] ?? 'domestic'),
-            'url_access' => self::sanitize_url_access($input['url_access'] ?? $current['url_access'] ?? 'public'),
+            'url_access' => self::sanitize_url_access($input['url_access'] ?? $current['url_access'] ?? 'public', $input['driver'] ?? $current['driver'] ?? ''),
             'signed_ttl' => self::sanitize_signed_ttl($input['signed_ttl'] ?? $current['signed_ttl'] ?? '3600'),
             'oss_signature' => self::sanitize_oss_signature($input['oss_signature'] ?? $current['oss_signature'] ?? 'v4'),
             'oss_auth' => self::sanitize_oss_auth($input['oss_auth'] ?? $current['oss_auth'] ?? 'ak'),
@@ -834,9 +834,15 @@ class Wpsss_Options
         return isset(self::site_modes()[$mode]) ? $mode : 'domestic';
     }
 
-    public static function sanitize_url_access($value): string
+    public static function sanitize_url_access($value, ?string $driver = null): string
     {
-        return (string) $value === 'signed' ? 'signed' : 'public';
+        if ((string) $value !== 'signed') {
+            return 'public';
+        }
+        if ($driver !== null && !self::supports_signed_get($driver)) {
+            return 'public';
+        }
+        return 'signed';
     }
 
     public static function sanitize_signed_ttl($value): string

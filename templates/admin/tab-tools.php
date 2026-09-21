@@ -11,6 +11,7 @@ $opts = $view['opts'];
 $rewrite = isset($view['rewrite']) && is_array($view['rewrite']) ? $view['rewrite'] : [];
 $pull = isset($view['pull']) && is_array($view['pull']) ? $view['pull'] : [];
 $pull_cursor = (int) ($view['pull_cursor'] ?? 0);
+$stalled = (int) ($view['stalled'] ?? 0);
 $offload_cursor = (int) ($view['offload_cursor'] ?? 0);
 $pending = (int) ($stats['pending'] ?? 0);
 $failed = (int) ($stats['failed'] ?? 0);
@@ -39,7 +40,7 @@ $panels = [
   <div class="mode">
     <span class="seg" role="tablist" aria-label="<?php echo esc_attr__('工具分组', 'wpsss'); ?>">
       <?php foreach ($panels as $id => $label) : ?>
-        <a class="<?php echo $panel === $id ? 'on' : ''; ?>" href="<?php echo esc_url($url('tools', ['panel' => $id])); ?>"><?php echo esc_html($label); ?></a>
+        <a role="tab"<?php echo $panel === $id ? ' class="on" aria-selected="true"' : ' aria-selected="false"'; ?> href="<?php echo esc_url($url('tools', ['panel' => $id])); ?>"><?php echo esc_html($label); ?></a>
       <?php endforeach; ?>
     </span>
   </div>

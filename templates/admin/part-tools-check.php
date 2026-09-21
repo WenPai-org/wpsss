@@ -77,7 +77,7 @@ defined('ABSPATH') || exit;
         <div class="field-ctl"><input type="text" name="wpsss_diagnose" value="<?php echo esc_attr((string) ($diagnose['input'] ?? '')); ?>" placeholder="128" /></div>
       </div>
       <?php if ($diagnose !== []) : ?>
-        <div class="notice <?php echo !empty($diagnose['found']) ? 'ok' : 'info'; ?>">
+        <div class="notice <?php echo (!empty($diagnose['found']) && isset($diagnose['host_ok']) && !$diagnose['host_ok']) ? 'warn' : (!empty($diagnose['found']) ? 'ok' : 'info'); ?>">
           <?php echo Wpsss_Icons::svg('info'); ?>
           <span><?php
             if (!empty($diagnose['found'])) {
@@ -124,7 +124,7 @@ defined('ABSPATH') || exit;
       </div>
     </div>
     <?php if ($head !== []) : ?>
-      <div class="notice <?php echo empty($head['missing']) ? 'ok' : 'info'; ?>">
+      <div class="notice <?php echo empty($head['missing']) ? 'ok' : 'warn'; ?>">
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html(sprintf(
             '抽检 %d 个，远端还在 %d，异常 %d。',

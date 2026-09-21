@@ -184,7 +184,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
     ] as $field => $copy) : ?>
       <?php $on = $opts[$field] === '1'; ?>
       <div class="simple-row is-action">
-        <div class="tile<?php echo $on ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg($copy[2]); ?></div>
+        <div class="tile<?php echo $on ? ' ok' : ($field === 'keep_local' ? ' warn' : ''); ?>"><?php echo Wpsss_Icons::svg($copy[2]); ?></div>
         <div>
           <div class="t"><?php echo esc_html($copy[0]); ?></div>
           <div class="d"><?php
@@ -207,6 +207,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
             <input type="hidden" name="action" value="wpsss_quick" />
             <?php wp_nonce_field('wpsss_quick'); ?>
             <input type="hidden" name="<?php echo esc_attr($field); ?>" value="<?php echo $on ? '0' : '1'; ?>" />
+            <noscript><button class="btn btn-secondary" type="submit"><?php echo esc_html__('保存', 'wpsss'); ?></button></noscript>
             <button type="button" class="toggle<?php echo $on ? ' on' : ''; ?> js-wpsss-toggle" title="<?php echo esc_attr($copy[1]); ?>" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo $on ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
           </form>
           <?php endif; ?>
@@ -226,6 +227,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
           <input type="hidden" name="action" value="wpsss_quick" />
           <?php wp_nonce_field('wpsss_quick'); ?>
           <input type="hidden" name="url_access" value="<?php echo $url_access === 'signed' ? 'public' : 'signed'; ?>" />
+          <noscript><button class="btn btn-secondary" type="submit"><?php echo esc_html__('保存', 'wpsss'); ?></button></noscript>
           <button type="button" class="toggle<?php echo $url_access === 'signed' ? ' on' : ''; ?> js-wpsss-toggle" title="<?php echo esc_attr($url_access === 'signed' ? __('使用签名 URL，私有桶也可正常访问', 'wpsss') : __('公开读；若桶禁止匿名访问，前台图片可能无法显示', 'wpsss')); ?>" data-on="<?php echo esc_attr__('签名访问', 'wpsss'); ?>" data-off="<?php echo esc_attr__('公开读', 'wpsss'); ?>"><i></i><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : esc_html__('公开读', 'wpsss'); ?></button>
         </form>
       </div>
