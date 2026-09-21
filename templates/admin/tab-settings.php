@@ -199,7 +199,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
         </div>
         <div class="r">
           <?php if ($field === 'keep_local' && $on) : ?>
-            <button type="button" class="toggle on is-locked" disabled title="<?php echo esc_attr__('关闭此选项需管理员批准', 'wpsss'); ?>" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo esc_html__('已开启', 'wpsss'); ?></button>
+            <button type="button" class="toggle on is-locked" disabled title="<?php echo esc_attr__('关闭本地备份须到「设置 → 高级」操作；关闭后服务器不再保留副本，故障时无法从本地恢复', 'wpsss'); ?>" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo esc_html__('已开启', 'wpsss'); ?></button>
           <?php elseif ($field === 'origin_protect' && !$has_style && !$on) : ?>
             <button type="button" class="toggle is-locked" disabled title="<?php echo esc_attr__('须先在高级设置填写图片样式', 'wpsss'); ?>" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo esc_html__('未开启', 'wpsss'); ?></button>
           <?php else : ?>
@@ -267,7 +267,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
       <div class="field js-wpsss-app-id-field"<?php echo $show_app_id ? '' : ' hidden'; ?>><div><div class="field-label js-wpsss-app-id-label"><?php echo ($opts['s3_preset'] ?? '') === 'r2' && $driver === Wpsss_Options::DRIVER_S3 ? esc_html__('R2 Account ID', 'wpsss') : esc_html__('APPID（COS）', 'wpsss'); ?></div><div class="field-help js-wpsss-app-id-help"><?php echo ($opts['s3_preset'] ?? '') === 'r2' && $driver === Wpsss_Options::DRIVER_S3 ? esc_html__('用于拼接服务 Endpoint。', 'wpsss') : esc_html__('创建桶的主账号 APPID。子账户的 APPID 无效。桶名已含 APPID 可留空。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[app_id]" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" class="js-wpsss-app-id" /></div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('访问密钥 ID', 'wpsss'); ?></div><div class="field-help"><?php echo $id_set ? esc_html(sprintf('已保存 · 末四位 %s', $id_tail)) : esc_html__('RAM 子用户 AccessKey ID', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_id]" type="text" value="" autocomplete="off" placeholder="<?php echo $id_set ? esc_attr('••••' . $id_tail) : ''; ?>" /></div></div>
       <div class="field"><div><div class="field-label"><?php echo esc_html__('访问密钥 Secret', 'wpsss'); ?></div><div class="field-help"><?php echo $view['secret_set'] ? esc_html__('已保存；留空保存时保持不变。', 'wpsss') : esc_html__('不会在页面中显示', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_secret]" type="password" value="" autocomplete="new-password" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('源站与存储桶位于同一区域时可启用。', 'wpsss'); ?></div></div><div class="field-ctl">
+      <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('网站服务器与存储桶在同一区域时可启用。', 'wpsss'); ?></div></div><div class="field-ctl">
         <input type="hidden" name="<?php echo esc_attr($key); ?>[use_internal]" value="<?php echo $opts['use_internal'] === '1' ? '1' : '0'; ?>" />
         <button type="button" class="toggle<?php echo $opts['use_internal'] === '1' ? ' on' : ''; ?> js-wpsss-flip" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo $opts['use_internal'] === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
       </div></div>
@@ -277,7 +277,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
           <option value="v1"<?php selected($oss_signature, 'v1'); ?>><?php echo esc_html__('V1', 'wpsss'); ?></option>
         </select>
       </div></div>
-      <div class="field js-wpsss-for-aliyun"<?php echo $driver === Wpsss_Options::DRIVER_ALIYUN ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('凭证', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('一般用 RAM 子用户密钥。源站在阿里云 ECS 且绑了角色时，可选实例角色，不必再填密钥。', 'wpsss'); ?></div></div><div class="field-ctl">
+      <div class="field js-wpsss-for-aliyun"<?php echo $driver === Wpsss_Options::DRIVER_ALIYUN ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('凭证', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('一般用 RAM 子用户密钥。网站服务器是阿里云 ECS 且绑了角色时，可选实例角色，不必再填密钥。', 'wpsss'); ?></div></div><div class="field-ctl">
         <select name="<?php echo esc_attr($key); ?>[oss_auth]" class="js-wpsss-oss-auth">
           <option value="ak"<?php selected($oss_auth, 'ak'); ?>><?php echo esc_html__('AccessKey', 'wpsss'); ?></option>
           <option value="ram"<?php selected($oss_auth, 'ram'); ?>><?php echo esc_html__('ECS 实例 RAM 角色', 'wpsss'); ?></option>

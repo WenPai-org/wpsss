@@ -18,7 +18,7 @@ defined('ABSPATH') || exit;
       <div class="notice info">
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html(sprintf(
-            '已检查 %d 个：本地缺失 %d，访问域名不一致 %d，http 明文 %d，失败 %d，前缀不符 %d。',
+            '已检查 %d 个：本地文件缺失 %d，访问域名不一致 %d，http 明文 %d，失败 %d，前缀不符 %d。',
             (int) ($scan['checked'] ?? 0),
             count($scan['local_missing'] ?? []),
             count($scan['host_mismatch'] ?? []),
@@ -28,9 +28,9 @@ defined('ABSPATH') || exit;
         )); ?></span>
       </div>
       <?php if (!empty($scan['expected_host'])) : ?>
-        <p class="meta"><?php echo esc_html(sprintf('当前对外主机：%s', $scan['expected_host'])); ?></p>
+        <p class="meta"><?php echo esc_html(sprintf('当前访问域名：%s', $scan['expected_host'])); ?></p>
       <?php endif; ?>
-      <?php foreach (['local_missing' => '本地文件不在', 'host_mismatch' => '对外主机不一致', 'http' => '仍是 http', 'failed' => '带失败标记', 'prefix_mismatch' => '存储路径前缀不符'] as $flag => $label) : ?>
+      <?php foreach (['local_missing' => '本地文件缺失', 'host_mismatch' => '访问域名不一致', 'http' => '仍是 http', 'failed' => '带失败标记', 'prefix_mismatch' => '存储路径前缀不符'] as $flag => $label) : ?>
         <?php $rows = isset($scan[$flag]) && is_array($scan[$flag]) ? $scan[$flag] : []; ?>
         <?php if ($rows === []) { continue; } ?>
         <ul class="wpsss-log">
@@ -110,7 +110,7 @@ defined('ABSPATH') || exit;
       <?php endif; ?>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('只读。主题直传或不在媒体库的文件会提示找不到。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('诊断', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit"><?php echo esc_html__('开始诊断', 'wpsss'); ?></button>
       </div>
     </form>
   </section>

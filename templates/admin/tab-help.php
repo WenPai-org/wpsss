@@ -10,7 +10,7 @@ $docs = static function (string $slug): string {
 <div class="wpcy-page-head">
   <div>
     <h1 class="wpcy-h1"><?php echo esc_html__('帮助', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶（存到对象存储桶），页面仍在源站。', 'wpsss'); ?></p>
+    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶，网页仍从自己的服务器打开。', 'wpsss'); ?></p>
   </div>
 </div>
 
@@ -162,7 +162,7 @@ wp sss copy --to-bucket=新桶 --dry-run</code></pre>
     </div>
     <ul>
       <li><?php echo esc_html__('多站点（Multisite）暂不支持；不要在网络层激活。', 'wpsss'); ?></li>
-      <li><?php echo esc_html__('COS / OBS / 七牛的超大文件上传是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。', 'wpsss'); ?></li>
+      <li><?php echo esc_html__('COS / OBS / 七牛云的超大文件上传是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。', 'wpsss'); ?></li>
     </ul>
   </section>
   <section class="card wpsss-help-card">

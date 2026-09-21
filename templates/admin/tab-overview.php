@@ -17,7 +17,7 @@ $pending = (int) ($stats['pending'] ?? 0);
 <div class="wpcy-page-head">
   <div>
     <h1 class="wpcy-h1"><?php echo esc_html__('概览', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶（存到对象存储桶），页面仍在源站。', 'wpsss'); ?></p>
+    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶，网页仍从自己的服务器打开。', 'wpsss'); ?></p>
   </div>
 </div>
 

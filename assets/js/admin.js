@@ -33,12 +33,12 @@
       function (event) {
         var action = filter.querySelector('select[name="action"]');
         var value = action ? action.value : "";
-        if (value === "wpsss_pull" && !askConfirm(copy.confirmBulkPull || "确认批量拉回所选附件？")) {
+        if (value === "wpsss_pull" && !askConfirm(copy.confirmBulkPull || "确认批量拉回所选附件？本地已有同名文件时会先改名保留。")) {
           event.preventDefault();
           return;
         }
         if ((value === "delete" || value === "delete_all") && filter.querySelector("[data-wpsss-offloaded]")) {
-          if (!askConfirm(copy.confirmBulkDelete || "所选附件若已进桶，永久删除会同时删掉桶内对象。确定？")) {
+          if (!askConfirm(copy.confirmBulkDelete || "所选附件若已进桶，永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？")) {
             event.preventDefault();
           }
         }
@@ -51,7 +51,7 @@
       }
       tr.querySelectorAll("a.submitdelete, .delete a").forEach(function (a) {
         if (!a.getAttribute("data-wpsss-confirm")) {
-          a.setAttribute("data-wpsss-confirm", copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象。确定删除？");
+          a.setAttribute("data-wpsss-confirm", copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？");
         }
       });
     });
@@ -60,7 +60,7 @@
   if (deleteOne && document.querySelector(".wpsss-metabox .pill.ok")) {
     deleteOne.setAttribute(
       "data-wpsss-confirm",
-      copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象。确定删除？"
+      copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？"
     );
   }
 
@@ -883,7 +883,7 @@
           if (failStreak >= 5) {
             running = false;
             idle();
-            setProgress("连续失败 5 次，已暂停。请到「工具 → 排障 → 体检」查明原因后再重试。");
+            setProgress("页面补传连续 5 轮失败，已暂停。请到「工具 → 排障」查明原因后再重试。");
             return;
           }
           var left = body.get("source") === "failed" ? data.failed : data.pending;
@@ -901,7 +901,7 @@
             var hint = form.querySelector(".js-wpsss-offload-hint");
             if (hint && (left || 0) === 0) {
               hint.textContent = (data.failed || 0) > 0
-                ? "待传已清完，剩 " + (data.failed || 0) + " 个失败项。到「体检」查明原因，再点「重试失败项」。"
+                ? "待补传已清完，剩 " + (data.failed || 0) + " 个失败项。到「工具 → 排障」查明原因，再点「重试失败项」。"
                 : "全部附件已进桶，新上传会自动进桶。";
             }
             if (runBtn && (left || 0) === 0) {
@@ -1063,7 +1063,7 @@
           if (failStreak >= 5) {
             running = false;
             idle();
-            setProgress("连续失败 5 次，已暂停。请用「体检」查明原因后再继续。");
+            setProgress("页面补传连续 5 轮失败，已暂停。请到「工具 → 排障」查明原因后再继续。");
             return;
           }
           var line = "本轮已拉回 " + totals.ok + "，失败 " + totals.fail;
@@ -1294,7 +1294,7 @@
           .then(function (json) {
             inspectBtn.disabled = false;
             if (!json || !json.success) {
-              inspectHint(settingsForm, (json && json.data && json.data.message) || "读取失败。", false);
+              inspectHint(settingsForm, (json && json.data && json.data.message) || "读取桶信息失败，请稍后重试。", false);
               return;
             }
             var data = json.data || {};
@@ -1319,13 +1319,13 @@
             var notes = (data.notes || []).filter(Boolean);
             inspectHint(
               settingsForm,
-              notes.length ? notes.join(" ") : "已填入建议值，请点击保存。",
+              notes.length ? notes.join(" ") : "已填入建议值，请点「保存设置」。",
               true
             );
           })
           .catch(function () {
             inspectBtn.disabled = false;
-            inspectHint(settingsForm, "读取失败，请稍后重试。", false);
+            inspectHint(settingsForm, "读取桶信息失败，请稍后重试。", false);
           });
       });
     }

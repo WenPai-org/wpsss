@@ -179,7 +179,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
     </form>
 
   <?php elseif ($step === 3) : ?>
-    <h1><?php echo esc_html__('已为你做的', 'wpsss'); ?></h1>
+    <h1><?php echo esc_html__('已为你配置', 'wpsss'); ?></h1>
     <p class="lede"><?php echo esc_html__('以下默认项已就绪；细项可在设置页调整。', 'wpsss'); ?></p>
     <ul class="wpsss-done-list">
       <?php foreach ($done_rows as $row) : ?>

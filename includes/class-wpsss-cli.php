@@ -203,7 +203,7 @@ final class Wpsss_CLI
      * : 一批最多几个。默认 20。
      *
      * [--source=<which>]
-     * : pending（默认）取待传；failed 只重试带失败标记的附件。
+     * : pending（默认）取待补传；failed 只重试带失败标记的附件。
      *
      * [--dry-run]
      * : 只数不传。
@@ -233,7 +233,7 @@ final class Wpsss_CLI
             WP_CLI::warning($line);
         }
         if ($result['fail'] > 0) {
-            WP_CLI::error('仍有附件未上传成功。');
+            WP_CLI::error('仍有附件未上传成功。可用 wp sss offload --source=failed 重试，或到后台「工具 → 排障」查看原因。');
         }
         WP_CLI::success($dry ? '试运行结束，未做任何更改。' : '补传结束。');
     }
@@ -344,25 +344,6 @@ final class Wpsss_CLI
         }
     }
 
-    /**
-     * 把文章里的本地 uploads URL 换成桶域。默认 dry-run。
-     *
-     * ## OPTIONS
-     *
-     * [--apply]
-     * : 真写库。不加就只预览。
-     * [--from=<url>]
-     * : 被替换的前缀。默认本站 uploads。
-     * [--to=<url>]
-     * : 换成这个。默认当前对外地址。
-     *
-     * ## EXAMPLES
-     *
-     *     wp sss rewrite
-     *     wp sss rewrite --apply
-     *
-     * @when after_wp_load
-     */
     /**
      * 把已进桶的对象搬到另一只桶或厂商。只搬对象，不改插件配置。
      *
@@ -491,9 +472,28 @@ final class Wpsss_CLI
         foreach (array_slice($errors, 0, 5) as $err) {
             WP_CLI::warning($err);
         }
-        WP_CLI::success(sprintf('搬运完成：成功 %d 个附件，失败 %d 个对象。接续：--before=%d', $ok, $fail, $last_id));
+        WP_CLI::success(sprintf('搬运完成：成功 %d 个附件，失败 %d 个对象。下一批从 --before=%d 继续', $ok, $fail, $last_id));
     }
 
+    /**
+     * 把文章里的本地 uploads URL 换成桶域。默认 dry-run。
+     *
+     * ## OPTIONS
+     *
+     * [--apply]
+     * : 真写库。不加就只预览。
+     * [--from=<url>]
+     * : 被替换的前缀。默认本站 uploads。
+     * [--to=<url>]
+     * : 换成这个。默认当前对外地址。
+     *
+     * ## EXAMPLES
+     *
+     *     wp sss rewrite
+     *     wp sss rewrite --apply
+     *
+     * @when after_wp_load
+     */
     public function rewrite(array $args, array $assoc_args): void
     {
         unset($args);
@@ -556,9 +556,7 @@ final class Wpsss_CLI
             WP_CLI::log('offloaded_bytes=' . size_format((int) $stats['offloaded_bytes']));
         }
         $queue = wpsss()->library()->queue_snapshot();
-        WP_CLI::log(sprintf('queue: 待传 %d，失败 %d，后台任务 %s，运行锁 %s。', $queue['pending'], $queue['failed'], $queue['cron'], $queue['lock']));
-        $queue = wpsss()->library()->queue_snapshot();
-        WP_CLI::log(sprintf('队列：待传 %d，失败 %d，后台任务 %s，运行锁 %s。', $queue['pending'], $queue['failed'], $queue['cron'], $queue['lock']));
+        WP_CLI::log(sprintf('队列：待补传 %d，失败 %d，后台任务 %s，运行锁 %s。', $queue['pending'], $queue['failed'], $queue['cron'], $queue['lock']));
         if ($report['blockers'] === []) {
             WP_CLI::success('体检完成：无阻断项。');
             return;

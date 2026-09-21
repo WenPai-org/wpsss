@@ -760,7 +760,7 @@ class Wpsss_Offload
     {
         $key = $this->object_key($absolute_path);
         if ($key === '') {
-            return new WP_Error('wpsss_bad_key', '不在 uploads 下，跳过。');
+            return new WP_Error('wpsss_bad_key', '文件不在 uploads 目录内，已跳过；请检查附件是否完整。');
         }
         $opts = Wpsss_Options::get();
         if (self::key_is_excluded_dir(Wpsss_Offload::local_rel_from_object_key($key, $opts), $opts)) {
@@ -976,7 +976,7 @@ class Wpsss_Offload
     {
         $on_exist = self::sanitize_on_exist($on_exist);
         if ($delete_remote && $on_exist === 'skip') {
-            return new WP_Error('wpsss_pull_delete_mode', '删桶不能只补缺失。请改用覆盖或旁路改名，并先核对本地。');
+            return new WP_Error('wpsss_pull_delete_mode', '删除桶内对象时不能选「只补缺失」，请改用「覆盖」或「旧文件改名保留」，并先核对本地。');
         }
         $opts = Wpsss_Options::get();
         $driver = $this->plugin->active_driver();
@@ -1003,7 +1003,7 @@ class Wpsss_Offload
             $dest = $basedir . '/' . $rel;
             if (!wp_mkdir_p(dirname($dest))) {
                 self::restore_sidecars($moved);
-                return new WP_Error('wpsss_mkdir', '建不了本地目录。');
+                return new WP_Error('wpsss_mkdir', '无法创建本地目录，请检查磁盘权限。');
             }
             $exists = is_file($dest);
             if ($exists && $on_exist === 'skip') {
@@ -1029,7 +1029,7 @@ class Wpsss_Offload
                     if (!@rename($dest, $side)) {
                         @unlink($tmp);
                         self::restore_sidecars($moved);
-                        return new WP_Error('wpsss_rename', '挪不开本地文件：' . basename($dest));
+                        return new WP_Error('wpsss_rename', '无法挪开本地文件：' . basename($dest));
                     }
                     $moved[] = [$side, $dest];
                 }

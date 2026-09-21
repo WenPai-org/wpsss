@@ -67,7 +67,7 @@ class Wpsss_History
 
     public static function add_pull(int $post_id, bool $delete_remote): void
     {
-        $suffix = $delete_remote ? __('拉回并删远端', 'wpsss') : __('拉回本地', 'wpsss');
+        $suffix = $delete_remote ? __('拉回并删除桶内对象', 'wpsss') : __('拉回本地', 'wpsss');
         self::add_row('pull', self::attachment_detail($post_id, $suffix));
     }
 
@@ -150,7 +150,7 @@ class Wpsss_History
         }
         if (preg_match('/^attachment=(\d+)(?:\s+delete-remote)?$/', $detail, $m)) {
             $suffix = str_contains($detail, 'delete-remote')
-                ? __('拉回并删远端', 'wpsss')
+                ? __('拉回并删除桶内对象', 'wpsss')
                 : __('拉回本地', 'wpsss');
 
             return self::attachment_detail((int) $m[1], $suffix);

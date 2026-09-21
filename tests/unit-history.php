@@ -45,7 +45,7 @@ wpsss_assert(
     'legacy delete detail'
 );
 wpsss_assert(
-    Wpsss_History::format_detail('pull', 'attachment=5 delete-remote') === '附件 #5 · 拉回并删远端',
+    Wpsss_History::format_detail('pull', 'attachment=5 delete-remote') === '附件 #5 · 拉回并删除桶内对象',
     'legacy pull detail'
 );
 wpsss_assert(

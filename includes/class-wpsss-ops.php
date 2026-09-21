@@ -211,16 +211,16 @@ final class Wpsss_Ops
             $notes[] = '媒体库里没有对应附件。可能是主题直传、旧 CDN 或已删条目。';
         }
         if ($found && $expected !== '' && $host !== '' && $host !== $expected) {
-            $notes[] = '对外主机与当前设置不一致。文章若仍是旧地址，用工具页改写。';
+            $notes[] = '访问域名与当前设置不一致。文章若仍是旧地址，用工具页改写。';
         }
         if ($found && $host === '' && $expected === '') {
             $notes[] = '当前没有对外地址。检查自定义域名或桶设置。';
         }
         if ($found && $offloaded && !$local_exists) {
-            $notes[] = '本地文件不在。到迁移用「只补缺失」拉回。';
+            $notes[] = '本地文件缺失。到「工具 → 迁移」选「只补缺失」拉回。';
         }
         if ($found && $offloaded && $local_exists) {
-            $notes[] = '拉回只写磁盘，前台仍走桶。要改地址请解除标记或拉回并删除。本地已有时可旁路改名。';
+            $notes[] = '拉回只把文件写回服务器，前台地址仍指向存储桶。要改回本地地址，请解除进桶标记，或拉回并删除桶内对象。本地已有同名文件时会先改名保留。';
         }
         if ($found && $offloaded && $key !== '' && class_exists('Wpsss_Offload') && method_exists('Wpsss_Offload', 'key_fits_current_prefix') && !Wpsss_Offload::key_fits_current_prefix($key, $opts)) {
             $notes[] = '对象键对不上当前前缀。换过桶或前缀后不要直接拉回。';

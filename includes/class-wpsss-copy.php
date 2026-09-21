@@ -28,7 +28,7 @@ final class Wpsss_Copy
         // 跨厂商（或服务端复制不被接受）：中转临时文件，全程流式。
         $tmp = wp_tempnam('wpsss-copy');
         if ($tmp === false) {
-            return new WP_Error('wpsss_copy_tmp', '建不了临时文件。');
+            return new WP_Error('wpsss_copy_tmp', '无法创建临时文件，请检查磁盘空间。');
         }
         $download = Wpsss_Stream::download(static function (int $start, int $end) use ($from_driver, $from_opts, $from_key) {
             return $from_driver->get_object_range($from_opts, $from_key, $start, $end);

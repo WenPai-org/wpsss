@@ -72,7 +72,7 @@ if ($blockers !== []) {
       </ul>
       <?php if ($show_foot) : ?>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('需要写入探测时，请到工具页。', 'wpsss'); ?></span>
+        <span class="meta"><?php echo esc_html__('要验证密钥与权限，请到工具页做一次测试连通。', 'wpsss'); ?></span>
         <a class="btn btn-secondary" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('测试连通', 'wpsss'); ?></a>
       </div>
       <?php endif; ?>

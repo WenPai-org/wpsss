@@ -113,7 +113,7 @@ final class Wpsss_Admin
         $notice = isset($_GET['wpsss_notice']) ? sanitize_text_field(wp_unslash((string) $_GET['wpsss_notice'])) : '';
         $level = isset($_GET['wpsss_level']) ? sanitize_key((string) $_GET['wpsss_level']) : '';
         if (isset($_GET['settings-updated']) || isset($_GET['saved'])) {
-            $notice = $notice !== '' ? $notice : __('已保存', 'wpsss');
+            $notice = $notice !== '' ? $notice : __('已保存。', 'wpsss');
             $level = $level !== '' ? $level : 'ok';
         }
 
@@ -409,12 +409,13 @@ final class Wpsss_Admin
         ], 10 * MINUTE_IN_SECONDS);
         $msg = $apply
             ? sprintf(
-                '拉回完成：写入 %d，失败 %d，跳过 %d，改名保留 %d。',
+                '拉回完成：写入 %d，失败 %d，跳过 %d，改名保留 %d；本地已有 %d，缺失 %d。',
                 $result['ok'],
                 $result['fail'],
-                $result['missing'] + ($on_exist === 'skip' ? 0 : $result['exists']),
                 $result['skip'],
-                $result['renamed']
+                $result['renamed'],
+                $result['exists'],
+                $result['missing']
             )
             : sprintf(
                 '预览：将写入 %d 个文件，跳过 %d，改名保留 %d；本地已有 %d，缺失 %d。',
@@ -484,7 +485,7 @@ final class Wpsss_Admin
         $this->redirect_tools(
             'ok',
             sprintf(
-                '%s：扫 %d 篇命中 %d，字段扫 %d 命中 %d。%s',
+                '%s：扫描 %d 篇文章，命中 %d 篇；扫描 %d 个字段，命中 %d 个。%s',
                 $verb,
                 $result['scanned'],
                 $result['changed'],
@@ -702,13 +703,13 @@ final class Wpsss_Admin
                 $this->redirect('setup', 'error', __('请填写桶名与访问密钥。', 'wpsss'), ['step' => '2']);
             }
             update_option(Wpsss_Options::OPTION_KEY, $saved);
-            $this->redirect('setup', 'ok', __('已保存桶与密钥', 'wpsss'), ['step' => '3']);
+            $this->redirect('setup', 'ok', __('已保存桶与密钥。', 'wpsss'), ['step' => '3']);
         }
 
         if ($action === 'finish') {
             $opts['setup_completed_at'] = gmdate('c');
             update_option(Wpsss_Options::OPTION_KEY, Wpsss_Options::sanitize($opts));
-            $this->redirect('overview', 'ok', __('设置向导已完成', 'wpsss'));
+            $this->redirect('overview', 'ok', __('设置向导已完成。', 'wpsss'));
         }
 
         wp_safe_redirect($this->url('setup'));

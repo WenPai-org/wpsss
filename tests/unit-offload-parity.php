@@ -156,7 +156,7 @@ wpsss_assert(strpos($offload_src, 'sanitize_on_exist') !== false, 'pull has on-e
 wpsss_assert(strpos($offload_src, 'sidecar_path') !== false, 'pull has sidecar rename');
 wpsss_assert(strpos($offload_src, 'restore_sidecars') !== false, 'pull restores sidecar on fail');
 wpsss_assert(strpos($offload_src, 'key_fits_current_prefix') !== false, 'pull checks key prefix');
-wpsss_assert(strpos($offload_src, '删桶不能只补缺失') !== false, 'pull rejects delete+skip');
+wpsss_assert(strpos($offload_src, '不能选「只补缺失」') !== false, 'pull rejects delete+skip');
 wpsss_assert(Wpsss_Offload::key_fits_current_prefix('2026/09/a.jpg', []) === true, 'empty prefix always fits');
 wpsss_assert(Wpsss_Offload::key_fits_current_prefix('wp/2026/09/a.jpg', ['object_prefix' => 'wp']) === true, 'matching prefix fits');
 wpsss_assert(Wpsss_Offload::key_fits_current_prefix('2026/09/a.jpg', ['object_prefix' => 'wp']) === false, 'missing prefix blocked');

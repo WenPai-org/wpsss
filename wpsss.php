@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WPSSS
  * Plugin URI: https://wpcy.com/
- * Description: 文派智储。媒体进桶，页面仍在源站。支持国内云、S3 兼容与自定义 CDN 域名。
+ * Description: 文派智储。媒体进桶，网页仍从自己的服务器打开。支持国内云、S3 兼容与自定义 CDN 域名。
  * Version: 0.9.1
  * Requires at least: 6.0
  * Requires PHP: 7.4

@@ -107,7 +107,7 @@ $exist_modes = [
       <div class="wpsss-caution js-wpsss-pull-delete-confirm wpsss-gate-extra" hidden>
         <div class="notice bad">
           <?php echo Wpsss_Icons::svg('info'); ?>
-          <span><strong><?php echo esc_html__('桶里没有回收站。', 'wpsss'); ?></strong> <?php echo esc_html__('对象存储控制台通常也无法恢复。文章、缩略图、付费下载若仍指向桶地址，删除后前台图片将立即无法显示。', 'wpsss'); ?><?php echo class_exists('WooCommerce', false) ? ' ' . esc_html__('Woo 付费下载若仍指向桶地址，删除对象将影响订单交付。', 'wpsss') : ''; ?></span>
+          <span><strong><?php echo esc_html__('桶里没有回收站。', 'wpsss'); ?></strong> <?php echo esc_html__('对象存储控制台通常也无法恢复。文章、缩略图、付费下载若仍指向桶地址，删除后前台图片将立即无法显示。', 'wpsss'); ?><?php echo class_exists('WooCommerce', false) ? ' ' . esc_html__('WooCommerce 付费下载若仍指向桶地址，删除对象将影响订单交付。', 'wpsss') : ''; ?></span>
         </div>
         <p class="wpsss-backup-note"><?php echo esc_html__('先做完这三步，再勾下面：', 'wpsss'); ?></p>
         <ol class="wpsss-backup-steps">
@@ -225,7 +225,7 @@ $exist_modes = [
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('每批最多 20 个，不会删除桶内对象。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不会删除桶内对象。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除标记', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不会删除桶内对象。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除进桶标记', 'wpsss'); ?></button>
       </div>
     </form>
   </section>

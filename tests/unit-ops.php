@@ -51,8 +51,8 @@ wpsss_assert(strpos(implode('', $notes), '媒体库里没有') !== false, 'diagn
 $missing_local = Wpsss_Ops::diagnose_notes(true, 'id', 'cdn.example', 'cdn.example', false, true);
 wpsss_assert(strpos(implode('', $missing_local), '只补缺失') !== false, 'diagnose missing local points to skip pull');
 $keep_local = Wpsss_Ops::diagnose_notes(true, 'id', 'cdn.example', 'cdn.example', true, true);
-wpsss_assert(strpos(implode('', $keep_local), '旁路改名') !== false, 'diagnose existing local points to rename');
-wpsss_assert(strpos(implode('', $keep_local), '前台仍走桶') !== false, 'diagnose existing local says still on bucket');
+wpsss_assert(strpos(implode('', $keep_local), '会先改名保留') !== false, 'diagnose existing local points to rename');
+wpsss_assert(strpos(implode('', $keep_local), '前台地址仍指向存储桶') !== false, 'diagnose existing local says still on bucket');
 $prefix_notes = Wpsss_Ops::diagnose_notes(true, 'id', 'cdn.example', 'cdn.example', true, true, '2026/09/a.jpg', ['object_prefix' => 'wp']);
 wpsss_assert(strpos(implode('', $prefix_notes), '对不上当前前缀') !== false, 'diagnose prefix mismatch');
 $prefix_row = Wpsss_Ops::classify_row([
@@ -103,7 +103,7 @@ wpsss_assert(strpos((string) file_get_contents($toolsDir . 'part-tools-move.php'
 wpsss_assert(strpos($tools, '序列化字段不修改') === false, 'tools rewrite no longer lies about serialized');
 wpsss_assert(strpos($tools, '含序列化') !== false, 'tools rewrite admits serialized meta');
 wpsss_assert(strpos($tools, '请清页面缓存') !== false, 'tools asks to flush cache');
-wpsss_assert(strpos($tools, 'Woo 付费下载') !== false, 'tools delete mentions Woo when class exists');
+wpsss_assert(strpos($tools, 'WooCommerce 付费下载') !== false, 'tools delete mentions Woo when class exists');
 wpsss_assert(strpos($tools, '只补缺失') !== false, 'tools pull skip mode');
 wpsss_assert(strpos($tools, 'wpsss_pull_reset') !== false, 'tools pull resume reset');
 wpsss_assert(strpos($tools, 'wpsss_offload_reset') !== false, 'tools offload resume reset');
@@ -153,7 +153,7 @@ wpsss_assert(strpos($lib, 'ID > %d') !== false, 'rewrite uses keyset pagination'
 wpsss_assert(strpos($tools, 'js-wpsss-pull-progress') !== false, 'tools pull ajax progress');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-stop') !== false, 'tools pull pause button');
 wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-time copy');
-wpsss_assert(strpos($tools, '待传已清完') !== false, 'tools queue-drained copy');
+wpsss_assert(strpos($tools, '待补传已清完') !== false, 'tools queue-drained copy');
 wpsss_assert(strpos($tools, '点「重试失败项」只处理它们') !== false, 'tools retry copy');
 wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
 wpsss_assert(strpos($tools, 'js-wpsss-offload-bar') !== false, 'tools offload bar element');
@@ -169,7 +169,7 @@ wpsss_assert(strpos($offload_src, 'editor_hooked') === false, 'image editor hook
 $url_src = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-url.php');
 wpsss_assert(strpos($url_src, "allowed_classes") !== false, 'serialized rewrite restricts classes');
 
-wpsss_assert(strpos($js, '连续失败 5 次') !== false, 'js failure circuit breaker');
+wpsss_assert(strpos($js, '页面补传连续 5 轮失败') !== false, 'js failure circuit breaker');
 
 $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php');
 wpsss_assert(strpos($cli, '删除远端须加 --yes') !== false, 'cli pull delete needs yes');

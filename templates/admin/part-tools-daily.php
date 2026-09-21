@@ -19,7 +19,7 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_probe'); ?>
       <div class="card-foot start">
-        <span class="meta"><?php echo esc_html__('测试会向桶写入并删除一个临时对象，用来验证密钥与权限。', 'wpsss'); ?></span>
+        <span class="meta"><?php echo esc_html__('测试不产生费用，也不会留下文件。', 'wpsss'); ?></span>
         <button class="btn btn-secondary" type="submit"><?php echo esc_html__('测试连通', 'wpsss'); ?></button>
       </div>
     </form>
@@ -31,7 +31,7 @@ defined('ABSPATH') || exit;
       <div>
         <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html(sprintf(
-            '已进桶 %d / 共 %d 个附件，待上传 %d，失败 %d。',
+            '已进桶 %d / 共 %d 个附件，待补传 %d，失败 %d。',
             (int) $stats['offloaded'],
             (int) $stats['total'],
             (int) $stats['pending'],
@@ -48,13 +48,13 @@ defined('ABSPATH') || exit;
       <div class="card-foot start">
         <span class="meta js-wpsss-offload-hint"><?php
           if ($pending > 0 && (int) ($failed ?? 0) > 0) {
-              echo esc_html(sprintf(__('待上传 %d 个，其中 %d 个上次失败。失败项会自动退出队列，点「重试失败项」单独处理。', 'wpsss'), (int) $pending, (int) $failed));
+              echo esc_html(sprintf(__('待补传 %d 个，其中 %d 个上次失败。失败项会自动退出队列，点「重试失败项」单独处理。', 'wpsss'), (int) $pending, (int) $failed));
           } elseif ($pending > 0 && (int) ($offload_cursor ?? 0) > 0) {
               echo esc_html(sprintf(__('接着上次的位置（编号 %d）继续，从新到旧。关掉页面，后台每分钟最多补 2 个。', 'wpsss'), (int) $offload_cursor));
           } elseif ($pending > 0) {
               echo esc_html__('开始后一次传一个。关掉页面，后台每分钟最多补 2 个，补完自动停；点「暂停」立即全停。', 'wpsss');
           } elseif ((int) ($failed ?? 0) > 0) {
-              echo esc_html(sprintf(__('待传已清完，剩 %d 个失败项。到「体检」查明原因，再点「重试失败项」。', 'wpsss'), (int) $failed));
+              echo esc_html(sprintf(__('待补传已清完，剩 %d 个失败项。到「工具 → 排障」查明原因，再点「重试失败项」。', 'wpsss'), (int) $failed));
           } else {
               echo esc_html__('全部附件已进桶，新上传会自动进桶。', 'wpsss');
           }
@@ -71,7 +71,7 @@ defined('ABSPATH') || exit;
     <?php if ((int) ($stalled ?? 0) > 0) : ?>
     <div class="notice warn">
       <?php echo Wpsss_Icons::svg('info'); ?>
-      <span><?php echo esc_html(sprintf(__('后台慢跑已停：剩 %d 个附件连续失败 3 次以上。请到「体检」查明原因，再用下方按钮重试。', 'wpsss'), (int) $stalled)); ?></span>
+      <span><?php echo esc_html(sprintf(__('后台自动补传已停：剩 %d 个附件连续失败 3 次以上。请到「工具 → 排障」查明原因，再用下方按钮重试。', 'wpsss'), (int) $stalled)); ?></span>
     </div>
     <?php endif; ?>
     <?php if ($failed > 0) : ?>

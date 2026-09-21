@@ -8,12 +8,11 @@ Stable tag: 0.7.0
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
-文派对象存储。一个插件：国内四家 + 火山 TOS + Amazon S3 兼容：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。
+文派智储（WPSSS）。一个插件：国内四家 + 火山 TOS + Amazon S3 兼容：阿里云 OSS / 腾讯云 COS / 七牛云 KODO / 华为云 OBS。
 
 == Description ==
 
-对照 sy-records Apache-2.0 全家桶的上传 / 删除 / URL 路径，自写 OSS REST + Signature V1，不整仓粘贴 SDK。
-不是 Mac Studio/wpsss 腾讯云官方套件，也不是 wenpai-static-host。
+媒体文件存进对象存储桶，网页仍从自己的服务器打开。支持自定义域名、签名访问、大文件分片、WooCommerce 付费下载保护与 WP-CLI。
 
 == Changelog ==
 

@@ -1,6 +1,6 @@
-# WPSSS · 文派对象存储
+# WPSSS · 文派智储
 
-一个 WordPress 插件，四个对象存储 driver：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。自定义域名以后接 CyberCDN。**HTML 仍在源站。**
+一个 WordPress 插件，四个对象存储 driver：阿里云 OSS / 腾讯云 COS / 七牛 KODO / 华为云 OBS。自定义域名以后接 CyberCDN。**网页仍从自己的服务器打开。**
 
 | | |
 |--|--|

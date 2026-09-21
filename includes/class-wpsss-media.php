@@ -94,7 +94,7 @@ final class Wpsss_Media
             return;
         }
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            echo esc_html__('未接通', 'wpsss');
+            echo esc_html__('未连接', 'wpsss');
             return;
         }
         $err = Wpsss_Library::last_error($post_id);
@@ -124,14 +124,14 @@ final class Wpsss_Media
                 admin_url('admin-post.php?action=wpsss_pull_one&id=' . (int) $post->ID),
                 'wpsss_pull_one_' . (int) $post->ID
             );
-            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？已有同名文件会旁路改名成 原名-local-时间，再写入桶里那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？本地已有同名文件时，会先把旧文件改名为「原名-local-时间戳」保留，再写入桶里的那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             return $actions;
         }
         $url = wp_nonce_url(
             admin_url('admin-post.php?action=wpsss_offload_one&id=' . (int) $post->ID),
             'wpsss_offload_one_' . (int) $post->ID
         );
-        $actions['wpsss'] = '<a href="' . esc_url($url) . '">' . esc_html__('传到对象存储', 'wpsss') . '</a>';
+        $actions['wpsss'] = '<a href="' . esc_url($url) . '">' . esc_html__('补传到桶', 'wpsss') . '</a>';
         return $actions;
     }
 
@@ -141,7 +141,7 @@ final class Wpsss_Media
      */
     public function bulk_actions(array $actions): array
     {
-        $actions['wpsss_offload'] = __('传到对象存储', 'wpsss');
+        $actions['wpsss_offload'] = __('补传到桶', 'wpsss');
         $actions['wpsss_pull'] = __('拉回本地', 'wpsss');
         return $actions;
     }
@@ -288,7 +288,7 @@ final class Wpsss_Media
                 admin_url('admin-post.php?action=wpsss_offload_one&id=' . $id),
                 'wpsss_offload_one_' . $id
             );
-            echo '<a class="btn btn-secondary" href="' . esc_url($href) . '">' . esc_html__('传到对象存储', 'wpsss') . '</a>';
+            echo '<a class="btn btn-secondary" href="' . esc_url($href) . '">' . esc_html__('补传到桶', 'wpsss') . '</a>';
         }
         echo '</div></div>';
     }
@@ -307,7 +307,7 @@ final class Wpsss_Media
             $ok = sanitize_key((string) $_GET['wpsss_offload']) === 'ok';
             $this->render_flash(
                 $ok ? 'ok' : 'warn',
-                $ok ? __('已传到对象存储。', 'wpsss') : __('上传失败，请检查本地文件与桶权限。', 'wpsss')
+                $ok ? __('已进桶。', 'wpsss') : __('上传失败，请检查本地文件与桶权限。', 'wpsss')
             );
         }
         if (isset($_GET['wpsss_pull'])) {
