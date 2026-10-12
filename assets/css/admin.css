@@ -1220,12 +1220,19 @@ body.wpsss-admin .wenpai-head-action {
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors.is-compact {
     grid-template-columns: 1fr;
   }
-  /* 高级页头：藏「显示」标签，给简单/高级 + 保存腾位置 */
+  /* 页头 .mode：整行左起，seg 均分；藏「显示」标签腾出保存钮 */
+  body.wpsss-admin .wenpai-app .wenpai-page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
   body.wpsss-admin .wenpai-app .wenpai-page-head .mode {
     flex-wrap: wrap;
     row-gap: 8px;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    width: 100%;
     max-width: 100%;
+    margin-left: 0;
   }
   body.wpsss-admin .wenpai-app .wenpai-page-head .mode > svg,
   body.wpsss-admin .wenpai-app .wenpai-page-head .mode > span:not(.seg) {
@@ -1235,8 +1242,16 @@ body.wpsss-admin .wenpai-head-action {
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
   }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode .seg {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode .seg a {
+    flex: 1 1 0;
+    justify-content: center;
+  }
   body.wpsss-admin .wenpai-app .wenpai-page-head .mode .btn-primary {
-    margin-left: 0;
+    margin-left: auto;
   }
   body.wpsss-admin .wenpai-app .field-ctl-row {
     flex-wrap: wrap;
