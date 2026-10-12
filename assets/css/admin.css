@@ -834,6 +834,9 @@ details > .wpsss-doctor-summary {
   gap: 12px;
   margin-top: 20px;
 }
+.wpsss-help-card {
+  padding: 20px 24px;
+}
 .wpsss-help-card .card-head {
   align-items: flex-start;
 }
@@ -876,6 +879,7 @@ details > .wpsss-doctor-summary {
   grid-column: 2;
   font-size: 13px;
   line-height: 20px;
+  font-weight: 400;
   color: var(--wenpai-ink);
 }
 .wpsss-help-steps span {
@@ -893,9 +897,9 @@ details > .wpsss-doctor-summary {
 .wpsss-help-details > summary {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 14px 24px;
   cursor: pointer;
   list-style: none;
 }
@@ -925,9 +929,8 @@ details > .wpsss-doctor-summary {
 .wpsss-help-summary-text strong {
   font-size: 14px;
   line-height: 20px;
-  color: var(--wenpai-ink);
-
   font-weight: 400;
+  color: var(--wenpai-ink);
 }
 .wpsss-help-summary-text span {
   font-size: 12px;
@@ -935,7 +938,8 @@ details > .wpsss-doctor-summary {
   color: var(--wenpai-ink-3);
 }
 .wpsss-help-body {
-  padding: 0 16px 16px 52px;
+  /* 24 + 36 + 14：与 WPSlug harvest 图标左缘对齐 */
+  padding: 0 24px 16px 74px;
   border-top: 1px solid var(--wenpai-line-soft);
 }
 .wpsss-help-dl {
@@ -946,15 +950,15 @@ details > .wpsss-doctor-summary {
   line-height: 20px;
   color: var(--wenpai-ink);
   font-weight: 400;
-  margin-top: 18px;
+  margin-top: 12px;
 }
 .wpsss-help-dl dt:first-child {
   margin-top: 0;
 }
 .wpsss-help-dl dd {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
-  line-height: 19px;
+  line-height: 18px;
   color: var(--wenpai-ink-3);
 }
 .wpsss-help-details .wpsss-help-body .wpsss-help-dl dd {

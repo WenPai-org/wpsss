@@ -167,7 +167,7 @@ wp sss copy --to-bucket=新桶 --dry-run</code></pre>
   </section>
   <section class="card wpsss-help-card">
     <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('chat'); ?></span>
+      <span class="tile"><?php echo Wpsss_Icons::svg('feedback'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('需要更多帮助', 'wpsss'); ?></h2>
         <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
