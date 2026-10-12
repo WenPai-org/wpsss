@@ -827,6 +827,7 @@ details > .wpsss-doctor-summary {
 
 .wenpai-head-right .btn-ghost.is-active {
   color: var(--wenpai-accent);
+  background: var(--wenpai-accent-soft);
 }
 .wpsss-help-stack {
   display: flex;
@@ -889,6 +890,17 @@ details > .wpsss-doctor-summary {
   grid-column: 2;
   justify-self: start;
   margin-top: 4px;
+}
+.wpsss-help-steps .wpsss-help-step-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.wpsss-help-steps .wpsss-help-step-actions .btn {
+  grid-column: auto;
+  margin-top: 0;
 }
 .wpsss-help-details {
   padding: 0;
@@ -1126,6 +1138,11 @@ body.wpsss-admin .wenpai-head-action {
     padding: 0;
     gap: 0;
     justify-content: center;
+  }
+  /* 图标态也要看得出当前在帮助页 */
+  body.wpsss-admin .wenpai-head-right .wenpai-head-action.is-active {
+    color: var(--wenpai-accent);
+    background: var(--wenpai-accent-soft);
   }
   body.wpsss-admin .wenpai-head-right .wenpai-head-label {
     position: absolute;
