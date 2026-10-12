@@ -15,8 +15,8 @@ if ( ! class_exists( 'Wenpai_Admin_Loader', false ) ) {
 	 */
 	class Wenpai_Admin_Loader {
 
-		const STYLE_HANDLE = 'wenpai-admin-ui';
-		const SCRIPT_HANDLE = 'wenpai-admin-ui-js';
+		const STYLE_HANDLE  = 'wenpai-admin-ui';
+		const SCRIPT_HANDLE = 'wenpai-admin-ui';
 
 		/**
 		 * @param array $args {
@@ -40,6 +40,7 @@ if ( ! class_exists( 'Wenpai_Admin_Loader', false ) ) {
 
 			$css_file = $dir . '/css/wenpai-admin.css';
 			$wp_file  = $dir . '/css/wenpai-admin-wp.css';
+			$js_file  = $dir . '/js/wenpai-admin.js';
 			$ref      = $dir . '/VERSION';
 
 			wp_register_style(
@@ -63,6 +64,17 @@ if ( ! class_exists( 'Wenpai_Admin_Loader', false ) ) {
 			if ( $full && is_readable( $wp_file ) ) {
 				wp_enqueue_style( self::STYLE_HANDLE . '-wp' );
 				add_filter( 'admin_body_class', array( __CLASS__, 'body_class' ) );
+			}
+
+			if ( is_readable( $js_file ) && function_exists( 'wp_register_script' ) ) {
+				wp_register_script(
+					self::SCRIPT_HANDLE,
+					plugins_url( 'js/wenpai-admin.js', $ref ),
+					array(),
+					$ver,
+					true
+				);
+				wp_enqueue_script( self::SCRIPT_HANDLE );
 			}
 		}
 

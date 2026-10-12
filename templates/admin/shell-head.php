@@ -31,8 +31,8 @@ $tabs = [
     </div>
     <?php endif; ?>
     <div class="wenpai-head-right">
-      <a class="btn btn-ghost<?php echo $tab === 'help' ? ' is-active' : ''; ?>" href="<?php echo esc_url($url('help')); ?>"><?php echo Wpsss_Icons::svg('help'); ?><?php echo esc_html__('帮助', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('chat'); ?><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
+      <a class="btn btn-ghost wenpai-head-action<?php echo $tab === 'help' ? ' is-active' : ''; ?>" href="<?php echo esc_url($url('help')); ?>" title="<?php echo esc_attr__('帮助', 'wpsss'); ?>"><?php echo Wpsss_Icons::svg('help'); ?><span class="wenpai-head-label"><?php echo esc_html__('帮助', 'wpsss'); ?></span></a>
+      <a class="btn btn-ghost wenpai-head-action" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener" title="<?php echo esc_attr__('反馈', 'wpsss'); ?>"><?php echo Wpsss_Icons::svg('chat'); ?><span class="wenpai-head-label"><?php echo esc_html__('反馈', 'wpsss'); ?></span></a>
     </div>
   </div>
 </div></div>

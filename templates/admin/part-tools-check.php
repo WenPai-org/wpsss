@@ -160,7 +160,7 @@ defined('ABSPATH') || exit;
       <input type="hidden" name="action" value="wpsss_clear_errors" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_clear_errors'); ?>
-      <div class="chk wpsss-gate">
+      <div class="chk wenpai-gate wpsss-gate">
         <label><input type="checkbox" name="wpsss_clear_confirm" value="1" /> <?php echo esc_html__('我确认清除失败标记', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">

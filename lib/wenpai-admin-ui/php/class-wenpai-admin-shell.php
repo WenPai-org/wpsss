@@ -3,6 +3,9 @@
  * Settings-plugin chrome: top bar, tabs, wrap, footer.
  * Strings are passed in by the product plugin (no kit text domain).
  *
+ * Markup matches prototypes: .wenpai-top > .wenpai-wrap > .wenpai-head,
+ * then main.wenpai-main.wenpai-wrap, footer.foot.
+ *
  * @package Wenpai_Admin_UI
  */
 
@@ -18,60 +21,90 @@ if ( ! class_exists( 'Wenpai_Admin_Shell', false ) ) {
 
 		/**
 		 * @param array $args {
-		 *     @type string $slug          Product slug (wpslug / wpsss).
-		 *     @type string $name          Product display name (already translated).
-		 *     @type string $mark_html     Product SVG for .wenpai-mark.
-		 *     @type string $current       Current tab id.
-		 *     @type array  $tabs          array of array{ id, label, url }.
-		 *     @type string $help_url      Optional.
-		 *     @type string $help_label    Optional, already translated.
-		 *     @type string $feedback_url  Optional.
-		 *     @type string $feedback_label Optional.
-		 *     @type string $version       Plugin version string.
-		 *     @type string $doc_url       Footer doc link.
-		 *     @type string $doc_label     Footer doc label.
+		 *     @type string $slug            Product slug (wpslug / wpsss).
+		 *     @type string $name            Product display name (already translated).
+		 *     @type string $mark_html       Product SVG for .wenpai-mark.
+		 *     @type string $home_url        Brand link. Defaults to first tab url.
+		 *     @type string $current         Current tab id.
+		 *     @type array  $tabs            array of array{ id, label, url, icon_html? }.
+		 *     @type string $head_extra      Optional HTML after tabs (wizard exit). Caller escapes.
+		 *     @type string $help_url        Optional.
+		 *     @type string $help_label      Optional, already translated.
+		 *     @type string $help_icon_html  Optional SVG, caller escapes.
+		 *     @type string $feedback_url    Optional.
+		 *     @type string $feedback_label  Optional.
+		 *     @type string $feedback_icon_html Optional SVG.
+		 *     @type string $version         Plugin version string.
+		 *     @type string $doc_url         Footer doc link.
+		 *     @type string $doc_label       Footer doc label.
 		 * }
 		 */
 		public static function open( $args ) {
-			$slug = isset( $args['slug'] ) ? sanitize_html_class( $args['slug'] ) : '';
-			$name = isset( $args['name'] ) ? $args['name'] : '';
-			$mark = isset( $args['mark_html'] ) ? $args['mark_html'] : '';
+			$name    = isset( $args['name'] ) ? $args['name'] : '';
+			$mark    = isset( $args['mark_html'] ) ? $args['mark_html'] : '';
 			$current = isset( $args['current'] ) ? $args['current'] : '';
-			$tabs = isset( $args['tabs'] ) && is_array( $args['tabs'] ) ? $args['tabs'] : array();
+			$tabs    = isset( $args['tabs'] ) && is_array( $args['tabs'] ) ? $args['tabs'] : array();
+			$home    = isset( $args['home_url'] ) ? $args['home_url'] : '';
+			if ( '' === $home && isset( $tabs[0]['url'] ) ) {
+				$home = $tabs[0]['url'];
+			}
 
 			echo '<div class="wenpai-app">';
-			echo '<div class="wenpai-top"><div class="wenpai-head">';
+			echo '<div class="wenpai-top"><div class="wenpai-wrap">';
+			echo '<div class="wenpai-head">';
+			echo '<a class="wenpai-brand" href="' . esc_url( $home ) . '">';
 			echo '<span class="wenpai-mark">' . $mark . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- product SVG.
 			echo '<span class="wenpai-name">' . esc_html( $name ) . '</span>';
-			echo '<nav class="wenpai-tabs" aria-label="' . esc_attr( $name ) . '">';
-			foreach ( $tabs as $tab ) {
-				$id    = isset( $tab['id'] ) ? $tab['id'] : '';
-				$label = isset( $tab['label'] ) ? $tab['label'] : '';
-				$url   = isset( $tab['url'] ) ? $tab['url'] : '';
-				$cls   = 'wenpai-tab';
-				if ( $id === $current ) {
-					$cls .= ' is-active';
+			echo '</a>';
+			if ( array() !== $tabs ) {
+				echo '<nav class="wenpai-tabs" aria-label="' . esc_attr( $name ) . '">';
+				foreach ( $tabs as $tab ) {
+					$id    = isset( $tab['id'] ) ? $tab['id'] : '';
+					$label = isset( $tab['label'] ) ? $tab['label'] : '';
+					$url   = isset( $tab['url'] ) ? $tab['url'] : '';
+					$icon  = isset( $tab['icon_html'] ) ? $tab['icon_html'] : '';
+					$cls   = 'wenpai-tab';
+					if ( $id === $current ) {
+						$cls .= ' is-active';
+					}
+					echo '<a class="' . esc_attr( $cls ) . '" href="' . esc_url( $url ) . '">';
+					echo $icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- product SVG.
+					echo esc_html( $label );
+					echo '</a>';
 				}
-				echo '<a class="' . esc_attr( $cls ) . '" href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>';
+				echo '</nav>';
 			}
-			echo '</nav>';
-			echo '<span class="wenpai-head-right">';
+			if ( ! empty( $args['head_extra'] ) ) {
+				echo $args['head_extra']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- caller HTML.
+			}
+			echo '<div class="wenpai-head-right">';
 			if ( ! empty( $args['help_url'] ) ) {
-				$hl = isset( $args['help_label'] ) ? $args['help_label'] : '帮助';
-				echo '<a class="btn btn-ghost" href="' . esc_url( $args['help_url'] ) . '">' . esc_html( $hl ) . '</a>';
+				$hl  = isset( $args['help_label'] ) ? $args['help_label'] : '帮助';
+				$hcl = 'btn btn-ghost';
+				if ( 'help' === $current ) {
+					$hcl .= ' is-active';
+				}
+				$hicon = isset( $args['help_icon_html'] ) ? $args['help_icon_html'] : '';
+				echo '<a class="' . esc_attr( $hcl ) . '" href="' . esc_url( $args['help_url'] ) . '">';
+				echo $hicon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- product SVG.
+				echo esc_html( $hl );
+				echo '</a>';
 			}
 			if ( ! empty( $args['feedback_url'] ) ) {
-				$fl = isset( $args['feedback_label'] ) ? $args['feedback_label'] : '反馈';
-				echo '<a class="btn btn-ghost" href="' . esc_url( $args['feedback_url'] ) . '">' . esc_html( $fl ) . '</a>';
+				$fl    = isset( $args['feedback_label'] ) ? $args['feedback_label'] : '反馈';
+				$ficon = isset( $args['feedback_icon_html'] ) ? $args['feedback_icon_html'] : '';
+				echo '<a class="btn btn-ghost" href="' . esc_url( $args['feedback_url'] ) . '">';
+				echo $ficon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- product SVG.
+				echo esc_html( $fl );
+				echo '</a>';
 			}
-			echo '</span>';
-			echo '</div></div>';
-			echo '<div class="wenpai-wrap">';
-			unset( $slug );
+			echo '</div>';
+			echo '</div></div></div>';
+			echo '<main class="wenpai-main wenpai-wrap">';
 		}
 
 		/**
-		 * Close wrap + footer.
+		 * Close main + footer.
 		 *
 		 * @param array $args Same as open(); uses version / doc_url / doc_label.
 		 */
@@ -80,24 +113,24 @@ if ( ! class_exists( 'Wenpai_Admin_Shell', false ) ) {
 			$doc = isset( $args['doc_url'] ) ? $args['doc_url'] : '';
 			$dl  = isset( $args['doc_label'] ) ? $args['doc_label'] : '';
 
-			echo '</div>'; // .wenpai-wrap
-			echo '<div class="wenpai-foot">';
+			echo '<footer class="foot">';
 			if ( '' !== $ver ) {
-				echo '<span class="wenpai-foot-ver">' . esc_html( $ver ) . '</span>';
+				echo '<span>' . esc_html( $ver ) . '</span>';
 			}
 			if ( '' !== $doc ) {
-				echo '<a class="wenpai-foot-doc" href="' . esc_url( $doc ) . '">' . esc_html( $dl ) . '</a>';
+				echo '<span class="r"><a href="' . esc_url( $doc ) . '">' . esc_html( $dl ) . '</a></span>';
 			}
+			echo '</footer>';
+			echo '</main>';
 			echo '</div>';
-			echo '</div>'; // .wenpai-app
 		}
 
 		/**
-		 * Page heading inside the wrap.
+		 * Page heading inside main.
 		 *
 		 * @param string $title Already translated.
 		 * @param string $lede  Already translated. Optional.
-		 * @param string $aside Optional HTML for the right of the heading (escaped by caller).
+		 * @param string $aside Optional HTML for .mode (escaped by caller).
 		 */
 		public static function page_head( $title, $lede = '', $aside = '' ) {
 			echo '<div class="wenpai-page-head">';
@@ -108,7 +141,7 @@ if ( ! class_exists( 'Wenpai_Admin_Shell', false ) ) {
 			}
 			echo '</div>';
 			if ( '' !== $aside ) {
-				echo '<div class="wenpai-mode">' . $aside . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- caller HTML.
+				echo '<div class="mode">' . $aside . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- caller HTML.
 			}
 			echo '</div>';
 		}

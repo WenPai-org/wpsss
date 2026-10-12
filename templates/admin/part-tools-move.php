@@ -100,7 +100,7 @@ $exist_modes = [
           ?>
         <p class="wpsss-pull-result"><?php echo esc_html(implode(' · ', $bits)); ?></p>
       <?php endif; ?>
-      <div class="chk wpsss-gate js-wpsss-pull-gate"<?php echo $pull_exist === 'skip' ? ' hidden' : ''; ?>>
+      <div class="chk wenpai-gate wpsss-gate js-wpsss-pull-gate"<?php echo $pull_exist === 'skip' ? ' hidden' : ''; ?>>
         <label><input type="checkbox" name="wpsss_pull_confirm" value="1" /> <span class="js-wpsss-pull-confirm-text"><?php echo esc_html($exist_modes[$pull_exist]['confirm']); ?></span></label>
         <label class="js-wpsss-pull-delete-wrap"><input type="checkbox" name="wpsss_pull_delete" value="1" class="js-wpsss-pull-delete" /> <?php echo esc_html__('还要永久删除桶内对象', 'wpsss'); ?></label>
       </div>
@@ -186,7 +186,7 @@ $exist_modes = [
           )); ?><?php echo $samples !== [] ? ' ' . esc_html(sprintf(__('示例附件 #%s', 'wpsss'), implode('、#', $samples))) : ''; ?></span>
         </div>
       <?php endif; ?>
-      <div class="chk wpsss-gate">
+      <div class="chk wenpai-gate wpsss-gate">
         <label><input type="checkbox" name="wpsss_rewrite_confirm" value="1" /> <?php echo esc_html__('我已经预览过，并且有数据库备份', 'wpsss'); ?></label>
       </div>
       <div class="card-foot start">
@@ -218,7 +218,7 @@ $exist_modes = [
       <p class="wpsss-backup-note"><?php echo $keep_on
           ? esc_html__('备份：本地备份已开启，前台通常会改回 uploads 地址。请先确认本地文件仍在。', 'wpsss')
           : esc_html__('备份：本地备份已关闭。解除后若本地无文件，前台图片可能无法显示。请先拉回，或确认本地仍有副本。', 'wpsss'); ?></p>
-      <div class="chk wpsss-gate">
+      <div class="chk wenpai-gate wpsss-gate">
         <label><input type="checkbox" name="wpsss_release_confirm" value="1" /> <?php echo $keep_on
             ? esc_html__('我明白前台会改回本地地址', 'wpsss')
             : esc_html__('我确认本地仍有文件，或接受前台图片可能无法显示', 'wpsss'); ?></label>

@@ -1,4 +1,4 @@
-/* WP 后台里套 4.0 壳。token 在 e.css。 */
+/* WP 后台里套 4.0 壳。token 由 kit wenpai-admin-ui 提供；产品只留 .wpsss-*。 */
 body.wpsss-admin #wpcontent,
 body.wpsss-admin #wpbody,
 body.wpsss-admin #wpbody-content {
@@ -433,6 +433,7 @@ body.wpsss-admin .wenpai-app .wpsss-doctor-card.card {
   font-size: 13px;
   line-height: 20px;
 }
+.wenpai-gate,
 .wpsss-gate {
   margin: 16px 0 0;
   padding: 12px 14px;
@@ -925,6 +926,8 @@ details > .wpsss-doctor-summary {
   font-size: 14px;
   line-height: 20px;
   color: var(--wenpai-ink);
+
+  font-weight: 400;
 }
 .wpsss-help-summary-text span {
   font-size: 12px;
@@ -942,7 +945,7 @@ details > .wpsss-doctor-summary {
   font-size: 13px;
   line-height: 20px;
   color: var(--wenpai-ink);
-  font-weight: 600;
+  font-weight: 400;
   margin-top: 18px;
 }
 .wpsss-help-dl dt:first-child {
@@ -1082,21 +1085,54 @@ details > .wpsss-doctor-summary {
     padding-right: 20px;
   }
 }
+/* 窄屏：与 kit / WPSlug 同一断点。品牌+帮助/反馈同行，页签第二行；≤782 只留图标。 */
+body.wpsss-admin .wenpai-head-action {
+  position: relative;
+}
 @media (max-width: 782px) {
   body.wpsss-admin .wenpai-head {
     height: auto;
     min-height: 56px;
     flex-wrap: wrap;
-    padding: 8px 0 0;
-    row-gap: 0;
+    padding-top: 12px;
+    row-gap: 8px;
+  }
+  body.wpsss-admin .wenpai-brand {
+    order: 1;
+    min-width: 0;
+    flex: 0 1 auto;
+    margin-right: 8px;
+  }
+  body.wpsss-admin .wenpai-head-right {
+    order: 2;
+    flex: 1 1 auto;
+    width: auto;
+    justify-content: flex-end;
+    margin-left: auto;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-head-right .wenpai-head-action {
+    width: 36px;
+    min-width: 36px;
+    padding: 0;
+    gap: 0;
+  }
+  body.wpsss-admin .wenpai-head-right .wenpai-head-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
   body.wpsss-admin .wenpai-tabs {
     width: 100%;
     height: 44px;
     order: 3;
-  }
-  body.wpsss-admin .wenpai-head-right {
-    margin-left: auto;
+    flex: 1 1 100%;
   }
   body.wpsss-admin .wenpai-app .choice-cards,
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors,
