@@ -43,7 +43,7 @@ if (PHP_VERSION_ID < 80000) {
 define('WPSSS_VERSION', '0.9.1');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
-define('WPSSS_PRODUCT_URL', 'https://wpcy.com/');
+define('WPSSS_PRODUCT_URL', 'https://wpcy.com/object-storage');
 define('WPSSS_DOCS_URL', 'https://wpcy.com/document');
 define('WPSSS_SUPPORT_URL', 'https://wpcy.com/support/');
 
