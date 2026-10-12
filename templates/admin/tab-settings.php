@@ -38,10 +38,10 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
     && in_array((string) $opts['region'], ['oss-accelerate', 'oss-accelerate-overseas'], true);
 ?>
 <?php $setup_done = ($opts['setup_completed_at'] ?? '') !== ''; ?>
-<div class="wpcy-page-head">
+<div class="wenpai-page-head">
   <div>
-    <h1 class="wpcy-h1"><?php echo esc_html__('设置', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo $adv ? esc_html__('桶与密钥保存后生效；开关仍即时生效。', 'wpsss') : esc_html__('开关即时生效。', 'wpsss'); ?></p>
+    <h1 class="wenpai-h1"><?php echo esc_html__('设置', 'wpsss'); ?></h1>
+    <p class="wenpai-lede"><?php echo $adv ? esc_html__('桶与密钥保存后生效；开关仍即时生效。', 'wpsss') : esc_html__('开关即时生效。', 'wpsss'); ?></p>
     <?php if (!$setup_done && !$view['configured']) : ?>
       <p class="wpsss-setup-hint"><a href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('首次配置？走 4 步设置向导', 'wpsss'); ?></a></p>
     <?php endif; ?>
@@ -66,10 +66,10 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
 <?php endif; ?>
 
 <?php if ($adv) : ?>
-<form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>" id="wpsss-settings-form" class="wpcy-stack">
+<form method="post" action="<?php echo esc_url(admin_url('options.php')); ?>" id="wpsss-settings-form" class="wenpai-stack">
   <?php settings_fields('wpsss'); ?>
 <?php else : ?>
-<div class="wpcy-stack">
+<div class="wenpai-stack">
 <?php endif; ?>
   <?php if ($adv || !$view['configured']) : ?>
   <section class="card" id="wpsss-scene">

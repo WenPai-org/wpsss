@@ -14,14 +14,14 @@ $stats = isset($view['stats']) && is_array($view['stats']) ? $view['stats'] : []
 $public_base = (string) ($view['public_base'] ?? '');
 $pending = (int) ($stats['pending'] ?? 0);
 ?>
-<div class="wpcy-page-head">
+<div class="wenpai-page-head">
   <div>
-    <h1 class="wpcy-h1"><?php echo esc_html__('概览', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html__('媒体进桶，网页仍从自己的服务器打开。', 'wpsss'); ?></p>
+    <h1 class="wenpai-h1"><?php echo esc_html__('概览', 'wpsss'); ?></h1>
+    <p class="wenpai-lede"><?php echo esc_html__('媒体进桶，网页仍从自己的服务器打开。', 'wpsss'); ?></p>
   </div>
 </div>
 
-<div class="wpcy-stack">
+<div class="wenpai-stack">
 <?php if (!$on) : ?>
 <div class="next">
   <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>

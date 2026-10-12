@@ -32,10 +32,10 @@ $panels = [
     'move' => __('迁移', 'wpsss'),
 ];
 ?>
-<div class="wpcy-page-head">
+<div class="wenpai-page-head">
   <div>
-    <h1 class="wpcy-h1"><?php echo esc_html__('工具', 'wpsss'); ?></h1>
-    <p class="wpcy-lede"><?php echo esc_html($ledes[$panel]); ?></p>
+    <h1 class="wenpai-h1"><?php echo esc_html__('工具', 'wpsss'); ?></h1>
+    <p class="wenpai-lede"><?php echo esc_html($ledes[$panel]); ?></p>
   </div>
   <div class="mode">
     <span class="seg" role="tablist" aria-label="<?php echo esc_attr__('工具分组', 'wpsss'); ?>">
@@ -45,6 +45,6 @@ $panels = [
     </span>
   </div>
 </div>
-<div class="wpcy-stack">
+<div class="wenpai-stack">
   <?php include WPSSS_DIR . 'templates/admin/part-tools-' . $panel . '.php'; ?>
 </div>

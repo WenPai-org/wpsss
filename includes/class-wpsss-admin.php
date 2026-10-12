@@ -69,8 +69,13 @@ final class Wpsss_Admin
             return;
         }
         $base = plugin_dir_url(WPSSS_FILE);
-        wp_enqueue_style('wpsss-e', $base . 'assets/css/e.css', [], (string) filemtime(WPSSS_DIR . 'assets/css/e.css'));
-        wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', ['wpsss-e'], (string) filemtime(WPSSS_DIR . 'assets/css/admin.css'));
+        if (function_exists('wenpai_admin_ui_boot')) {
+            wenpai_admin_ui_boot();
+        }
+        if (class_exists('Wenpai_Admin_Loader', false)) {
+            Wenpai_Admin_Loader::enqueue(array('full' => $this->is_screen()));
+        }
+        wp_enqueue_style('wpsss-admin', $base . 'assets/css/admin.css', array('wenpai-admin-ui'), (string) filemtime(WPSSS_DIR . 'assets/css/admin.css'));
         wp_enqueue_script('wpsss-admin', $base . 'assets/js/admin.js', [], (string) filemtime(WPSSS_DIR . 'assets/js/admin.js'), true);
         $ui = [
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -157,9 +162,9 @@ final class Wpsss_Admin
             ),
         ];
 
-        echo '<div class="wpcy-app">';
+        echo '<div class="wenpai-app">';
         $this->include_template('shell-head', $view);
-        echo '<main class="wpcy-main wpcy-wrap">';
+        echo '<main class="wenpai-main wenpai-wrap">';
         $this->include_template('tab-' . $tab, $view);
         echo '<footer class="foot">';
         echo '<span>文派智储 ' . esc_html(WPSSS_VERSION) . '</span>';

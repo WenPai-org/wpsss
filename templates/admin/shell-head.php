@@ -10,16 +10,16 @@ $tabs = [
     'tools' => ['工具', 'server'],
 ];
 ?>
-<div class="wpcy-top"><div class="wpcy-wrap">
-  <div class="wpcy-head">
-    <a class="wpcy-brand" href="<?php echo esc_url($url('overview')); ?>">
-      <span class="wpcy-mark"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-      <span class="wpcy-name"><?php echo esc_html__('文派智储', 'wpsss'); ?></span>
+<div class="wenpai-top"><div class="wenpai-wrap">
+  <div class="wenpai-head">
+    <a class="wenpai-brand" href="<?php echo esc_url($url('overview')); ?>">
+      <span class="wenpai-mark"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
+      <span class="wenpai-name"><?php echo esc_html__('文派智储', 'wpsss'); ?></span>
     </a>
     <?php if (!$wizard) : ?>
-    <nav class="wpcy-tabs" aria-label="<?php echo esc_attr__('文派智储', 'wpsss'); ?>">
+    <nav class="wenpai-tabs" aria-label="<?php echo esc_attr__('文派智储', 'wpsss'); ?>">
       <?php foreach ($tabs as $id => $meta) : ?>
-        <a class="wpcy-tab<?php echo $tab === $id ? ' is-active' : ''; ?>" href="<?php echo esc_url($url($id)); ?>">
+        <a class="wenpai-tab<?php echo $tab === $id ? ' is-active' : ''; ?>" href="<?php echo esc_url($url($id)); ?>">
           <?php echo Wpsss_Icons::svg($meta[1]); ?>
           <?php echo esc_html($meta[0]); ?>
         </a>
@@ -30,7 +30,7 @@ $tabs = [
       <a class="btn btn-ghost wpsss-setup-exit" href="<?php echo esc_url($url('overview')); ?>"><?php echo Wpsss_Icons::svg('home'); ?><?php echo esc_html__('退出向导', 'wpsss'); ?></a>
     </div>
     <?php endif; ?>
-    <div class="wpcy-head-right">
+    <div class="wenpai-head-right">
       <a class="btn btn-ghost<?php echo $tab === 'help' ? ' is-active' : ''; ?>" href="<?php echo esc_url($url('help')); ?>"><?php echo Wpsss_Icons::svg('help'); ?><?php echo esc_html__('帮助', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('chat'); ?><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
     </div>
@@ -45,7 +45,7 @@ $tabs = [
         $cls = 'warn';
     }
     ?>
-  <div class="wpcy-wrap wpsss-notice-wrap">
+  <div class="wenpai-wrap wpsss-notice-wrap">
     <div class="notice <?php echo esc_attr($cls); ?>">
       <?php echo Wpsss_Icons::svg('info'); ?>
       <span><?php echo esc_html((string) $view['notice']); ?></span>

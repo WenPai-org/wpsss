@@ -11,6 +11,7 @@
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wpsss
+ * Update URI: https://updates.wenpai.net
  */
 
 if (!defined('ABSPATH')) {
@@ -46,6 +47,7 @@ define('WPSSS_PRODUCT_URL', 'https://wpcy.com/');
 define('WPSSS_DOCS_URL', 'https://wpcy.com/document');
 define('WPSSS_SUPPORT_URL', 'https://wpcy.com/support/');
 
+require_once WPSSS_DIR . 'lib/wenpai-admin-ui/php/load.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-oss-signer.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-oss-ram.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-cos-signer.php';
