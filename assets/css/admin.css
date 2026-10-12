@@ -902,6 +902,12 @@ details > .wpsss-doctor-summary {
   grid-column: auto;
   margin-top: 0;
 }
+/* 帮助页底 CTA：不要用 .start 的 space-between 把两钮扯到两头 */
+.wpsss-help-cta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .wpsss-help-details {
   padding: 0;
   overflow: hidden;

@@ -179,7 +179,7 @@ wp sss copy --to-bucket=新桶 --dry-run</code></pre>
         <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
       </div>
     </div>
-    <div class="card-foot start">
+    <div class="card-foot wpsss-help-cta">
       <a class="btn btn-secondary" href="<?php echo esc_url(WPSSS_DOCS_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('文档中心', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_PRODUCT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('产品官网', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>
