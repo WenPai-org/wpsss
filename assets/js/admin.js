@@ -4,64 +4,51 @@
   var cfg = window.wpsssAdmin || {};
   var copy = cfg.copy || {};
 
-  function askConfirm(msg) {
-    return !msg || window.confirm(msg);
+  function bulkValue(form, name) {
+    var sel = form.querySelector('select[name="' + name + '"]');
+    return sel ? sel.value : "";
   }
-
-  document.addEventListener(
-    "click",
-    function (event) {
-      var el = event.target && event.target.closest ? event.target.closest("[data-wpsss-confirm]") : null;
-      if (!el || el.disabled) {
-        return;
-      }
-      if (el.tagName === "BUTTON" && el.form) {
-        return;
-      }
-      if (!askConfirm(el.getAttribute("data-wpsss-confirm"))) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    },
-    true
-  );
 
   var filter = document.getElementById("posts-filter");
   if (filter) {
     filter.addEventListener(
       "submit",
       function (event) {
-        var action = filter.querySelector('select[name="action"]');
-        var value = action ? action.value : "";
-        if (value === "wpsss_pull" && !askConfirm(copy.confirmBulkPull || "确认批量拉回所选附件？本地已有同名文件时会先改名保留。")) {
-          event.preventDefault();
+        var submitter = event.submitter;
+        var value = "";
+        if (submitter && submitter.id === "doaction2") {
+          value = bulkValue(filter, "action2");
+        } else if (submitter && submitter.id === "doaction") {
+          value = bulkValue(filter, "action");
+        } else {
+          var top = bulkValue(filter, "action");
+          value = top && top !== "-1" ? top : bulkValue(filter, "action2");
+        }
+        var needsGate = value === "wpsss_pull"
+          || ((value === "delete" || value === "delete_all") && filter.querySelector("[data-wpsss-offloaded]"));
+        if (!needsGate) {
           return;
         }
-        if ((value === "delete" || value === "delete_all") && filter.querySelector("[data-wpsss-offloaded]")) {
-          if (!askConfirm(copy.confirmBulkDelete || "所选附件若已进桶，永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？")) {
-            event.preventDefault();
+        var box = filter.querySelector(".js-wpsss-media-bulk-gate");
+        if (!box || !box.checked) {
+          event.preventDefault();
+          if (box) {
+            box.focus();
           }
         }
       },
       true
     );
-    filter.querySelectorAll("tr").forEach(function (tr) {
-      if (!tr.querySelector("[data-wpsss-offloaded], a[href*='wpsss_pull_one']")) {
-        return;
-      }
-      tr.querySelectorAll("a.submitdelete, .delete a").forEach(function (a) {
-        if (!a.getAttribute("data-wpsss-confirm")) {
-          a.setAttribute("data-wpsss-confirm", copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？");
-        }
-      });
-    });
   }
   var deleteOne = document.querySelector("#delete-action a.submitdelete");
-  if (deleteOne && document.querySelector(".wpsss-metabox .pill.ok")) {
-    deleteOne.setAttribute(
-      "data-wpsss-confirm",
-      copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？"
-    );
+  var deleteGate = document.querySelector(".js-wpsss-media-delete-gate");
+  if (deleteOne && deleteGate) {
+    deleteOne.addEventListener("click", function (event) {
+      if (!deleteGate.checked) {
+        event.preventDefault();
+        deleteGate.focus();
+      }
+    });
   }
 
   var app = document.querySelector(".wenpai-app");
@@ -101,6 +88,7 @@
       btn.appendChild(knob);
     }
     btn.appendChild(document.createTextNode(on ? onText : offText));
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
     var row = closest(btn, ".simple-row");
     if (row) {
       var tile = row.querySelector(".tile");
@@ -627,26 +615,168 @@
     });
   });
 
+  function clearSaved(form) {
+    form.querySelectorAll(".saved").forEach(function (node) {
+      node.remove();
+    });
+  }
+
+  function showSaved(btn) {
+    var form = closest(btn, "form");
+    if (!form) {
+      return;
+    }
+    clearSaved(form);
+    var span = document.createElement("span");
+    span.className = "saved";
+    span.textContent = "已保存";
+    btn.insertAdjacentElement("afterend", span);
+  }
+
+  function showToggleError(btn, text) {
+    var form = closest(btn, "form");
+    if (!form) {
+      return;
+    }
+    clearSaved(form);
+    var hint = form.querySelector(".hint.is-bad");
+    if (!hint) {
+      hint = document.createElement("p");
+      hint.className = "hint is-bad";
+      form.appendChild(hint);
+    }
+    hint.textContent = text || "未能保存";
+  }
+
+  function clearToggleError(form) {
+    var hint = form.querySelector(".hint.is-bad");
+    if (hint) {
+      hint.remove();
+    }
+  }
+
+  function flipQuickField(form) {
+    var field = form.querySelector('input[type="hidden"][name="keep_local"], input[type="hidden"][name="upload_thumbs"], input[type="hidden"][name="origin_protect"], input[type="hidden"][name="url_access"]');
+    if (!field) {
+      return;
+    }
+    if (field.name === "url_access") {
+      field.value = field.value === "signed" ? "public" : "signed";
+      return;
+    }
+    field.value = field.value === "1" ? "0" : "1";
+  }
+
   app.querySelectorAll(".js-wpsss-toggle").forEach(function (btn) {
     btn.addEventListener("click", function (event) {
       event.preventDefault();
-      if (btn.disabled) {
+      // Kit listens on document and also flips button.toggle. Stop so this save owns the state.
+      event.stopPropagation();
+      if (btn.disabled || btn.getAttribute("data-saving") === "1") {
         return;
       }
       var form = closest(btn, "form");
-      if (!form) {
+      if (!form || !cfg.ajaxUrl) {
         return;
       }
       var on = !btn.classList.contains("on");
       btn.classList.toggle("on", on);
       setToggleText(btn, on);
-      postForm(form);
+      clearToggleError(form);
+      btn.setAttribute("data-saving", "1");
+      fetch(cfg.ajaxUrl, {
+        method: "POST",
+        body: new FormData(form),
+        credentials: "same-origin",
+      })
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (json) {
+          btn.removeAttribute("data-saving");
+          if (!json || !json.success) {
+            btn.classList.toggle("on", !on);
+            setToggleText(btn, !on);
+            var message = json && json.data && json.data.message ? json.data.message : "未能保存";
+            showToggleError(btn, message);
+            return;
+          }
+          flipQuickField(form);
+          showSaved(btn);
+        })
+        .catch(function () {
+          btn.removeAttribute("data-saving");
+          btn.classList.toggle("on", !on);
+          setToggleText(btn, !on);
+          showToggleError(btn, "网络中断，未保存");
+        });
     });
   });
+
+  var sectionNav = app.querySelector(".wpsss-section-seg");
+  if (sectionNav) {
+    function showSection(id, push) {
+      var cards = app.querySelectorAll("[data-wpsss-section]");
+      var found = false;
+      cards.forEach(function (card) {
+        var on = card.getAttribute("data-wpsss-section") === id;
+        if (on) {
+          found = true;
+        }
+        card.hidden = !on;
+      });
+      if (!found) {
+        return;
+      }
+      sectionNav.querySelectorAll("a").forEach(function (link) {
+        var href = link.getAttribute("href") || "";
+        link.classList.toggle("on", href.indexOf("section=" + id) !== -1);
+      });
+      var input = app.querySelector('input[name="wpsss_section"]');
+      if (input) {
+        input.value = id;
+      }
+      var referer = app.querySelector('#wpsss-settings-form input[name="_wp_http_referer"]');
+      if (referer) {
+        try {
+          var refUrl = new URL(referer.value, window.location.origin);
+          refUrl.searchParams.set("mode", "advanced");
+          refUrl.searchParams.set("section", id);
+          referer.value = refUrl.pathname + refUrl.search;
+        } catch (err) {
+          /* referer stays as rendered */
+        }
+      }
+      if (push) {
+        var next = new URL(window.location.href);
+        next.searchParams.set("mode", "advanced");
+        next.searchParams.set("section", id);
+        next.hash = "";
+        window.history.replaceState(null, "", next.toString());
+      }
+    }
+    sectionNav.addEventListener("click", function (event) {
+      var link = event.target && event.target.closest ? event.target.closest("a") : null;
+      if (!link || !sectionNav.contains(link)) {
+        return;
+      }
+      var href = link.getAttribute("href") || "";
+      var match = href.match(/[?&]section=([a-z]+)/);
+      if (!match) {
+        return;
+      }
+      event.preventDefault();
+      showSection(match[1], true);
+    });
+    if (window.location.hash === "#wpsss-access") {
+      showSection("access", true);
+    }
+  }
 
   app.querySelectorAll(".js-wpsss-flip").forEach(function (btn) {
     btn.addEventListener("click", function (event) {
       event.preventDefault();
+      event.stopPropagation();
       if (btn.disabled) {
         return;
       }
@@ -1166,19 +1296,6 @@
     form.addEventListener(
       "submit",
       function (event) {
-        var btn = event.submitter;
-        var hasGate = !!form.querySelector(".wenpai-gate, .wpsss-gate");
-        if (!hasGate) {
-          var msg = (btn && btn.getAttribute("data-wpsss-confirm")) || form.getAttribute("data-wpsss-confirm");
-          if (form.querySelector('input[name="wpsss_pull_delete"]:checked')) {
-            msg = copy.confirmPullDelete || msg;
-          }
-          if (msg && !askConfirm(msg)) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            return;
-          }
-        }
         form.classList.add("is-busy");
         // 提交条目列表在 submit 处理器跑完之后才构建：此刻禁用 submitter 会让它的
         // name/value 不进 POST（「从头」会变成普通补传）。submitter 延后一拍再禁。

@@ -495,8 +495,8 @@ body.wenpai-ui-page .wenpai-app input[type="number"]::-webkit-inner-spin-button 
     height: auto;
     min-height: 56px;
     flex-wrap: wrap;
-    padding: 8px 0 0;
-    row-gap: 0;
+    padding: 12px 0 0;
+    row-gap: 8px;
   }
 
 body.wenpai-ui-page .wenpai-tabs {
@@ -506,7 +506,24 @@ body.wenpai-ui-page .wenpai-tabs {
   }
 
 body.wenpai-ui-page .wenpai-head-right {
+    flex: 1 1 auto;
+    width: auto;
     margin-left: auto;
+  }
+
+  body.wenpai-ui-page .wenpai-app .chk input[type="checkbox"],
+  body.wenpai-ui-page .wenpai-app .wenpai-gate input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    appearance: checkbox;
+    -webkit-appearance: checkbox;
+  }
+
+  body.wenpai-ui-page .wenpai-app .chk input[type="checkbox"]::before,
+  body.wenpai-ui-page .wenpai-app .wenpai-gate input[type="checkbox"]::before {
+    content: none;
   }
 
 body.wenpai-ui-page .wenpai-app .choice-cards,
@@ -695,9 +712,9 @@ body.wenpai-ui-page .wenpai-app .wenpai-code code {
   }
   body.wenpai-ui-page .wenpai-head-right {
     order: 2;
-    flex: 1 1 100%;
-    width: 100%;
-    margin-left: 0;
+    flex: 1 1 auto;
+    width: auto;
+    margin-left: auto;
     justify-content: flex-end;
   }
   body.wenpai-ui-page .wenpai-app .wenpai-page-head {

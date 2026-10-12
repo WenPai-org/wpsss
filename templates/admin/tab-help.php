@@ -106,7 +106,7 @@ $docs = static function (string $slug): string {
         <dt><?php echo esc_html__('设置 · 高级', 'wpsss'); ?></dt>
         <dd><?php echo esc_html__('云厂商、桶名、区域、密钥、对象前缀、图片样式等完整选项。', 'wpsss'); ?></dd>
         <dt><?php echo esc_html__('工具', 'wpsss'); ?></dt>
-        <dd><?php echo esc_html__('分日常、排障、迁移三组。高危操作须勾选并弹窗确认。', 'wpsss'); ?></dd>
+        <dd><?php echo esc_html__('分日常、排障、迁移三组。高危操作须先勾选确认。', 'wpsss'); ?></dd>
       </dl>
     </div>
   </details>

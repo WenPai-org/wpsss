@@ -34,6 +34,7 @@ final class Wpsss_Admin
         add_action('wp_ajax_wpsss_pull_tick', [$this, 'handle_pull_tick']);
         add_action('admin_post_wpsss_pull_one', [$this, 'handle_pull_one']);
         add_action('admin_post_wpsss_quick', [$this, 'handle_quick']);
+        add_action('wp_ajax_wpsss_quick', [$this, 'handle_quick']);
         add_action('admin_post_wpsss_setup', [$this, 'handle_setup']);
         add_action('wp_ajax_wpsss_inspect', [$this, 'handle_inspect']);
         add_filter('wp_redirect', [$this, 'after_options_redirect']);
@@ -113,6 +114,16 @@ final class Wpsss_Admin
         $tab = $this->tab();
         $mode = $this->mode();
         $opts = Wpsss_Options::get();
+        $pull_view = get_transient($this->pull_transient_key()) ?: [];
+        if (!is_array($pull_view)) {
+            $pull_view = [];
+        }
+        if (isset($_GET['pull_id'])) {
+            $pull_from_get = (int) $_GET['pull_id'];
+            if ($pull_from_get > 0 && (int) ($pull_view['only_id'] ?? 0) !== $pull_from_get) {
+                $pull_view = ['only_id' => $pull_from_get];
+            }
+        }
         $driver = $this->plugin->active_driver();
         $configured = $driver->is_configured($opts);
         $notice = isset($_GET['wpsss_notice']) ? sanitize_text_field(wp_unslash((string) $_GET['wpsss_notice'])) : '';
@@ -137,6 +148,7 @@ final class Wpsss_Admin
         $view = [
             'tab' => $tab,
             'mode' => $mode,
+            'section' => $this->settings_section(),
             'panel' => $this->tools_panel(),
             'opts' => $opts,
             'driver' => $driver,
@@ -148,7 +160,7 @@ final class Wpsss_Admin
             'stats' => $this->stats_cached(),
             'history' => Wpsss_History::all(),
             'rewrite' => get_transient($this->rewrite_transient_key()) ?: [],
-            'pull' => get_transient($this->pull_transient_key()) ?: [],
+            'pull' => $pull_view,
             'pull_cursor' => (int) get_transient($this->pull_cursor_key()),
             'offload_cursor' => (int) get_transient($this->offload_cursor_key()),
             'ops' => get_transient($this->ops_transient_key()) ?: [],
@@ -181,7 +193,15 @@ final class Wpsss_Admin
     public function after_options_redirect($location)
     {
         if (isset($_POST['option_page']) && $_POST['option_page'] === 'wpsss') {
-            return $this->url('settings', ['mode' => 'advanced', 'settings-updated' => 'true']);
+            $section = isset($_POST['wpsss_section']) ? sanitize_key((string) wp_unslash($_POST['wpsss_section'])) : 'scene';
+            if (!in_array($section, ['scene', 'vendor', 'bucket', 'access'], true)) {
+                $section = 'scene';
+            }
+            return $this->url('settings', [
+                'mode' => 'advanced',
+                'section' => $section,
+                'settings-updated' => 'true',
+            ]);
         }
         return $location;
     }
@@ -632,30 +652,23 @@ final class Wpsss_Admin
     public function handle_quick(): void
     {
         if (!current_user_can('manage_options')) {
+            if (wp_doing_ajax()) {
+                wp_send_json_error(['message' => __('权限不足。', 'wpsss')], 403);
+            }
             wp_die(esc_html__('权限不足。', 'wpsss'));
         }
         check_admin_referer('wpsss_quick');
 
         $opts = Wpsss_Options::get();
         if (isset($_POST['keep_local']) && (string) wp_unslash($_POST['keep_local']) !== '1') {
-            wp_safe_redirect($this->url('settings', [
-                'mode' => 'simple',
-                'wpsss_level' => 'error',
-                'wpsss_notice' => '本地备份关闭后，服务器不再保留媒体副本，故障时无法从本地恢复。如确认关闭，请在高级设置中操作。',
-            ]));
-            exit;
+            $this->quick_reject('本地备份关闭后，服务器不再保留媒体副本，故障时无法从本地恢复。如确认关闭，请在高级设置中操作。');
         }
         if (
             isset($_POST['origin_protect'])
             && (string) wp_unslash($_POST['origin_protect']) === '1'
             && trim((string) ($opts['image_style'] ?? '')) === ''
         ) {
-            wp_safe_redirect($this->url('settings', [
-                'mode' => 'simple',
-                'wpsss_level' => 'error',
-                'wpsss_notice' => '须先在高级设置填写图片样式。',
-            ]));
-            exit;
+            $this->quick_reject('须先在高级设置填写图片样式。');
         }
         foreach (['keep_local', 'upload_thumbs', 'origin_protect'] as $key) {
             if (!isset($_POST[$key])) {
@@ -670,7 +683,23 @@ final class Wpsss_Admin
             $opts['url_access'] = Wpsss_Options::sanitize_url_access(wp_unslash($_POST['url_access']), $opts['driver'] ?? '');
         }
         update_option(Wpsss_Options::OPTION_KEY, $opts);
+        if (wp_doing_ajax()) {
+            wp_send_json_success(['saved' => true]);
+        }
         wp_safe_redirect($this->url('settings', ['mode' => 'simple', 'saved' => '1']));
+        exit;
+    }
+
+    private function quick_reject(string $message): void
+    {
+        if (wp_doing_ajax()) {
+            wp_send_json_error(['message' => $message]);
+        }
+        wp_safe_redirect($this->url('settings', [
+            'mode' => 'simple',
+            'wpsss_level' => 'error',
+            'wpsss_notice' => $message,
+        ]));
         exit;
     }
 
@@ -779,6 +808,12 @@ final class Wpsss_Admin
     {
         $mode = isset($_GET['mode']) ? sanitize_key((string) $_GET['mode']) : 'simple';
         return $mode === 'advanced' ? 'advanced' : 'simple';
+    }
+
+    private function settings_section(): string
+    {
+        $section = isset($_GET['section']) ? sanitize_key((string) $_GET['section']) : 'scene';
+        return in_array($section, ['scene', 'vendor', 'bucket', 'access'], true) ? $section : 'scene';
     }
 
     private function sanitize_tools_panel(string $panel): string

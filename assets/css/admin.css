@@ -316,6 +316,21 @@ body.wpsss-admin .wenpai-app .field {
 body.wpsss-admin .wenpai-app .field[hidden] {
   display: none;
 }
+body.wpsss-admin .wenpai-app [data-wpsss-section][hidden] {
+  display: none !important;
+}
+body.wpsss-admin .wenpai-app .saved {
+  font-size: 12px;
+  line-height: 18px;
+}
+body.wpsss-admin .wenpai-app .wpsss-section-seg {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: visible;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 16px;
+}
 .field-ctl-row {
   display: flex;
   align-items: center;
@@ -588,7 +603,43 @@ body.wpsss-admin .wenpai-app input[type="number"]::-webkit-inner-spin-button {
   margin: 0;
 }
 .wpsss-toggle-form {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin: 0;
+}
+.wpsss-toggle-form .hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+.upload-php .wpsss-media-bulk-gate {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+  max-width: 40rem;
+  font-size: 13px;
+  line-height: 20px;
+}
+.upload-php .wpsss-media-bulk-gate input,
+.wpsss-media-delete-gate input {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 2px 0 0;
+  flex: none;
+}
+.wpsss-media-delete-gate {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 18px;
 }
 .wenpai-app.is-ready .wpsss-scene-foot {
   display: none;
@@ -1241,6 +1292,21 @@ body.wpsss-admin .wenpai-head-action {
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors,
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors.is-compact {
     grid-template-columns: 1fr;
+  }
+  body.wpsss-admin .wenpai-app .chk input[type="checkbox"],
+  body.wpsss-admin .wenpai-app .wenpai-gate input[type="checkbox"],
+  body.wpsss-admin .wenpai-app .wpsss-gate input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    appearance: checkbox;
+    -webkit-appearance: checkbox;
+  }
+  body.wpsss-admin .wenpai-app .chk input[type="checkbox"]::before,
+  body.wpsss-admin .wenpai-app .wenpai-gate input[type="checkbox"]::before,
+  body.wpsss-admin .wenpai-app .wpsss-gate input[type="checkbox"]::before {
+    content: none;
   }
   /* 页头 .mode：整行左起，seg 均分；藏「显示」标签腾出保存钮 */
   body.wpsss-admin .wenpai-app .wenpai-page-head {

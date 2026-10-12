@@ -120,11 +120,16 @@ final class Wpsss_Media
             return $actions;
         }
         if (Wpsss_Library::is_offloaded((int) $post->ID)) {
-            $pull = wp_nonce_url(
-                admin_url('admin-post.php?action=wpsss_pull_one&id=' . (int) $post->ID),
-                'wpsss_pull_one_' . (int) $post->ID
+            $pull = add_query_arg(
+                [
+                    'page' => 'wpsss',
+                    'tab' => 'tools',
+                    'panel' => 'move',
+                    'pull_id' => (int) $post->ID,
+                ],
+                admin_url('admin.php')
             );
-            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？本地已有同名文件时，会先把旧文件改名为「原名-local-时间戳」保留，再写入桶里的那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             return $actions;
         }
         $url = wp_nonce_url(
@@ -199,6 +204,10 @@ final class Wpsss_Media
         echo '<option value="pending"' . selected($cur, 'pending', false) . '>' . esc_html__('未进桶', 'wpsss') . '</option>';
         echo '<option value="failed"' . selected($cur, 'failed', false) . '>' . esc_html__('失败', 'wpsss') . '</option>';
         echo '</select>';
+        echo '<label class="wenpai-gate wpsss-media-bulk-gate">';
+        echo '<input type="checkbox" class="js-wpsss-media-bulk-gate" /> ';
+        echo esc_html__('拉回会先把已有本地文件改名保留。永久删除已进桶的附件时，桶内对象一并删除，没有回收站。', 'wpsss');
+        echo '</label>';
     }
 
     public function filter_query(WP_Query $query): void
@@ -277,12 +286,18 @@ final class Wpsss_Media
         }
         echo '<div class="wpsss-metabox-actions">';
         if ($off) {
-            $pull = wp_nonce_url(
-                admin_url('admin-post.php?action=wpsss_pull_one&id=' . $id),
-                'wpsss_pull_one_' . $id
+            $pull = add_query_arg(
+                [
+                    'page' => 'wpsss',
+                    'tab' => 'tools',
+                    'panel' => 'move',
+                    'pull_id' => $id,
+                ],
+                admin_url('admin.php')
             );
-            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？已有同名文件会旁路改名成 原名-local-时间，再写入桶里那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             echo '<p class="wpsss-metabox-meta">' . esc_html__('从媒体库永久删除此附件时，桶内对象会一并删除。', 'wpsss') . '</p>';
+            echo '<label class="chk wpsss-media-delete-gate"><input type="checkbox" class="js-wpsss-media-delete-gate" /> ' . esc_html__('永久删除会同时删掉桶内对象，没有回收站。本地副本还在。', 'wpsss') . '</label>';
         } else {
             $href = wp_nonce_url(
                 admin_url('admin-post.php?action=wpsss_offload_one&id=' . $id),
