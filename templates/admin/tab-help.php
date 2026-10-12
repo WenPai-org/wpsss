@@ -26,18 +26,24 @@ $docs = static function (string $slug): string {
     <li>
       <strong><?php echo esc_html__('填写桶与密钥', 'wpsss'); ?></strong>
       <span><?php echo esc_html__('跟随设置向导选择云厂商并保存桶名、区域与访问密钥；也可在高级设置中手动填写。', 'wpsss'); ?></span>
-      <a class="btn btn-secondary" href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('开始向导', 'wpsss'); ?></a>
-      <a class="btn btn-ghost" href="<?php echo esc_url($docs('start-guide')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('图文教程', 'wpsss'); ?></a>
+      <span class="wpsss-help-step-actions">
+        <a class="btn btn-secondary" href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('开始向导', 'wpsss'); ?></a>
+        <a class="btn btn-ghost" href="<?php echo esc_url($docs('start-guide')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('图文教程', 'wpsss'); ?></a>
+      </span>
     </li>
     <li>
       <strong><?php echo esc_html__('测试连通', 'wpsss'); ?></strong>
       <span><?php echo esc_html__('在工具页写入并删除探测对象，确认密钥与权限正确。', 'wpsss'); ?></span>
-      <a class="btn btn-secondary" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('前往工具', 'wpsss'); ?></a>
+      <span class="wpsss-help-step-actions">
+        <a class="btn btn-secondary" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('前往工具', 'wpsss'); ?></a>
+      </span>
     </li>
     <li>
       <strong><?php echo esc_html__('上传媒体', 'wpsss'); ?></strong>
       <span><?php echo esc_html__('新上传的附件会自动进桶；已有附件在工具页点「开始补传」，关掉页面后台也会继续。', 'wpsss'); ?></span>
-      <a class="btn btn-ghost" href="<?php echo esc_url($docs('upload-offload')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('补传说明', 'wpsss'); ?></a>
+      <span class="wpsss-help-step-actions">
+        <a class="btn btn-ghost" href="<?php echo esc_url($docs('upload-offload')); ?>" target="_blank" rel="noopener"><?php echo esc_html__('补传说明', 'wpsss'); ?></a>
+      </span>
     </li>
   </ol>
   <?php if ($on) : ?>
@@ -173,7 +179,7 @@ wp sss copy --to-bucket=新桶 --dry-run</code></pre>
         <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
       </div>
     </div>
-    <div class="card-foot start">
+    <div class="card-foot wpsss-help-cta">
       <a class="btn btn-secondary" href="<?php echo esc_url(WPSSS_DOCS_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('文档中心', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_PRODUCT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('产品官网', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('提交反馈', 'wpsss'); ?></a>

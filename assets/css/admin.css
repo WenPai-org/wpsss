@@ -251,8 +251,7 @@ body.wpsss-admin .wenpai-app .choice-cards.is-compact:not(.is-vendors) .choice {
 .wpsss-vendor-more[open] > summary .when-open {
   display: inline;
 }
-.wpsss-vendor-grid .js-wpsss-vendor-group[hidden],
-body.wpsss-admin .wenpai-app .choice .d[hidden] {
+.wpsss-vendor-grid .js-wpsss-vendor-group[hidden] {
   display: none;
 }
 .wpsss-vendor-grid .js-wpsss-vendor-group {
@@ -827,6 +826,7 @@ details > .wpsss-doctor-summary {
 
 .wenpai-head-right .btn-ghost.is-active {
   color: var(--wenpai-accent);
+  background: var(--wenpai-accent-soft);
 }
 .wpsss-help-stack {
   display: flex;
@@ -889,6 +889,23 @@ details > .wpsss-doctor-summary {
   grid-column: 2;
   justify-self: start;
   margin-top: 4px;
+}
+.wpsss-help-steps .wpsss-help-step-actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.wpsss-help-steps .wpsss-help-step-actions .btn {
+  grid-column: auto;
+  margin-top: 0;
+}
+/* 帮助页底 CTA：不要用 .start 的 space-between 把两钮扯到两头 */
+.wpsss-help-cta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .wpsss-help-details {
   padding: 0;
@@ -1107,6 +1124,8 @@ body.wpsss-admin .wenpai-head-action {
     flex: 0 1 auto;
     margin-right: 8px;
   }
+  /* 盖过 kit ≤600 的 flex:1 1 100%（勿整行折下成三行） */
+  body.wpsss-admin.wenpai-ui-page .wenpai-head-right,
   body.wpsss-admin .wenpai-head-right {
     order: 2;
     flex: 1 1 auto;
@@ -1115,11 +1134,20 @@ body.wpsss-admin .wenpai-head-action {
     margin-left: auto;
     min-width: 0;
   }
+  /* 必须压过 body.wpsss-admin .wenpai-app a.btn 的 padding:0 16px */
+  body.wpsss-admin .wenpai-app .wenpai-head-right a.btn.wenpai-head-action,
   body.wpsss-admin .wenpai-head-right .wenpai-head-action {
     width: 36px;
     min-width: 36px;
+    max-width: 36px;
     padding: 0;
     gap: 0;
+    justify-content: center;
+  }
+  /* 图标态也要看得出当前在帮助页 */
+  body.wpsss-admin .wenpai-head-right .wenpai-head-action.is-active {
+    color: var(--wenpai-accent);
+    background: var(--wenpai-accent-soft);
   }
   body.wpsss-admin .wenpai-head-right .wenpai-head-label {
     position: absolute;
@@ -1136,12 +1164,135 @@ body.wpsss-admin .wenpai-head-action {
     width: 100%;
     height: 44px;
     order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 0 6px;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-tab svg {
+    margin-right: 4px;
+  }
+  body.wpsss-admin .wenpai-app .foot {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    gap: 8px 16px;
+  }
+  body.wpsss-admin .wenpai-app .foot .r {
+    margin-left: auto;
+  }
+  body.wpsss-admin .wenpai-app .card-foot {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  body.wpsss-admin .wenpai-app .card-foot .btn {
+    white-space: normal;
+    height: auto;
+    min-height: 36px;
+    max-width: 100%;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex: 0 1 auto;
+  }
+  body.wpsss-admin .wenpai-app .simple-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    row-gap: 8px;
+  }
+  body.wpsss-admin .wenpai-app .simple-row > div:nth-child(2) {
+    flex: 1 1 calc(100% - 52px);
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.wpsss-admin .wenpai-app .simple-row .d,
+  body.wpsss-admin .wenpai-app .simple-row .d.is-url {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  /* 右侧 pill/链整行折下，别把 URL 挤成竖排 */
+  body.wpsss-admin .wenpai-app .simple-row .r {
     flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 52px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  body.wpsss-admin .wenpai-app .card-foot.start {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    align-items: center;
+  }
+  body.wpsss-admin .wenpai-app .card-foot.start .wpsss-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+  }
+  body.wpsss-admin .wenpai-app .wpsss-help-body {
+    padding-left: 24px;
   }
   body.wpsss-admin .wenpai-app .choice-cards,
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors,
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors.is-compact {
     grid-template-columns: 1fr;
+  }
+  /* 页头 .mode：整行左起，seg 均分；藏「显示」标签腾出保存钮 */
+  body.wpsss-admin .wenpai-app .wenpai-page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode > svg,
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode > span:not(.seg) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode .seg {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode .seg a {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode .btn-primary {
+    margin-left: auto;
+  }
+  body.wpsss-admin .wenpai-app .field-ctl-row {
+    flex-wrap: wrap;
+  }
+  body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"] {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-app .foot .r {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  body.wpsss-admin .wenpai-app .wpsss-help-steps .btn {
+    white-space: normal;
+    height: auto;
+    min-height: 36px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 
@@ -1204,7 +1355,7 @@ body.wpsss-admin .wenpai-app button.toggle[disabled],
 body.wpsss-admin .wenpai-app button.toggle.is-locked,
 body.wpsss-admin .wenpai-app button.toggle[disabled]:hover,
 body.wpsss-admin .wenpai-app button.toggle.is-locked:hover {
-  opacity: 1;
+  opacity: 0.72;
   cursor: not-allowed;
   color: var(--wenpai-ink-3);
   background: transparent;
@@ -1215,9 +1366,10 @@ body.wpsss-admin .wenpai-app button.toggle[disabled] i,
 body.wpsss-admin .wenpai-app button.toggle.is-locked i {
   background: #dcdcde;
 }
+/* 锁定仍须看得出开/关：开=品牌蓝轨道，关=灰；不要用 soft 洗成「像关着」 */
 body.wpsss-admin .wenpai-app button.toggle[disabled].on i,
 body.wpsss-admin .wenpai-app button.toggle.is-locked.on i {
-  background: var(--wenpai-accent-soft, #a7aaad);
+  background: var(--wenpai-accent, #3858e9);
 }
 body.wpsss-admin .wenpai-app .simple-row {
   margin: 0 -8px;

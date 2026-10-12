@@ -281,11 +281,12 @@
   }
 
   function revealChoiceHelp(form, attr) {
+    // Choice .d stays visible for every option (progressive disclosure ≠ hide help).
     form.querySelectorAll('.choice input[data-wpsss-disclose="' + attr + '"]').forEach(function (radio) {
       var label = closest(radio, ".choice");
       var help = label ? label.querySelector(".d") : null;
       if (help) {
-        help.hidden = !radio.checked;
+        help.hidden = false;
       }
     });
   }
@@ -430,10 +431,31 @@
     }
   }
 
-  function applyScene(form) {
+  function revealVendorPicker(form) {
+    var details = form.querySelector(".wpsss-vendor-more");
+    if (!details) {
+      return;
+    }
+    var wasOpen = details.open;
+    details.open = true;
+    if (wasOpen) {
+      return;
+    }
+    var card = details.closest("#wpsss-vendor") || details;
+    var reduce =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try {
+      card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" });
+    } catch (err) {
+      card.scrollIntoView(true);
+    }
+  }
+
+  function applyScene(form, opts) {
     if (!form) {
       return;
     }
+    opts = opts || {};
     var mode = currentScene(form);
     var driver = currentDriver(form);
     var order = (cfg.groupOrder && cfg.groupOrder[mode]) || ["cn", "intl"];
@@ -459,6 +481,9 @@
           grid.appendChild(groups[gid]);
         }
       });
+    }
+    if (opts.revealVendor) {
+      revealVendorPicker(form);
     }
     revealChoiceHelp(form, "site_mode");
     syncPreview(form);
@@ -591,7 +616,8 @@
       var disclose = input.getAttribute("data-wpsss-disclose");
       var settings = closest(input, "#wpsss-settings-form") || document.getElementById("wpsss-settings-form");
       if (disclose === "site_mode") {
-        applyScene(settings);
+        // Scene only reorders recommended vendors; open the picker so the link is visible.
+        applyScene(settings, { revealVendor: true });
         return;
       }
       if (disclose === "driver") {

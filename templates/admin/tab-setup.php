@@ -89,7 +89,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
             <input type="radio" name="site_mode" value="<?php echo esc_attr($id); ?>" <?php checked($active); ?> />
             <span>
               <div class="t"><?php echo esc_html($row['label']); ?></div>
-              <?php if ($active) : ?><div class="d"><?php echo esc_html($row['help']); ?></div><?php endif; ?>
+              <div class="d"><?php echo esc_html($row['help']); ?></div>
             </span>
           </label>
         <?php endforeach; ?>
@@ -131,7 +131,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
                 <span class="tile vendor-tile<?php echo $active ? ' accent' : ''; ?>"><?php echo Wpsss_Icons::vendor($id); ?></span>
                 <span>
                   <div class="t"><?php echo esc_html($label); ?></div>
-                  <?php if ($active) : ?><div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div><?php endif; ?>
+                  <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
                 </span>
               </label>
             <?php endforeach; ?>
