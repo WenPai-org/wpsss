@@ -1220,6 +1220,43 @@ body.wpsss-admin .wenpai-head-action {
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors.is-compact {
     grid-template-columns: 1fr;
   }
+  /* 高级页头：藏「显示」标签，给简单/高级 + 保存腾位置 */
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    justify-content: flex-end;
+    max-width: 100%;
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode > svg,
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode > span:not(.seg) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  body.wpsss-admin .wenpai-app .wenpai-page-head .mode .btn-primary {
+    margin-left: 0;
+  }
+  body.wpsss-admin .wenpai-app .field-ctl-row {
+    flex-wrap: wrap;
+  }
+  body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"] {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+  body.wpsss-admin .wenpai-app .foot .r {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  body.wpsss-admin .wenpai-app .wpsss-help-steps .btn {
+    white-space: normal;
+    height: auto;
+    min-height: 36px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
 }
 
 /* 控件反馈：点进去能看见，锁住的和能改的一眼分开。 */
@@ -1281,7 +1318,7 @@ body.wpsss-admin .wenpai-app button.toggle[disabled],
 body.wpsss-admin .wenpai-app button.toggle.is-locked,
 body.wpsss-admin .wenpai-app button.toggle[disabled]:hover,
 body.wpsss-admin .wenpai-app button.toggle.is-locked:hover {
-  opacity: 1;
+  opacity: 0.72;
   cursor: not-allowed;
   color: var(--wenpai-ink-3);
   background: transparent;
@@ -1292,9 +1329,10 @@ body.wpsss-admin .wenpai-app button.toggle[disabled] i,
 body.wpsss-admin .wenpai-app button.toggle.is-locked i {
   background: #dcdcde;
 }
+/* 锁定仍须看得出开/关：开=品牌蓝轨道，关=灰；不要用 soft 洗成「像关着」 */
 body.wpsss-admin .wenpai-app button.toggle[disabled].on i,
 body.wpsss-admin .wenpai-app button.toggle.is-locked.on i {
-  background: var(--wenpai-accent-soft, #a7aaad);
+  background: var(--wenpai-accent, #3858e9);
 }
 body.wpsss-admin .wenpai-app .simple-row {
   margin: 0 -8px;

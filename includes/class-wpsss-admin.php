@@ -169,7 +169,8 @@ final class Wpsss_Admin
         echo '<footer class="foot">';
         echo '<span>文派智储 ' . esc_html(WPSSS_VERSION) . '</span>';
         echo '<span class="r">';
-        echo '<a href="' . esc_url(WPSSS_PRODUCT_URL) . '" target="_blank" rel="noopener">' . esc_html__('文档', 'wpsss') . '</a>';
+        echo '<a href="' . esc_url(WPSSS_DOCS_URL) . '" target="_blank" rel="noopener">' . esc_html__('文档', 'wpsss') . '</a>';
+        echo '<a href="' . esc_url(WPSSS_SUPPORT_URL) . '" target="_blank" rel="noopener">' . esc_html__('支持', 'wpsss') . '</a>';
         echo '</span></footer>';
         echo '</main></div>';
     }

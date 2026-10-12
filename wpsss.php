@@ -40,10 +40,11 @@ if (PHP_VERSION_ID < 80000) {
     }
 }
 
-define('WPSSS_VERSION', '0.9.1');
+define('WPSSS_VERSION', '0.9.2');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
-define('WPSSS_PRODUCT_URL', 'https://wpcy.com/object-storage');
+/* Plugin URI 占位 /object-storage；页脚「文档」走 DOCS，产品官网暂回主站（占位页未上） */
+define('WPSSS_PRODUCT_URL', 'https://wpcy.com/');
 define('WPSSS_DOCS_URL', 'https://wpcy.com/document');
 define('WPSSS_SUPPORT_URL', 'https://wpcy.com/support/');
 
