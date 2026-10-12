@@ -756,11 +756,7 @@
         if (label && labelDelete) {
           btn.textContent = pullDel && pullDel.checked ? labelDelete : label;
         }
-        if (row.dialog) {
-          btn.setAttribute("data-wpsss-confirm", row.dialog);
-        } else {
-          btn.removeAttribute("data-wpsss-confirm");
-        }
+        btn.removeAttribute("data-wpsss-confirm");
       });
     }
     if (pullBox) {

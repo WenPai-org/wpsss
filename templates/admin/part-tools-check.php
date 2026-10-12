@@ -167,7 +167,7 @@ defined('ABSPATH') || exit;
         <span class="meta"><?php echo esc_html__('每批最多 50 条。', 'wpsss'); ?></span>
         <span class="wpsss-actions">
           <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('去日常重试', 'wpsss'); ?></a>
-          <button class="btn btn-ghost" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认清除失败标记？不会重新上传。', 'wpsss'); ?>"><?php echo esc_html__('清除失败标记', 'wpsss'); ?></button>
+          <button class="btn btn-ghost" type="submit" data-wpsss-need-apply disabled><?php echo esc_html__('清除失败标记', 'wpsss'); ?></button>
         </span>
       </div>
     </form>

@@ -137,7 +137,7 @@ $exist_modes = [
           <?php endif; ?>
           <button class="btn btn-ghost js-wpsss-pull-go" type="submit" name="wpsss_pull_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
           <button class="btn btn-ghost js-wpsss-pull-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
-          <button class="btn btn-secondary js-wpsss-pull-go js-wpsss-pull-run" type="submit" name="wpsss_pull_apply" value="1" data-wpsss-need-apply <?php echo $pull_exist === 'skip' ? '' : 'disabled '; ?>data-wpsss-label="<?php echo esc_attr__('拉回', 'wpsss'); ?>" data-wpsss-label-delete="<?php echo esc_attr__('拉回并删除', 'wpsss'); ?>" data-wpsss-confirm="<?php echo esc_attr($exist_modes[$pull_exist]['dialog']); ?>"><?php echo esc_html__('拉回', 'wpsss'); ?></button>
+          <button class="btn btn-secondary js-wpsss-pull-go js-wpsss-pull-run" type="submit" name="wpsss_pull_apply" value="1" data-wpsss-need-apply <?php echo $pull_exist === 'skip' ? '' : 'disabled '; ?>data-wpsss-label="<?php echo esc_attr__('拉回', 'wpsss'); ?>" data-wpsss-label-delete="<?php echo esc_attr__('拉回并删除', 'wpsss'); ?>"><?php echo esc_html__('拉回', 'wpsss'); ?></button>
         </span>
       </div>
     </form>
@@ -193,7 +193,7 @@ $exist_modes = [
         <span class="meta"><?php echo esc_html__('没有预览结果时，不要写入。', 'wpsss'); ?></span>
         <span class="wpsss-actions">
           <button class="btn btn-ghost" type="submit" name="wpsss_rewrite_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
-          <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('会写入数据库，插件不能撤销。确认已经预览，并且有数据库备份？', 'wpsss'); ?>"><?php echo esc_html__('写入数据库', 'wpsss'); ?></button>
+          <button class="btn btn-secondary" type="submit" name="wpsss_rewrite_apply" value="1" data-wpsss-need-apply disabled><?php echo esc_html__('写入数据库', 'wpsss'); ?></button>
         </span>
       </div>
     </form>
@@ -225,7 +225,7 @@ $exist_modes = [
       </div>
       <div class="card-foot start">
         <span class="meta"><?php echo esc_html__('每批最多 20 个，不会删除桶内对象。', 'wpsss'); ?></span>
-        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled data-wpsss-confirm="<?php echo esc_attr__('确认解除进桶标记？不会删除桶内对象。若本地没有文件，前台图片可能无法显示。', 'wpsss'); ?>"><?php echo esc_html__('解除进桶标记', 'wpsss'); ?></button>
+        <button class="btn btn-secondary" type="submit" data-wpsss-need-apply disabled><?php echo esc_html__('解除进桶标记', 'wpsss'); ?></button>
       </div>
     </form>
   </section>
