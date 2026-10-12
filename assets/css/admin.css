@@ -251,8 +251,7 @@ body.wpsss-admin .wenpai-app .choice-cards.is-compact:not(.is-vendors) .choice {
 .wpsss-vendor-more[open] > summary .when-open {
   display: inline;
 }
-.wpsss-vendor-grid .js-wpsss-vendor-group[hidden],
-body.wpsss-admin .wenpai-app .choice .d[hidden] {
+.wpsss-vendor-grid .js-wpsss-vendor-group[hidden] {
   display: none;
 }
 .wpsss-vendor-grid .js-wpsss-vendor-group {

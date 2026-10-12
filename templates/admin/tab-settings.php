@@ -91,11 +91,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
           <?php endif; ?>
           <span>
             <div class="t"><?php echo esc_html($row['label']); ?></div>
-            <?php if ($adv) : ?>
-              <div class="d"<?php echo $on ? '' : ' hidden'; ?>><?php echo esc_html($row['help']); ?></div>
-            <?php elseif ($on) : ?>
-              <div class="d"><?php echo esc_html($row['help']); ?></div>
-            <?php endif; ?>
+            <div class="d"><?php echo esc_html($row['help']); ?></div>
           </span>
         </label>
       <?php endforeach; ?>
@@ -134,7 +130,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
                   <span class="tile vendor-tile<?php echo $on ? ' accent' : ''; ?>"><?php echo Wpsss_Icons::vendor($id); ?></span>
                   <span>
                     <div class="t"><?php echo esc_html($label); ?></div>
-                    <div class="d"<?php echo $on ? '' : ' hidden'; ?>><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
+                    <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
                   </span>
                 </label>
               <?php endforeach; ?>
