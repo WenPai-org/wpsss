@@ -64,7 +64,7 @@
     );
   }
 
-  var app = document.querySelector(".wpcy-app");
+  var app = document.querySelector(".wenpai-app");
   if (!app) {
     return;
   }
@@ -1108,15 +1108,9 @@
         if (!isBatchScope()) {
           return;
         }
-        var msg = btn.getAttribute("data-wpsss-confirm") || form.getAttribute("data-wpsss-confirm");
-        if (form.querySelector('input[name="wpsss_pull_delete"]:checked')) {
-          msg = copy.confirmPullDelete || msg;
-        }
+        /* 确认门用 .wenpai-gate 勾选，不再弹 window.confirm（对照 WPSlug / kit）。 */
         event.preventDefault();
         event.stopImmediatePropagation();
-        if (msg && !askConfirm(msg)) {
-          return;
-        }
         if (running) {
           return;
         }
@@ -1151,14 +1145,17 @@
       "submit",
       function (event) {
         var btn = event.submitter;
-        var msg = (btn && btn.getAttribute("data-wpsss-confirm")) || form.getAttribute("data-wpsss-confirm");
-        if (form.querySelector('input[name="wpsss_pull_delete"]:checked')) {
-          msg = copy.confirmPullDelete || msg;
-        }
-        if (msg && !askConfirm(msg)) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          return;
+        var hasGate = !!form.querySelector(".wenpai-gate, .wpsss-gate");
+        if (!hasGate) {
+          var msg = (btn && btn.getAttribute("data-wpsss-confirm")) || form.getAttribute("data-wpsss-confirm");
+          if (form.querySelector('input[name="wpsss_pull_delete"]:checked')) {
+            msg = copy.confirmPullDelete || msg;
+          }
+          if (msg && !askConfirm(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+          }
         }
         form.classList.add("is-busy");
         // 提交条目列表在 submit 处理器跑完之后才构建：此刻禁用 submitter 会让它的
