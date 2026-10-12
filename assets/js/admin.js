@@ -43,12 +43,15 @@
   var deleteOne = document.querySelector("#delete-action a.submitdelete");
   var deleteGate = document.querySelector(".js-wpsss-media-delete-gate");
   if (deleteOne && deleteGate) {
-    deleteOne.addEventListener("click", function (event) {
-      if (!deleteGate.checked) {
-        event.preventDefault();
-        deleteGate.focus();
+    window.addEventListener("click", function (event) {
+      var link = event.target && event.target.closest ? event.target.closest("#delete-action a.submitdelete") : null;
+      if (!link || deleteGate.checked) {
+        return;
       }
-    });
+      event.preventDefault();
+      event.stopPropagation();
+      deleteGate.focus();
+    }, true);
   }
 
   var app = document.querySelector(".wenpai-app");
