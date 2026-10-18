@@ -94,14 +94,12 @@ final class Wpsss_Admin
 
     public function register_menu(): void
     {
-        add_menu_page(
-            '文派智储',
-            '文派智储',
+        add_options_page(
+            '智储',
+            '智储',
             'manage_options',
             'wpsss',
-            [$this, 'render'],
-            'dashicons-cloud',
-            81
+            [$this, 'render']
         );
     }
 
@@ -767,7 +765,7 @@ final class Wpsss_Admin
     public function url(string $tab, array $extra = []): string
     {
         $args = array_merge(['page' => 'wpsss', 'tab' => $tab], $extra);
-        return add_query_arg($args, admin_url('admin.php'));
+        return add_query_arg($args, admin_url('options-general.php'));
     }
 
     /**

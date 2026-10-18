@@ -129,7 +129,7 @@ final class Wpsss_Media
                         'panel' => 'move',
                         'pull_id' => (int) $post->ID,
                     ],
-                    admin_url('admin.php')
+                    admin_url('options-general.php')
                 );
             } else {
                 $pull = get_edit_post_link($post->ID, 'raw');
@@ -303,7 +303,7 @@ final class Wpsss_Media
                         'panel' => 'move',
                         'pull_id' => $id,
                     ],
-                    admin_url('admin.php')
+                    admin_url('options-general.php')
                 );
                 echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             } else {

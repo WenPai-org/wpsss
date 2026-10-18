@@ -194,7 +194,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
           <?php if ($field === 'keep_local' && $on) : ?>
             <button type="button" class="toggle on is-locked" disabled title="<?php echo esc_attr__('关闭本地备份须到「设置 → 高级」操作；关闭后服务器不再保留副本，故障时无法从本地恢复', 'wpsss'); ?>" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo esc_html__('已开启', 'wpsss'); ?></button>
           <?php elseif ($field === 'origin_protect' && !$has_style && !$on) : ?>
-            <a class="btn btn-ghost" href="<?php echo esc_url(add_query_arg(array('page' => 'wpsss', 'tab' => 'settings', 'mode' => 'advanced'), admin_url('admin.php'))); ?>"><?php echo esc_html__('去填写图片样式', 'wpsss'); ?></a>
+            <a class="btn btn-ghost" href="<?php echo esc_url(add_query_arg(array('page' => 'wpsss', 'tab' => 'settings', 'mode' => 'advanced'), admin_url('options-general.php'))); ?>"><?php echo esc_html__('去填写图片样式', 'wpsss'); ?></a>
           <?php else : ?>
           <form class="wpsss-toggle-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="wpsss_quick" />
