@@ -127,6 +127,8 @@ wpsss_assert(strpos($js, 'js-wpsss-pull-exist') !== false, 'js pull exist mode')
 wpsss_assert(strpos($js, 'js-wpsss-pull-scope') !== false, 'js pull scope');
 wpsss_assert(strpos($js, 'js-wpsss-media-bulk-gate') !== false, 'js media bulk gate');
 wpsss_assert(strpos($js, 'js-wpsss-media-delete-gate') !== false, 'js media delete gate');
+wpsss_assert(strpos($js, 'js-wpsss-media-grid-gate') !== false, 'js media grid gate');
+wpsss_assert(strpos($js, 'js-wpsss-media-pull') !== false, 'js attachment pull posts after the gate');
 wpsss_assert(strpos($js, 'confirmMediaDelete') === false, 'js media delete has no dialog copy key');
 wpsss_assert(strpos($js, 'wpsss_offload_tick') !== false, 'js offload tick');
 wpsss_assert(strpos($js, 'wpsss_pull_tick') !== false, 'js pull tick');
@@ -137,6 +139,7 @@ wpsss_assert(strpos($js, 'setBar') !== false, 'js offload bar percent math');
 
 $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
 wpsss_assert(strpos($admin, '删除存储桶中的对象前，请再确认一次') !== false, 'admin rejects pull delete without second confirm');
+wpsss_assert(strpos($admin, 'wpsss_pull_gate') !== false, 'single pull rejects an unchecked post');
 wpsss_assert(strpos($admin, 'function redirect_tools') !== false, 'admin returns to tools panel');
 wpsss_assert(strpos($admin, '删除桶内对象时不能选「只补缺失」') !== false, 'admin rejects delete+skip');
 wpsss_assert(strpos($admin, '文件已写回本地，前台地址仍指向存储桶') !== false, 'admin pull message disk vs url');

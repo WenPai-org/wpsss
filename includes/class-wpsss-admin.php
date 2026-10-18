@@ -474,8 +474,12 @@ final class Wpsss_Admin
         if (!current_user_can('upload_files')) {
             wp_die(esc_html__('权限不足。', 'wpsss'));
         }
-        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        $id = isset($_REQUEST['id']) ? (int) $_REQUEST['id'] : 0;
         check_admin_referer('wpsss_pull_one_' . $id);
+        $posted = isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST';
+        if ($posted && (string) wp_unslash($_POST['wpsss_pull_gate'] ?? '') !== '1') {
+            $this->redirect_media($id, 'wpsss_pull', false);
+        }
         if ($id <= 0) {
             wp_safe_redirect(admin_url('upload.php'));
             exit;

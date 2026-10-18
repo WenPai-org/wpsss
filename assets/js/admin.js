@@ -54,6 +54,168 @@
     }, true);
   }
 
+  document.addEventListener("click", function (event) {
+    var pullBtn = event.target && event.target.closest ? event.target.closest(".js-wpsss-media-pull") : null;
+    if (!pullBtn) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    var pullGate = document.querySelector(".js-wpsss-media-pull-gate");
+    if (!pullGate || !pullGate.checked) {
+      if (pullGate) {
+        pullGate.focus();
+      }
+      return;
+    }
+    var pullForm = document.createElement("form");
+    pullForm.method = "post";
+    pullForm.setAttribute("action", pullBtn.getAttribute("data-action") || "");
+    [
+      ["action", "wpsss_pull_one"],
+      ["id", pullBtn.getAttribute("data-id") || ""],
+      ["_wpnonce", pullBtn.getAttribute("data-nonce") || ""],
+      ["wpsss_pull_gate", "1"]
+    ].forEach(function (pair) {
+      var input = document.createElement("input");
+      input.type = "hidden";
+      input.name = pair[0];
+      input.value = pair[1];
+      pullForm.appendChild(input);
+    });
+    document.body.appendChild(pullForm);
+    HTMLFormElement.prototype.submit.call(pullForm);
+  });
+
+  function gridSelectionOffloaded(frame) {
+    var selection = frame && frame.state ? frame.state().get("selection") : null;
+    var found = false;
+    if (!selection || !selection.each) {
+      return false;
+    }
+    selection.each(function (model) {
+      if (model && model.get && model.get("wpsssOffloaded")) {
+        found = true;
+      }
+    });
+    return found;
+  }
+
+  function ensureGridGate() {
+    var button = document.querySelector(".delete-selected-button");
+    var toolbar = button ? button.closest(".media-toolbar") : null;
+    if (!toolbar || !toolbar.parentNode) {
+      return null;
+    }
+    var gate = toolbar.parentNode.querySelector(".js-wpsss-media-grid-gate");
+    if (gate) {
+      var existing = gate.closest(".wpsss-media-grid-gate");
+      if (existing) {
+        existing.hidden = false;
+        existing.style.removeProperty("display");
+      }
+      return gate;
+    }
+    var label = document.createElement("label");
+    label.className = "wpsss-media-bulk-gate wpsss-media-grid-gate";
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.className = "js-wpsss-media-grid-gate";
+    label.appendChild(input);
+    label.appendChild(document.createTextNode("永久删除已进桶的附件时，桶内对象一并删除，没有回收站。"));
+    toolbar.parentNode.insertBefore(label, toolbar);
+    return input;
+  }
+
+  function bindMediaGrid(frame) {
+    if (!frame || frame.wpsssGridBound) {
+      return;
+    }
+    frame.wpsssGridBound = true;
+    frame.on("select:activate", function () {
+      window.setTimeout(ensureGridGate, 0);
+    });
+    frame.on("select:deactivate", function () {
+      var gate = document.querySelector(".wpsss-media-grid-gate");
+      if (!gate) {
+        return;
+      }
+      var box = gate.querySelector("input");
+      if (box) {
+        box.checked = false;
+      }
+      gate.hidden = true;
+    });
+    frame.on("edit:attachment", function (model) {
+      window.setTimeout(function () {
+        var details = document.querySelector(".attachment-details");
+        if (!details) {
+          return;
+        }
+        var old = details.querySelector(".wpsss-media-grid-one");
+        if (old) {
+          old.remove();
+        }
+        if (!model || !model.get || !model.get("wpsssOffloaded")) {
+          return;
+        }
+        var link = details.querySelector("a.delete-attachment, button.delete-attachment");
+        if (!link || !link.parentNode) {
+          return;
+        }
+        var label = document.createElement("label");
+        label.className = "wpsss-media-delete-gate wpsss-media-grid-one";
+        var input = document.createElement("input");
+        input.type = "checkbox";
+        input.className = "js-wpsss-media-grid-one-gate";
+        label.appendChild(input);
+        label.appendChild(document.createTextNode("永久删除会同时删掉桶内对象，没有回收站。本地副本还在。"));
+        link.parentNode.insertBefore(label, link);
+      }, 50);
+    });
+  }
+
+  if (document.body.classList.contains("upload-php") && !document.getElementById("posts-filter")) {
+    var gridTries = 0;
+    var gridTimer = window.setInterval(function () {
+      gridTries += 1;
+      if (window.wp && wp.media && wp.media.frame) {
+        window.clearInterval(gridTimer);
+        bindMediaGrid(wp.media.frame);
+      } else if (gridTries > 40) {
+        window.clearInterval(gridTimer);
+      }
+    }, 50);
+    window.addEventListener("click", function (event) {
+      var bulk = event.target && event.target.closest ? event.target.closest(".delete-selected-button") : null;
+      if (bulk && !bulk.classList.contains("hidden")) {
+        var frame = window.wp && wp.media ? wp.media.frame : null;
+        if (frame && gridSelectionOffloaded(frame)) {
+          var box = document.querySelector(".js-wpsss-media-grid-gate");
+          if (!box || !box.checked) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (box) {
+              box.focus();
+            }
+            return;
+          }
+        }
+      }
+      var one = event.target && event.target.closest ? event.target.closest(".attachment-details .delete-attachment") : null;
+      if (!one) {
+        return;
+      }
+      var oneGate = document.querySelector(".attachment-details .js-wpsss-media-grid-one-gate");
+      if (!oneGate || oneGate.checked) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      oneGate.focus();
+    }, true);
+  }
+
   var app = document.querySelector(".wenpai-app");
   if (!app) {
     return;

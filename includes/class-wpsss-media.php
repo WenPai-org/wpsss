@@ -48,7 +48,8 @@ final class Wpsss_Media
             return $response;
         }
         $id = is_object($attachment) ? (int) $attachment->ID : (int) $attachment;
-        if (!Wpsss_Library::is_offloaded($id)) {
+        $response['wpsssOffloaded'] = Wpsss_Library::is_offloaded($id);
+        if (!$response['wpsssOffloaded']) {
             return $response;
         }
         $response['url'] = $this->offload->rewrite_url((string) ($response['url'] ?? ''), $id);
@@ -120,15 +121,23 @@ final class Wpsss_Media
             return $actions;
         }
         if (Wpsss_Library::is_offloaded((int) $post->ID)) {
-            $pull = add_query_arg(
-                [
-                    'page' => 'wpsss',
-                    'tab' => 'tools',
-                    'panel' => 'move',
-                    'pull_id' => (int) $post->ID,
-                ],
-                admin_url('admin.php')
-            );
+            if (current_user_can('manage_options')) {
+                $pull = add_query_arg(
+                    [
+                        'page' => 'wpsss',
+                        'tab' => 'tools',
+                        'panel' => 'move',
+                        'pull_id' => (int) $post->ID,
+                    ],
+                    admin_url('admin.php')
+                );
+            } else {
+                $pull = get_edit_post_link($post->ID, 'raw');
+                if (!is_string($pull) || $pull === '') {
+                    $pull = admin_url('post.php?post=' . (int) $post->ID . '&action=edit');
+                }
+                $pull .= '#wpsss_attachment';
+            }
             $actions['wpsss_pull'] = '<a href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
             return $actions;
         }
@@ -286,16 +295,25 @@ final class Wpsss_Media
         }
         echo '<div class="wpsss-metabox-actions">';
         if ($off) {
-            $pull = add_query_arg(
-                [
-                    'page' => 'wpsss',
-                    'tab' => 'tools',
-                    'panel' => 'move',
-                    'pull_id' => $id,
-                ],
-                admin_url('admin.php')
-            );
-            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            if (current_user_can('manage_options')) {
+                $pull = add_query_arg(
+                    [
+                        'page' => 'wpsss',
+                        'tab' => 'tools',
+                        'panel' => 'move',
+                        'pull_id' => $id,
+                    ],
+                    admin_url('admin.php')
+                );
+                echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
+            } else {
+                echo '<label class="chk wpsss-media-delete-gate"><input type="checkbox" class="js-wpsss-media-pull-gate" /> ' . esc_html__('拉回会先把已有本地文件改名保留。', 'wpsss') . '</label>';
+                echo '<button type="button" class="btn btn-ghost js-wpsss-media-pull"';
+                echo ' data-action="' . esc_url(admin_url('admin-post.php')) . '"';
+                echo ' data-id="' . esc_attr((string) $id) . '"';
+                echo ' data-nonce="' . esc_attr(wp_create_nonce('wpsss_pull_one_' . $id)) . '">';
+                echo esc_html__('拉回本地', 'wpsss') . '</button>';
+            }
             echo '<p class="wpsss-metabox-meta">' . esc_html__('从媒体库永久删除此附件时，桶内对象会一并删除。', 'wpsss') . '</p>';
             echo '<label class="chk wpsss-media-delete-gate"><input type="checkbox" class="js-wpsss-media-delete-gate" /> ' . esc_html__('永久删除会同时删掉桶内对象，没有回收站。本地副本还在。', 'wpsss') . '</label>';
         } else {

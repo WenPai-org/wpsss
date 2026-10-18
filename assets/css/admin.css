@@ -625,6 +625,7 @@ body.wpsss-admin .wenpai-app input[type="number"]::-webkit-inner-spin-button {
   line-height: 20px;
 }
 .upload-php .wpsss-media-bulk-gate input,
+.upload-php .wpsss-media-grid-gate input,
 .wpsss-media-delete-gate input {
   width: 16px;
   height: 16px;
@@ -632,6 +633,23 @@ body.wpsss-admin .wenpai-app input[type="number"]::-webkit-inner-spin-button {
   min-height: 16px;
   margin: 2px 0 0;
   flex: none;
+  appearance: checkbox;
+  -webkit-appearance: checkbox;
+}
+.upload-php .wpsss-media-bulk-gate input::before,
+.upload-php .wpsss-media-grid-gate input::before,
+.wpsss-media-delete-gate input::before {
+  content: none;
+}
+.upload-php .wpsss-media-grid-gate {
+  position: relative;
+  z-index: 2;
+  clear: both;
+  margin: 0 0 8px;
+  max-width: 40rem;
+}
+.upload-php .wpsss-media-grid-gate[hidden] {
+  display: none !important;
 }
 .wpsss-media-delete-gate {
   display: flex;
