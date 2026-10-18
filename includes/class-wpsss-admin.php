@@ -94,13 +94,16 @@ final class Wpsss_Admin
 
     public function register_menu(): void
     {
-        add_options_page(
-            '智储',
-            '智储',
-            'manage_options',
-            'wpsss',
-            [$this, 'render']
-        );
+        if (class_exists('Wenpai_Admin_Menu')) {
+            Wenpai_Admin_Menu::register([
+                'slug' => 'wpsss',
+                'label' => '智储',
+                'title' => '智储',
+                'render' => [$this, 'render'],
+            ]);
+            return;
+        }
+        add_options_page('智储', '智储', 'manage_options', 'wpsss', [$this, 'render']);
     }
 
     public function render(): void
@@ -171,17 +174,15 @@ final class Wpsss_Admin
             ),
         ];
 
-        echo '<div class="wenpai-app">';
         $this->include_template('shell-head', $view);
-        echo '<main class="wenpai-main wenpai-wrap">';
         $this->include_template('tab-' . $tab, $view);
-        echo '<footer class="foot">';
-        echo '<span>文派智储 ' . esc_html(WPSSS_VERSION) . '</span>';
-        echo '<span class="r">';
-        echo '<a href="' . esc_url(WPSSS_DOCS_URL) . '" target="_blank" rel="noopener">' . esc_html__('文档', 'wpsss') . '</a>';
-        echo '<a href="' . esc_url(WPSSS_SUPPORT_URL) . '" target="_blank" rel="noopener">' . esc_html__('支持', 'wpsss') . '</a>';
-        echo '</span></footer>';
-        echo '</main></div>';
+        Wenpai_Admin_Shell::close([
+            'version' => '文派智储 ' . WPSSS_VERSION,
+            'links' => [
+                ['url' => WPSSS_DOCS_URL, 'label' => __('文档', 'wpsss')],
+                ['url' => WPSSS_SUPPORT_URL, 'label' => __('支持', 'wpsss')],
+            ],
+        ]);
     }
 
     /**

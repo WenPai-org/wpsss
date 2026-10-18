@@ -10,32 +10,33 @@ $tabs = [
     'tools' => ['工具', 'server'],
 ];
 ?>
-<div class="wenpai-top"><div class="wenpai-wrap">
-  <div class="wenpai-head">
-    <a class="wenpai-brand" href="<?php echo esc_url($url('overview')); ?>">
-      <span class="wenpai-mark"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-      <span class="wenpai-name"><?php echo esc_html__('文派智储', 'wpsss'); ?></span>
-    </a>
-    <?php if (!$wizard) : ?>
-    <nav class="wenpai-tabs" aria-label="<?php echo esc_attr__('文派智储', 'wpsss'); ?>">
-      <?php foreach ($tabs as $id => $meta) : ?>
-        <a class="wenpai-tab<?php echo $tab === $id ? ' is-active' : ''; ?>" href="<?php echo esc_url($url($id)); ?>">
-          <?php echo Wpsss_Icons::svg($meta[1]); ?>
-          <?php echo esc_html($meta[0]); ?>
-        </a>
-      <?php endforeach; ?>
-    </nav>
-    <?php else : ?>
-    <div class="wpsss-setup-exit-wrap">
-      <a class="btn btn-ghost wpsss-setup-exit" href="<?php echo esc_url($url('overview')); ?>"><?php echo Wpsss_Icons::svg('home'); ?><?php echo esc_html__('退出向导', 'wpsss'); ?></a>
-    </div>
-    <?php endif; ?>
-    <div class="wenpai-head-right">
-      <a class="btn btn-ghost wenpai-head-action<?php echo $tab === 'help' ? ' is-active' : ''; ?>" href="<?php echo esc_url($url('help')); ?>" title="<?php echo esc_attr__('帮助', 'wpsss'); ?>"><?php echo Wpsss_Icons::svg('help'); ?><span class="wenpai-head-label"><?php echo esc_html__('帮助', 'wpsss'); ?></span></a>
-      <a class="btn btn-ghost wenpai-head-action" href="<?php echo esc_url(WPSSS_SUPPORT_URL); ?>" target="_blank" rel="noopener" title="<?php echo esc_attr__('反馈', 'wpsss'); ?>"><?php echo Wpsss_Icons::svg('feedback'); ?><span class="wenpai-head-label"><?php echo esc_html__('反馈', 'wpsss'); ?></span></a>
-    </div>
-  </div>
-</div></div>
+<?php
+$shell_tabs = [];
+if (!$wizard) {
+    foreach ($tabs as $id => $meta) {
+        $shell_tabs[] = ['id' => $id, 'label' => $meta[0], 'url' => $url($id), 'icon_html' => Wpsss_Icons::svg($meta[1])];
+    }
+}
+$head_extra = '';
+if ($wizard) {
+    $head_extra = '<div class="wpsss-setup-exit-wrap"><a class="btn btn-ghost wpsss-setup-exit" href="' . esc_url($url('overview')) . '">' . Wpsss_Icons::svg('home') . esc_html__('退出向导', 'wpsss') . '</a></div>';
+}
+Wenpai_Admin_Shell::open([
+    'slug' => 'wpsss',
+    'name' => __('文派智储', 'wpsss'),
+    'mark_html' => Wpsss_Icons::svg('cloud'),
+    'home_url' => $url('overview'),
+    'current' => $tab,
+    'tabs' => $shell_tabs,
+    'head_extra' => $head_extra,
+    'help_url' => $url('help'),
+    'help_label' => __('帮助', 'wpsss'),
+    'help_icon_html' => Wpsss_Icons::svg('help'),
+    'feedback_url' => WPSSS_SUPPORT_URL,
+    'feedback_label' => __('反馈', 'wpsss'),
+    'feedback_icon_html' => Wpsss_Icons::svg('feedback'),
+]);
+?>
 <?php if ($view['notice'] !== '') : ?>
   <?php
     $cls = 'info';

@@ -174,6 +174,34 @@ def lint_plugin_pages(plugin_root: Path) -> tuple[list[dict], str | None]:
     return findings, None
 
 
+import re as _re
+PLUGIN_RULES = (
+    (_re.compile(r"\badd_menu_page\s*\("), "top-level menu; use Wenpai_Admin_Menu::register"),
+    (_re.compile(r"add_\w+_page\s*\([^;]*,\s*8[0-2]\s*\)"), "menu position 80-82 is reserved"),
+    (_re.compile(r"admin\.php\?page=|admin_url\(\s*[\x27\"]admin\.php[\x27\"]"), "hardcoded admin.php; use Wenpai_Admin_Menu::url"),
+    (_re.compile(r"class=[\x27\"][^\x27\"]*\b(wenpai-top|wenpai-brand)\b|class=[\x27\"]foot[\x27\"]"), "hand-written chrome; use Wenpai_Admin_Shell"),
+)
+
+
+def lint_plugin_rules(plugin_root):
+    findings = []
+    used_shell = False
+    for path in sorted(plugin_root.rglob("*.php")):
+        posix = path.as_posix()
+        if "lib/wenpai-admin-ui" in posix or "/vendor/" in posix or "/node_modules/" in posix:
+            continue
+        text = path.read_text(errors="replace")
+        if "Wenpai_Admin_Shell::open" in text:
+            used_shell = True
+        for i, line in enumerate(text.splitlines(), 1):
+            for rx, why in PLUGIN_RULES:
+                if rx.search(line):
+                    findings.append({"file": f"{path.relative_to(plugin_root)}:{i}", "kind": "RULE", "why": why})
+    if not used_shell:
+        findings.append({"file": str(plugin_root), "kind": "RULE", "why": "plugin never calls Wenpai_Admin_Shell::open"})
+    return findings
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default="", help="kit repo root")
@@ -210,6 +238,7 @@ def main() -> int:
     if plugin_root is not None:
         page_findings, plugin_skip = lint_plugin_pages(plugin_root)
         findings.extend(page_findings)
+        findings.extend(lint_plugin_rules(plugin_root))
 
     if proto_skip:
         proto_status = "SKIP"
@@ -224,7 +253,7 @@ def main() -> int:
         plugin_status = None
     elif plugin_skip:
         plugin_status = "SKIP"
-    elif any(item.get("why") in {"kit page uses form-table", "product still uses wpcy-app"} for item in findings):
+    elif any(item.get("why") in {"kit page uses form-table", "product still uses wpcy-app"} for item in findings) or any(item.get("kind") == "RULE" for item in findings):
         plugin_status = "FAIL"
     else:
         plugin_status = "PASS"

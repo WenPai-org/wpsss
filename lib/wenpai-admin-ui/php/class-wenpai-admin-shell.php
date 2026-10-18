@@ -37,6 +37,7 @@ if ( ! class_exists( 'Wenpai_Admin_Shell', false ) ) {
 		 *     @type string $version         Plugin version string.
 		 *     @type string $doc_url         Footer doc link.
 		 *     @type string $doc_label       Footer doc label.
+		 *     @type array  $links           Footer links: array of array{ url, label } (0.2.5+).
 		 * }
 		 */
 		public static function open( $args ) {
@@ -80,22 +81,22 @@ if ( ! class_exists( 'Wenpai_Admin_Shell', false ) ) {
 			echo '<div class="wenpai-head-right">';
 			if ( ! empty( $args['help_url'] ) ) {
 				$hl  = isset( $args['help_label'] ) ? $args['help_label'] : '帮助';
-				$hcl = 'btn btn-ghost';
+				$hcl = 'btn btn-ghost wenpai-head-action';
 				if ( 'help' === $current ) {
 					$hcl .= ' is-active';
 				}
 				$hicon = isset( $args['help_icon_html'] ) ? $args['help_icon_html'] : '';
 				echo '<a class="' . esc_attr( $hcl ) . '" href="' . esc_url( $args['help_url'] ) . '">';
 				echo $hicon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- product SVG.
-				echo esc_html( $hl );
+				echo '<span class="wenpai-head-label">' . esc_html( $hl ) . '</span>';
 				echo '</a>';
 			}
 			if ( ! empty( $args['feedback_url'] ) ) {
 				$fl    = isset( $args['feedback_label'] ) ? $args['feedback_label'] : '反馈';
 				$ficon = isset( $args['feedback_icon_html'] ) ? $args['feedback_icon_html'] : '';
-				echo '<a class="btn btn-ghost" href="' . esc_url( $args['feedback_url'] ) . '">';
+				echo '<a class="btn btn-ghost wenpai-head-action" href="' . esc_url( $args['feedback_url'] ) . '" target="_blank" rel="noopener">';
 				echo $ficon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- product SVG.
-				echo esc_html( $fl );
+				echo '<span class="wenpai-head-label">' . esc_html( $fl ) . '</span>';
 				echo '</a>';
 			}
 			echo '</div>';
@@ -117,8 +118,19 @@ if ( ! class_exists( 'Wenpai_Admin_Shell', false ) ) {
 			if ( '' !== $ver ) {
 				echo '<span>' . esc_html( $ver ) . '</span>';
 			}
+			$links = isset( $args['links'] ) && is_array( $args['links'] ) ? $args['links'] : array();
 			if ( '' !== $doc ) {
-				echo '<span class="r"><a href="' . esc_url( $doc ) . '">' . esc_html( $dl ) . '</a></span>';
+				array_unshift( $links, array( 'url' => $doc, 'label' => $dl ) );
+			}
+			if ( array() !== $links ) {
+				echo '<span class="r">';
+				foreach ( $links as $link ) {
+					if ( empty( $link['url'] ) ) {
+						continue;
+					}
+					echo '<a href="' . esc_url( $link['url'] ) . '" target="_blank" rel="noopener">' . esc_html( isset( $link['label'] ) ? $link['label'] : '' ) . '</a>';
+				}
+				echo '</span>';
 			}
 			echo '</footer>';
 			echo '</main>';
