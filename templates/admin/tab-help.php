@@ -101,13 +101,15 @@ $docs = static function (string $slug): string {
     <div class="card-head">
       <span class="tile"><?php echo Wpsss_Icons::svg('info'); ?></span>
       <div>
-        <h2 class="card-title"><?php echo esc_html__('边界与支持范围', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('这些场景目前不支持或有限制，使用前请先了解。', 'wpsss'); ?></p>
+        <h2 class="card-title"><?php echo esc_html__('支持范围', 'wpsss'); ?></h2>
+        <p class="card-sub"><?php echo esc_html__('当前可用的站点形态，以及各厂商在大文件和访问地址上的差别。', 'wpsss'); ?></p>
       </div>
     </div>
     <ul class="wpsss-edge-list">
-      <li><?php echo esc_html__('多站点（Multisite）暂不支持；不要在网络层激活。', 'wpsss'); ?></li>
-      <li><?php echo esc_html__('腾讯云 COS、华为云 OBS 和七牛云的超大文件以单次请求上传，超时时间会随文件体积增加。超过 100MB 的文件建议使用阿里云 OSS 或 S3 兼容存储。', 'wpsss'); ?></li>
+      <li><?php echo esc_html__('目前支持单个站点。多站点（Multisite）暂不支持，请在具体站点里激活。', 'wpsss'); ?></li>
+      <li><?php echo esc_html__('上传的媒体进入存储桶。页面和文章仍从本站服务器打开。', 'wpsss'); ?></li>
+      <li><?php echo esc_html__('阿里云 OSS 和 S3 兼容存储可以分片上传大文件。腾讯云 COS、华为云 OBS 和七牛云按一次请求上传，超时会随文件变大。超过 100MB 的文件建议改用阿里云 OSS 或 S3 兼容存储。', 'wpsss'); ?></li>
+      <li><?php echo esc_html__('七牛云的访客地址必须使用 HTTPS 自定义域名。', 'wpsss'); ?></li>
     </ul>
   </section>
 </div>
