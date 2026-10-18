@@ -874,21 +874,36 @@ details > .wpsss-doctor-summary {
 .wpsss-doctor-list li.is-warn {
   border-left-color: var(--wenpai-warn, #bdb35a);
 }
-.wpsss-edge-list {
+.wpsss-scope {
+  list-style: none;
   margin: 0;
-  padding-left: 1.3em;
-  color: var(--wenpai-ink-2);
+  padding: 0 16px 8px;
+}
+.wpsss-scope li {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 4px 16px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid var(--wenpai-line-soft);
   font-size: 13px;
   line-height: 20px;
+  color: var(--wenpai-ink-2);
 }
-.wpsss-edge-list li {
-  margin: 0 0 8px;
+.wpsss-scope li:first-child {
+  border-top: 0;
 }
-.wpsss-edge-list li:last-child {
-  margin-bottom: 0;
+.wpsss-scope strong {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--wenpai-ink);
 }
-.wpsss-edge-list li::marker {
-  color: var(--wenpai-ink-3);
+.wpsss-scope p {
+  margin: 0;
+}
+.wpsss-scope p + p {
+  margin-top: 4px;
 }
 .wpsss-doctor-list {
   list-style: none;

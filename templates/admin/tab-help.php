@@ -105,11 +105,26 @@ $docs = static function (string $slug): string {
         <p class="card-sub"><?php echo esc_html__('当前可用的站点形态，以及各厂商在大文件和访问地址上的差别。', 'wpsss'); ?></p>
       </div>
     </div>
-    <ul class="wpsss-edge-list">
-      <li><?php echo esc_html__('目前支持单个站点。多站点（Multisite）暂不支持，请在具体站点里激活。', 'wpsss'); ?></li>
-      <li><?php echo esc_html__('上传的媒体进入存储桶。页面和文章仍从本站服务器打开。', 'wpsss'); ?></li>
-      <li><?php echo esc_html__('阿里云 OSS 和 S3 兼容存储可以分片上传大文件。腾讯云 COS、华为云 OBS 和七牛云按一次请求上传，超时会随文件变大。超过 100MB 的文件建议改用阿里云 OSS 或 S3 兼容存储。', 'wpsss'); ?></li>
-      <li><?php echo esc_html__('七牛云的访客地址必须使用 HTTPS 自定义域名。', 'wpsss'); ?></li>
+    <ul class="wpsss-scope">
+      <li>
+        <strong><?php echo esc_html__('站点', 'wpsss'); ?></strong>
+        <span><?php echo esc_html__('目前支持单个站点。多站点（Multisite）暂不支持，请在具体站点里激活。', 'wpsss'); ?></span>
+      </li>
+      <li>
+        <strong><?php echo esc_html__('页面', 'wpsss'); ?></strong>
+        <span><?php echo esc_html__('上传的媒体进入存储桶。页面和文章仍从本站服务器打开。', 'wpsss'); ?></span>
+      </li>
+      <li>
+        <strong><?php echo esc_html__('大文件', 'wpsss'); ?></strong>
+        <span>
+          <p><?php echo esc_html__('可以分片：阿里云 OSS、S3 兼容存储。', 'wpsss'); ?></p>
+          <p><?php echo esc_html__('一次请求：腾讯云 COS、华为云 OBS、七牛云。超过 100MB 建议改用可以分片的厂商。', 'wpsss'); ?></p>
+        </span>
+      </li>
+      <li>
+        <strong><?php echo esc_html__('七牛云', 'wpsss'); ?></strong>
+        <span><?php echo esc_html__('访客地址必须使用 HTTPS 自定义域名。', 'wpsss'); ?></span>
+      </li>
     </ul>
   </section>
 </div>
