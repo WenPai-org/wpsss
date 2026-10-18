@@ -26,8 +26,8 @@ $http = Wpsss_Cos_Signer::http_string(
     []
 );
 wpsss_assert(strpos($http, "put\n/2026/09/hello.txt\n") === 0, 'cos http method path');
-wpsss_assert(strpos($http, "content-type:text/plain\n") !== false, 'cos headers lower');
-wpsss_assert(strpos($http, "host:demo-1250000000.cos.ap-guangzhou.myqcloud.com\n") !== false, 'cos host signed');
+wpsss_assert(strpos($http, 'content-type=text%2Fplain') !== false, 'cos headers lower');
+wpsss_assert(strpos($http, 'host=demo-1250000000.cos.ap-guangzhou.myqcloud.com') !== false, 'cos host signed');
 
 $auth = Wpsss_Cos_Signer::authorization(
     'AKIDtest',

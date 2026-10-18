@@ -25,19 +25,17 @@ class Wpsss_Cos_Signer
     ): string {
         $key_time = $start . ';' . $end;
         $sign_key = hash_hmac('sha1', $key_time, $secret_key);
-        $header_list = [];
         $normalized = [];
         foreach ($headers as $name => $value) {
-            $lower = strtolower($name);
-            $normalized[$lower] = trim($value);
-            $header_list[] = $lower;
+            $normalized[strtolower($name)] = rawurlencode(trim((string) $value));
         }
         ksort($normalized);
-        sort($header_list);
-        $header_block = '';
+        $header_list = array_keys($normalized);
+        $parts = [];
         foreach ($normalized as $name => $value) {
-            $header_block .= $name . ':' . $value . "\n";
+            $parts[] = $name . '=' . $value;
         }
+        $header_block = implode('&', $parts);
         $param_list = [];
         $param_pairs = [];
         foreach ($params as $name => $value) {
@@ -79,13 +77,14 @@ class Wpsss_Cos_Signer
     ): string {
         $normalized = [];
         foreach ($headers as $name => $value) {
-            $normalized[strtolower($name)] = trim($value);
+            $normalized[strtolower($name)] = rawurlencode(trim((string) $value));
         }
         ksort($normalized);
-        $header_block = '';
+        $parts = [];
         foreach ($normalized as $name => $value) {
-            $header_block .= $name . ':' . $value . "\n";
+            $parts[] = $name . '=' . $value;
         }
+        $header_block = implode('&', $parts);
         $param_pairs = [];
         foreach ($params as $name => $value) {
             $param_pairs[strtolower($name)] = rawurlencode($value);
