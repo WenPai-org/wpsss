@@ -414,8 +414,7 @@
     if (toggle) {
       var hidden = toggle.parentNode ? toggle.parentNode.querySelector('input[type="hidden"]') : null;
       var on = hidden ? hidden.value === "1" : toggle.classList.contains("on");
-      toggle.disabled = !hasStyle && !on;
-      toggle.classList.toggle("is-locked", toggle.disabled);
+      toggle.hidden = !hasStyle && !on;
     }
   }
 
