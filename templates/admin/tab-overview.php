@@ -58,7 +58,7 @@ $pending = (int) ($stats['pending'] ?? 0);
     <div class="r">
       <span class="pill<?php echo $public_base !== '' ? ' ok' : ' warn'; ?>"><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : ($custom ? esc_html__('自定义域名', 'wpsss') : esc_html__('默认域名', 'wpsss')); ?></span>
       <?php if (!$custom) : ?>
-        <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced', 'section' => 'access'])); ?>"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
+        <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
       <?php endif; ?>
     </div>
   </div>

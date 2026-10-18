@@ -316,20 +316,37 @@ body.wpsss-admin .wenpai-app .field {
 body.wpsss-admin .wenpai-app .field[hidden] {
   display: none;
 }
-body.wpsss-admin .wenpai-app [data-wpsss-section][hidden] {
-  display: none !important;
-}
 body.wpsss-admin .wenpai-app .saved {
   font-size: 12px;
   line-height: 18px;
 }
-body.wpsss-admin .wenpai-app .wpsss-section-seg {
-  display: flex;
-  flex-wrap: wrap;
-  overflow: visible;
-  max-width: 100%;
-  height: auto;
-  margin: 0 0 16px;
+.wpsss-more {
+  margin: 4px 0 0;
+  border-top: 1px solid var(--wenpai-line-soft);
+}
+.wpsss-more > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 0 4px;
+}
+.wpsss-more > summary::-webkit-details-marker {
+  display: none;
+}
+.wpsss-more > summary .t {
+  display: block;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--wenpai-ink);
+}
+.wpsss-more > summary .d {
+  display: block;
+  margin-top: 2px;
+  color: var(--wenpai-ink-3);
+  font-size: 13px;
+  line-height: 20px;
+}
+.wpsss-more[open] > summary {
+  padding-bottom: 0;
 }
 .field-ctl-row {
   display: flex;
@@ -860,10 +877,15 @@ details > .wpsss-doctor-summary {
 .wpsss-edge-list {
   margin: 0;
   padding-left: 1.3em;
+  color: var(--wenpai-ink-2);
+  font-size: 13px;
+  line-height: 20px;
 }
 .wpsss-edge-list li {
-  margin: 0 0 0.5em;
-  line-height: 1.7;
+  margin: 0 0 8px;
+}
+.wpsss-edge-list li:last-child {
+  margin-bottom: 0;
 }
 .wpsss-edge-list li::marker {
   color: var(--wenpai-ink-3);
@@ -900,8 +922,7 @@ details > .wpsss-doctor-summary {
 .wpsss-help-stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 20px;
 }
 .wpsss-help-card {
   padding: 20px 24px;
@@ -922,8 +943,8 @@ details > .wpsss-doctor-summary {
   align-items: start;
   padding: 14px 0;
   border-top: 1px solid var(--wenpai-line-soft);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 13px;
+  line-height: 20px;
   color: var(--wenpai-ink-3);
 }
 .wpsss-help-steps li:first-child {
@@ -946,8 +967,8 @@ details > .wpsss-doctor-summary {
 }
 .wpsss-help-steps strong {
   grid-column: 2;
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 14px;
+  line-height: 22px;
   font-weight: 400;
   color: var(--wenpai-ink);
 }
@@ -970,104 +991,43 @@ details > .wpsss-doctor-summary {
   grid-column: auto;
   margin-top: 0;
 }
-/* 帮助页底 CTA：不要用 .start 的 space-between 把两钮扯到两头 */
-.wpsss-help-cta {
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.wpsss-help-details {
-  padding: 0;
-  overflow: hidden;
-}
-.wpsss-help-details > summary {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
-  align-items: center;
-  padding: 14px 24px;
-  cursor: pointer;
-  list-style: none;
-}
-.wpsss-help-details > summary::-webkit-details-marker {
-  display: none;
-}
-.wpsss-help-details > summary::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-right: 2px solid var(--wenpai-ink-3);
-  border-bottom: 2px solid var(--wenpai-ink-3);
-  transform: rotate(45deg);
-  transition: transform 0.15s ease;
-  margin-left: 8px;
-}
-.wpsss-help-details[open] > summary::after {
-  transform: rotate(-135deg);
-  margin-top: 4px;
-}
-.wpsss-help-summary-text {
+.wpsss-help-docs {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  gap: 18px;
 }
-.wpsss-help-summary-text strong {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 400;
-  color: var(--wenpai-ink);
-}
-.wpsss-help-summary-text span {
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--wenpai-ink-3);
-}
-.wpsss-help-body {
-  /* 24 + 36 + 14：与 WPSlug harvest 图标左缘对齐 */
-  padding: 0 24px 16px 74px;
-  border-top: 1px solid var(--wenpai-line-soft);
-}
-.wpsss-help-dl {
-  margin: 12px 0 0;
-}
-.wpsss-help-dl dt {
+.wpsss-help-doc-label {
+  margin: 0 0 8px;
   font-size: 13px;
   line-height: 20px;
-  color: var(--wenpai-ink);
-  font-weight: 400;
-  margin-top: 12px;
-}
-.wpsss-help-dl dt:first-child {
-  margin-top: 0;
-}
-.wpsss-help-dl dd {
-  margin: 4px 0 0;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--wenpai-ink-3);
-}
-.wpsss-help-details .wpsss-help-body .wpsss-help-dl dd {
-  margin-bottom: 2px;
-}
-.wpsss-help-code {
-  margin: 12px 0 0;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: var(--wenpai-line-soft);
-  overflow-x: auto;
-}
-.wpsss-help-code code {
-  font-size: 12px;
-  line-height: 18px;
   color: var(--wenpai-ink-2);
-  white-space: pre;
 }
-.wpsss-help-note {
-  margin: 10px 0 0;
-  font-size: 12px;
-  line-height: 18px;
-  color: var(--wenpai-ink-3);
+.wpsss-help-doc-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  border-top: 1px solid var(--wenpai-line-soft);
+}
+.wpsss-help-doc-group li {
+  min-width: 0;
+  border-bottom: 1px solid var(--wenpai-line-soft);
+}
+.wpsss-help-doc-group li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.wpsss-help-doc-group a {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--wenpai-accent);
+}
+.wpsss-help-doc-group a:hover {
+  color: var(--wenpai-accent-hover, #2c47c5);
 }
 .wpsss-notice-wrap {
   padding-top: 16px;
@@ -1303,8 +1263,8 @@ body.wpsss-admin .wenpai-head-action {
     gap: 8px;
     margin-left: auto;
   }
-  body.wpsss-admin .wenpai-app .wpsss-help-body {
-    padding-left: 24px;
+  body.wpsss-admin .wenpai-app .wpsss-help-doc-group ul {
+    grid-template-columns: 1fr;
   }
   body.wpsss-admin .wenpai-app .choice-cards,
   body.wpsss-admin .wenpai-app .choice-cards.is-vendors,
@@ -1476,16 +1436,6 @@ body.wpsss-admin .wenpai-app .chk input:focus-visible,
 body.wpsss-admin .wenpai-app .wpsss-gate input:focus-visible {
   outline: 2px solid var(--wenpai-accent);
   outline-offset: 2px;
-}
-body.wpsss-admin .wenpai-app .wpsss-help-details > summary {
-  transition: background-color 0.12s ease;
-}
-body.wpsss-admin .wenpai-app .wpsss-help-details > summary:hover {
-  background: var(--wenpai-line-soft);
-}
-body.wpsss-admin .wenpai-app .wpsss-help-details > summary:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--wenpai-accent);
 }
 body.wpsss-admin .wenpai-app .wenpai-tab:hover {
   background: transparent;

@@ -148,7 +148,6 @@ final class Wpsss_Admin
         $view = [
             'tab' => $tab,
             'mode' => $mode,
-            'section' => $this->settings_section(),
             'panel' => $this->tools_panel(),
             'opts' => $opts,
             'driver' => $driver,
@@ -193,13 +192,8 @@ final class Wpsss_Admin
     public function after_options_redirect($location)
     {
         if (isset($_POST['option_page']) && $_POST['option_page'] === 'wpsss') {
-            $section = isset($_POST['wpsss_section']) ? sanitize_key((string) wp_unslash($_POST['wpsss_section'])) : 'scene';
-            if (!in_array($section, ['scene', 'vendor', 'bucket', 'access'], true)) {
-                $section = 'scene';
-            }
             return $this->url('settings', [
                 'mode' => 'advanced',
-                'section' => $section,
                 'settings-updated' => 'true',
             ]);
         }
@@ -812,12 +806,6 @@ final class Wpsss_Admin
     {
         $mode = isset($_GET['mode']) ? sanitize_key((string) $_GET['mode']) : 'simple';
         return $mode === 'advanced' ? 'advanced' : 'simple';
-    }
-
-    private function settings_section(): string
-    {
-        $section = isset($_GET['section']) ? sanitize_key((string) $_GET['section']) : 'scene';
-        return in_array($section, ['scene', 'vendor', 'bucket', 'access'], true) ? $section : 'scene';
     }
 
     private function sanitize_tools_panel(string $panel): string

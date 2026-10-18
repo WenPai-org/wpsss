@@ -878,63 +878,26 @@
     });
   });
 
-  var sectionNav = app.querySelector(".wpsss-section-seg");
-  if (sectionNav) {
-    function showSection(id, push) {
-      var cards = app.querySelectorAll("[data-wpsss-section]");
-      var found = false;
-      cards.forEach(function (card) {
-        var on = card.getAttribute("data-wpsss-section") === id;
-        if (on) {
-          found = true;
-        }
-        card.hidden = !on;
-      });
-      if (!found) {
-        return;
-      }
-      sectionNav.querySelectorAll("a").forEach(function (link) {
-        var href = link.getAttribute("href") || "";
-        link.classList.toggle("on", href.indexOf("section=" + id) !== -1);
-      });
-      var input = app.querySelector('input[name="wpsss_section"]');
-      if (input) {
-        input.value = id;
-      }
-      var referer = app.querySelector('#wpsss-settings-form input[name="_wp_http_referer"]');
-      if (referer) {
-        try {
-          var refUrl = new URL(referer.value, window.location.origin);
-          refUrl.searchParams.set("mode", "advanced");
-          refUrl.searchParams.set("section", id);
-          referer.value = refUrl.pathname + refUrl.search;
-        } catch (err) {
-          /* referer stays as rendered */
-        }
-      }
-      if (push) {
-        var next = new URL(window.location.href);
-        next.searchParams.set("mode", "advanced");
-        next.searchParams.set("section", id);
-        next.hash = "";
-        window.history.replaceState(null, "", next.toString());
-      }
+  if (app.querySelector("#wpsss-settings-form")) {
+    var sectionJump = {
+      scene: "wpsss-scene",
+      vendor: "wpsss-vendor",
+      bucket: "wpsss-fields",
+      access: "wpsss-access",
+    };
+    var jumpKey = "";
+    try {
+      jumpKey = new URL(window.location.href).searchParams.get("section") || "";
+    } catch (err) {
+      jumpKey = "";
     }
-    sectionNav.addEventListener("click", function (event) {
-      var link = event.target && event.target.closest ? event.target.closest("a") : null;
-      if (!link || !sectionNav.contains(link)) {
-        return;
-      }
-      var href = link.getAttribute("href") || "";
-      var match = href.match(/[?&]section=([a-z]+)/);
-      if (!match) {
-        return;
-      }
-      event.preventDefault();
-      showSection(match[1], true);
-    });
+    var jumpId = sectionJump[jumpKey] || "";
     if (window.location.hash === "#wpsss-access") {
-      showSection("access", true);
+      jumpId = "wpsss-access";
+    }
+    var jump = jumpId ? document.getElementById(jumpId) : null;
+    if (jump && jump.scrollIntoView) {
+      jump.scrollIntoView({ block: "start" });
     }
   }
 
