@@ -256,28 +256,28 @@ class Wpsss_Options
         $rows = [
             [
                 't' => '本地备份',
-                'd' => '上传后在服务器保留副本，便于回滚与拉回',
+                'd' => '上传后仍在服务器保留副本，便于回滚和拉回。',
             ],
             [
                 't' => '缩略图同步',
-                'd' => '各尺寸附件一并上传至存储桶',
+                'd' => '各尺寸的附件会一并上传到存储桶。',
             ],
         ];
 
         if ($site_mode === 'domestic') {
             $rows[] = [
                 't' => '推荐国内云厂商',
-                'd' => '向导中优先展示 OSS、COS、KODO、OBS、TOS',
+                'd' => '设置向导会优先展示阿里云 OSS、腾讯云 COS、七牛云、华为云 OBS 和火山引擎 TOS。',
             ];
         } elseif ($site_mode === 'crossborder') {
             $rows[] = [
                 't' => '推荐国际与兼容云',
-                'd' => 'S3 兼容与 GCS 排在前列，国内云仍可选',
+                'd' => 'S3 兼容存储和 Google Cloud Storage 排在前面，国内云厂商仍可选择。',
             ];
         } else {
             $rows[] = [
                 't' => '国内外厂商均可选',
-                'd' => '按存储桶实际所在区域选择',
+                'd' => '请按存储桶实际所在区域选择云厂商。',
             ];
         }
 
@@ -285,12 +285,12 @@ class Wpsss_Options
         if ($access === 'signed') {
             $rows[] = [
                 't' => '签名访问',
-                'd' => '私有桶通过带有效期的 URL 对外提供媒体',
+                'd' => '私有存储桶通过带有效期的地址对外提供媒体。',
             ];
         } else {
             $rows[] = [
                 't' => '公开读',
-                'd' => '附件 URL 可直接访问，须桶策略允许匿名读取',
+                'd' => '附件地址可以直接访问。存储桶策略须允许匿名读取。',
             ];
         }
 
@@ -427,19 +427,19 @@ class Wpsss_Options
         $app_id = (string) ($opts['app_id'] ?? '');
 
         if ($driver === self::DRIVER_KODO && $custom === '') {
-            $warnings[] = '七牛必须填写 HTTPS 自定义域名，默认域不能给访客用。';
+            $warnings[] = '七牛的默认域名不能给访客使用。请填写 HTTPS 自定义域名，否则前台没有可访问的地址。';
         }
         if ($driver === self::DRIVER_ALIYUN && $custom === '' && $url_access !== 'signed') {
-            $warnings[] = '阿里默认域名 2019 年后常强制下载不预览。请配自定义域或改签名访问。';
+            $warnings[] = '自 2019 年起，阿里云存储桶的默认域名常把图片当作文件下载。请填写 HTTPS 自定义域名，或改用签名访问。';
         }
         if ($driver === self::DRIVER_COS && $app_id === '' && !preg_match('/-\d+/', $bucket)) {
-            $warnings[] = 'COS 的 APPID 是桶创建者的，不是子账户的。';
+            $warnings[] = '腾讯云 COS 的 APPID 属于创建存储桶的主账号，不是子账号。请填写主账号 APPID，或使用已带 APPID 后缀的桶名。';
         }
         if ((string) get_option('upload_url_path') === '.') {
-            $warnings[] = 'upload_url_path 不能是「.」，删除远端会失败。';
+            $warnings[] = '媒体地址前缀不能是「.」。为「.」时，删除存储桶中的对象会失败。';
         }
         if ($driver === self::DRIVER_ALIYUN && ($opts['oss_auth'] ?? 'ak') === 'ram' && (string) ($opts['oss_ram_role'] ?? '') === '') {
-            $warnings[] = '实例 RAM 角色名为空时，会向 ECS 元数据询问；失败则无法进桶。';
+            $warnings[] = '未填写 RAM 角色名时，插件会向服务器获取临时密钥。获取失败时，附件无法进入存储桶。';
         }
 
         return $warnings;
@@ -818,15 +818,15 @@ class Wpsss_Options
         return [
             'domestic' => [
                 'label' => '国内站',
-                'help' => '站点与访客主要位于中国大陆',
+                'help' => '站点与访客主要位于中国大陆。',
             ],
             'crossborder' => [
                 'label' => '跨境 · 外贸站',
-                'help' => '站点在海外，管理方在国内',
+                'help' => '站点在海外，管理方在国内。',
             ],
             'mixed' => [
                 'label' => '混合站',
-                'help' => '访客来源包含境内外',
+                'help' => '访客来自境内和境外。',
             ],
         ];
     }
@@ -985,13 +985,13 @@ class Wpsss_Options
     public static function driver_help(): array
     {
         return [
-            self::DRIVER_ALIYUN => '国内站点常用',
-            self::DRIVER_COS => '适合已有腾讯云 COS 桶',
-            self::DRIVER_KODO => '对外访问须配置自定义域名',
-            self::DRIVER_OBS => '适合已有华为云 OBS 桶',
-            self::DRIVER_TOS => '适合已有火山引擎 TOS 桶',
-            self::DRIVER_S3 => '兼容 AWS、Cloudflare R2、MinIO',
-            self::DRIVER_GCS => '适合 Google Cloud 存储桶',
+            self::DRIVER_ALIYUN => '适合国内站点。',
+            self::DRIVER_COS => '适合已有腾讯云 COS 存储桶。',
+            self::DRIVER_KODO => '对外访问需要填写 HTTPS 自定义域名。',
+            self::DRIVER_OBS => '适合已有华为云 OBS 存储桶。',
+            self::DRIVER_TOS => '适合已有火山引擎 TOS 存储桶。',
+            self::DRIVER_S3 => '兼容 AWS、Cloudflare R2 和 MinIO。',
+            self::DRIVER_GCS => '适合 Google Cloud 存储桶。',
         ];
     }
 
@@ -1001,13 +1001,13 @@ class Wpsss_Options
     public static function bucket_help(): array
     {
         return [
-            self::DRIVER_ALIYUN => '仅填写桶名，不含域名后缀',
-            self::DRIVER_COS => '格式 name-APPID',
-            self::DRIVER_KODO => '仅填写空间名称',
-            self::DRIVER_OBS => '仅填写桶名',
-            self::DRIVER_TOS => '仅填写桶名',
-            self::DRIVER_S3 => '仅填写桶名，Endpoint 另填',
-            self::DRIVER_GCS => '仅填写桶名，Endpoint 另填',
+            self::DRIVER_ALIYUN => '只填写存储桶名称，不要带域名。',
+            self::DRIVER_COS => '桶名须带 APPID 后缀，例如 demo-1250000000。',
+            self::DRIVER_KODO => '只填写空间名称，不要带域名。',
+            self::DRIVER_OBS => '只填写存储桶名称，不要带域名。',
+            self::DRIVER_TOS => '只填写存储桶名称，不要带域名。',
+            self::DRIVER_S3 => '只填写存储桶名称。Endpoint 请在高级设置填写。',
+            self::DRIVER_GCS => '只填写存储桶名称。Endpoint 请在高级设置填写。',
         ];
     }
 
@@ -1059,13 +1059,13 @@ class Wpsss_Options
                 'savePreview' => '预览中的更改需保存后才会生效。',
                 'saveDefault' => '密钥留空保存时将保留已保存的值。',
                 'appIdCos' => 'APPID（COS）',
-                'appIdCosHelp' => '创建桶的主账号 APPID。子账户的 APPID 无效。桶名已含 APPID 可留空。',
+                'appIdCosHelp' => '请填写创建存储桶的主账号 APPID。子账号的 APPID 无效。桶名已包含 APPID 时可以留空。',
                 'appIdR2' => 'R2 Account ID',
                 'appIdR2Help' => '用于拼接服务 Endpoint。',
                 's3Help' => '将自动填入默认 Endpoint。',
-                'tosHelp' => '火山引擎固定为此预设。',
-                'gcsHelp' => 'Google 云固定为此预设。',
-                'bucketFallback' => '仅填写桶名',
+                'tosHelp' => '火山引擎使用此预设，不能更换。',
+                'gcsHelp' => 'Google Cloud Storage 使用此预设，不能更换。',
+                'bucketFallback' => '只填写存储桶名称，不要带域名。',
             ],
         ];
     }

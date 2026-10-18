@@ -50,9 +50,9 @@ defined('ABSPATH') || exit;
           if ($pending > 0 && (int) ($failed ?? 0) > 0) {
               echo esc_html(sprintf(__('待补传 %d 个，其中 %d 个上次失败。失败项会自动退出队列，点「重试失败项」单独处理。', 'wpsss'), (int) $pending, (int) $failed));
           } elseif ($pending > 0 && (int) ($offload_cursor ?? 0) > 0) {
-              echo esc_html(sprintf(__('接着上次的位置（编号 %d）继续，从新到旧。关掉页面，后台每分钟最多补 2 个。', 'wpsss'), (int) $offload_cursor));
+              echo esc_html(sprintf(__('将从编号 %d 继续，从新到旧。关闭页面后，后台每分钟最多补传 2 个。', 'wpsss'), (int) $offload_cursor));
           } elseif ($pending > 0) {
-              echo esc_html__('开始后一次传一个。关掉页面，后台每分钟最多补 2 个，补完自动停；点「暂停」立即全停。', 'wpsss');
+              echo esc_html__('开始后每次上传一个附件。关闭页面后，后台每分钟最多补传 2 个，全部完成后自动停止。点「暂停」会立即停止。', 'wpsss');
           } elseif ((int) ($failed ?? 0) > 0) {
               echo esc_html(sprintf(__('待补传已清完，剩 %d 个失败项。到「工具 → 排障」查明原因，再点「重试失败项」。', 'wpsss'), (int) $failed));
           } else {
@@ -61,7 +61,7 @@ defined('ABSPATH') || exit;
         ?></span>
         <span class="wpsss-actions">
           <?php if ($pending > 0 && (int) ($offload_cursor ?? 0) > 0) : ?>
-            <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1" title="<?php echo esc_attr__('清掉续传位置，下一轮从最新的附件重新扫起；已进桶的会自动跳过。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
+            <button class="btn btn-ghost" type="submit" name="wpsss_offload_reset" value="1" title="<?php echo esc_attr__('清除续传位置。下一轮从最新的附件重新开始，已进桶的附件会自动跳过。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
           <?php endif; ?>
           <button class="btn btn-ghost js-wpsss-offload-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
           <button class="btn btn-secondary js-wpsss-offload-run" type="submit" name="wpsss_offload" value="1" <?php disabled($pending <= 0); ?>><?php echo esc_html__('开始补传', 'wpsss'); ?></button>

@@ -144,7 +144,7 @@ $protect_on = Wpsss_Options::sanitize([
 ]);
 wpsss_assert($protect_on['origin_protect'] === '1', 'origin_protect on with image_style');
 wpsss_assert(
-    in_array('实例 RAM 角色名为空时，会向 ECS 元数据询问；失败则无法进桶。', Wpsss_Options::runtime_warnings([
+    in_array('未填写 RAM 角色名时，插件会向服务器获取临时密钥。获取失败时，附件无法进入存储桶。', Wpsss_Options::runtime_warnings([
         'driver' => 'aliyun-oss',
         'oss_auth' => 'ram',
         'oss_ram_role' => '',
@@ -159,7 +159,7 @@ $kodo_w = Wpsss_Options::runtime_warnings([
     'access_key_secret' => 'do-not-echo',
 ]);
 wpsss_assert(
-    in_array('七牛必须填写 HTTPS 自定义域名，默认域不能给访客用。', $kodo_w, true),
+    in_array('七牛的默认域名不能给访客使用。请填写 HTTPS 自定义域名，否则前台没有可访问的地址。', $kodo_w, true),
     'runtime_warnings kodo needs custom domain'
 );
 wpsss_assert(strpos(implode("\n", $kodo_w), 'do-not-echo') === false, 'runtime_warnings does not echo secret');
@@ -170,7 +170,7 @@ $ali_w = Wpsss_Options::runtime_warnings([
     'url_access' => 'public',
 ]);
 wpsss_assert(
-    in_array('阿里默认域名 2019 年后常强制下载不预览。请配自定义域或改签名访问。', $ali_w, true),
+    in_array('自 2019 年起，阿里云存储桶的默认域名常把图片当作文件下载。请填写 HTTPS 自定义域名，或改用签名访问。', $ali_w, true),
     'runtime_warnings aliyun default domain'
 );
 
@@ -181,7 +181,7 @@ $dot_w = Wpsss_Options::runtime_warnings([
     'url_access' => 'public',
 ]);
 wpsss_assert(
-    in_array('upload_url_path 不能是「.」，删除远端会失败。', $dot_w, true),
+    in_array('媒体地址前缀不能是「.」。为「.」时，删除存储桶中的对象会失败。', $dot_w, true),
     'runtime_warnings upload_url_path is dot'
 );
 

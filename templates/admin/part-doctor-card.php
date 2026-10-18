@@ -15,7 +15,7 @@ $pill_cls = $tone === 'ok' ? 'ok' : ($tone === 'block' ? 'bad' : 'warn');
 $tile_cls = $tone === 'ok' ? ' ok' : ($tone === 'block' ? ' bad' : ' warn');
 $card_mod = $has_issue ? ' wpsss-doctor-card--alert' : '';
 if ($blockers !== []) {
-    $summary = sprintf(__('%d 项阻断，须先处理', 'wpsss'), count($blockers));
+    $summary = sprintf(__('%d 项需要先处理', 'wpsss'), count($blockers));
     if ($warnings !== []) {
         $summary .= sprintf(__(' · %d 项警告', 'wpsss'), count($warnings));
     }

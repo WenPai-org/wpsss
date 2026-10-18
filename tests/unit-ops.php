@@ -83,8 +83,8 @@ wpsss_assert(strpos($shell, "'move'") !== false, 'tools has move panel');
 wpsss_assert(strpos($shell, '媒体体检') === false, 'tools index does not stack all cards');
 wpsss_assert(strpos($tools, 'wpsss_pull_delete_confirm') !== false, 'tools second confirm for delete remote');
 wpsss_assert(strpos($tools, '桶里没有回收站') !== false, 'tools delete has no-trash warning');
-wpsss_assert(strpos($tools, '先做完这三步') !== false, 'tools delete has backup steps');
-wpsss_assert(strpos($tools, '本地已经打开核对过') !== false, 'tools delete confirm is a backup claim');
+wpsss_assert(strpos($tools, '请先完成下面三步') !== false, 'tools delete has backup steps');
+wpsss_assert(strpos($tools, '我已在本地打开并核对') !== false, 'tools delete confirm is a backup claim');
 wpsss_assert(strpos($tools, '有数据库备份') !== false, 'tools rewrite asks for database backup');
 wpsss_assert(strpos($tools, 'wenpai-gate') !== false, 'tools uses a checkbox gate');
 wpsss_assert(strpos($tools, 'data-wpsss-confirm') === false, 'tools templates have no dialog confirm');
@@ -136,7 +136,7 @@ wpsss_assert(strpos($js, 'js-wpsss-offload-bar') !== false, 'js offload progress
 wpsss_assert(strpos($js, 'setBar') !== false, 'js offload bar percent math');
 
 $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
-wpsss_assert(strpos($admin, '删除远端须再确认') !== false, 'admin rejects pull delete without second confirm');
+wpsss_assert(strpos($admin, '删除存储桶中的对象前，请再确认一次') !== false, 'admin rejects pull delete without second confirm');
 wpsss_assert(strpos($admin, 'function redirect_tools') !== false, 'admin returns to tools panel');
 wpsss_assert(strpos($admin, '删除桶内对象时不能选「只补缺失」') !== false, 'admin rejects delete+skip');
 wpsss_assert(strpos($admin, '文件已写回本地，前台地址仍指向存储桶') !== false, 'admin pull message disk vs url');
@@ -156,10 +156,10 @@ wpsss_assert(strpos($lib, 'ID > %d') !== false, 'rewrite uses keyset pagination'
 
 wpsss_assert(strpos($tools, 'js-wpsss-pull-progress') !== false, 'tools pull ajax progress');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-stop') !== false, 'tools pull pause button');
-wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-time copy');
+wpsss_assert(strpos($tools, '每次拉回一个') !== false, 'tools pull one-at-a-time copy');
 wpsss_assert(strpos($tools, '待补传已清完') !== false, 'tools queue-drained copy');
 wpsss_assert(strpos($tools, '点「重试失败项」只处理它们') !== false, 'tools retry copy');
-wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
+wpsss_assert(strpos($tools, '后台每分钟最多补传 2 个') !== false, 'tools cron fallback copy');
 wpsss_assert(strpos($tools, 'js-wpsss-offload-bar') !== false, 'tools offload bar element');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-bar') !== false, 'tools pull bar element');
 
@@ -173,7 +173,8 @@ wpsss_assert(strpos($offload_src, 'editor_hooked') === false, 'image editor hook
 $url_src = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-url.php');
 wpsss_assert(strpos($url_src, "allowed_classes") !== false, 'serialized rewrite restricts classes');
 
-wpsss_assert(strpos($js, '页面补传连续 5 轮失败') !== false, 'js failure circuit breaker');
+wpsss_assert(strpos($js, '补传已连续失败 5 次') !== false, 'js offload circuit breaker');
+wpsss_assert(strpos($js, '拉回已连续失败 5 次') !== false, 'js pull circuit breaker');
 
 $cli = (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-cli.php');
 wpsss_assert(strpos($cli, '删除远端须加 --yes') !== false, 'cli pull delete needs yes');

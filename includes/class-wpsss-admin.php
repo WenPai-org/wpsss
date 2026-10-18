@@ -216,7 +216,7 @@ final class Wpsss_Admin
         $settings = Wpsss_Options::get();
         $driver = $this->plugin->active_driver();
         if (!$driver->is_configured($settings)) {
-            $this->redirect_tools('empty', '先保存桶名和密钥再测。', 'daily');
+            $this->redirect_tools('empty', '请先保存存储桶名称和访问密钥，再测试连接。', 'daily');
         }
 
         $result = $driver->probe($settings);
@@ -238,11 +238,11 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_offload');
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            $this->redirect_tools('empty', '先保存桶名和密钥再补传。', 'daily');
+            $this->redirect_tools('empty', '请先保存存储桶名称和访问密钥，再开始补传。', 'daily');
         }
         if (!empty($_POST['wpsss_offload_reset'])) {
             delete_transient($this->offload_cursor_key());
-            $this->redirect_tools('ok', '已清掉续传位置，下一轮从最新的附件重新扫起（已进桶的自动跳过）。', 'daily');
+            $this->redirect_tools('ok', '已清除续传位置。下一轮从最新的附件重新开始，已进桶的附件会自动跳过。', 'daily');
         }
         $source = !empty($_POST['wpsss_retry']) ? 'failed' : 'pending';
         $result = $this->run_offload_slice($source, 20);
@@ -267,7 +267,7 @@ final class Wpsss_Admin
         }
         check_ajax_referer('wpsss_offload_tick', 'nonce');
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            wp_send_json_error(['message' => '先保存桶名和密钥再补传。']);
+            wp_send_json_error(['message' => '请先保存存储桶名称和访问密钥，再开始补传。']);
         }
         $token = 'user:' . get_current_user_id();
         if (!empty($_POST['stop'])) {
@@ -333,7 +333,7 @@ final class Wpsss_Admin
         }
         check_ajax_referer('wpsss_pull_tick', 'nonce');
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            wp_send_json_error(['message' => '先保存桶名和密钥再拉回。']);
+            wp_send_json_error(['message' => '请先保存存储桶名称和访问密钥，再拉回。']);
         }
         $on_exist = Wpsss_Offload::sanitize_on_exist(isset($_POST['wpsss_pull_exist']) ? (string) wp_unslash($_POST['wpsss_pull_exist']) : 'skip');
         $delete = !empty($_POST['wpsss_pull_delete']);
@@ -344,7 +344,7 @@ final class Wpsss_Admin
             wp_send_json_error(['message' => '请先勾选确认项。']);
         }
         if ($delete && empty($_POST['wpsss_pull_delete_confirm'])) {
-            wp_send_json_error(['message' => '删除远端须再确认。']);
+            wp_send_json_error(['message' => '删除存储桶中的对象前，请再确认一次。']);
         }
         $before = (int) get_transient($this->pull_cursor_key());
         $result = $this->plugin->library()->pull_batch(1, false, 0, $delete, $on_exist, $before, 12.0);
@@ -392,11 +392,11 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_pull');
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            $this->redirect_tools('empty', '先保存桶名和密钥再拉回。', 'move');
+            $this->redirect_tools('empty', '请先保存存储桶名称和访问密钥，再拉回。', 'move');
         }
         if (!empty($_POST['wpsss_pull_reset'])) {
             delete_transient($this->pull_cursor_key());
-            $this->redirect_tools('ok', '已清掉续传位置，下一轮从最新的附件重新扫起。', 'move');
+            $this->redirect_tools('ok', '已清除续传位置。下一轮从最新的附件重新开始。', 'move');
         }
         $apply = !empty($_POST['wpsss_pull_apply']);
         $on_exist = Wpsss_Offload::sanitize_on_exist(isset($_POST['wpsss_pull_exist']) ? (string) wp_unslash($_POST['wpsss_pull_exist']) : 'skip');
@@ -410,7 +410,7 @@ final class Wpsss_Admin
             $this->redirect_tools('error', '请先勾选确认项。', 'move');
         }
         if ($apply && $delete && empty($_POST['wpsss_pull_delete_confirm'])) {
-            $this->redirect_tools('error', '删除远端须再确认。', 'move');
+            $this->redirect_tools('error', '删除存储桶中的对象前，请再确认一次。', 'move');
         }
         if ($delete && $on_exist === 'skip') {
             $this->redirect_tools('error', '删除桶内对象时不能选「只补缺失」，请改用「覆盖」或「旧文件改名保留」。', 'move');
@@ -517,7 +517,7 @@ final class Wpsss_Admin
                 $result['changed'],
                 $result['meta_scanned'],
                 $result['meta_changed'],
-                $apply ? ' 会改正文、摘要和 post meta（含序列化）。不改 options / theme_mods / 磁盘 CSS。请清页面缓存和 CDN。' : ''
+                $apply ? ' 会改写正文、摘要和文章自定义字段（含序列化数据）。不会改网站设置、主题设置和磁盘上的 CSS。完成后请清除页面缓存和 CDN。' : ''
             ),
             'move'
         );
@@ -551,7 +551,7 @@ final class Wpsss_Admin
         }
         check_admin_referer('wpsss_headcheck');
         if (!$this->plugin->active_driver()->is_configured(Wpsss_Options::get())) {
-            $this->redirect_tools('empty', '先保存桶名和密钥再抽检。', 'check');
+            $this->redirect_tools('empty', '请先保存存储桶名称和访问密钥，再抽检远端对象。', 'check');
         }
         $this->store_ops(['head' => (new Wpsss_Ops($this->plugin))->head_check(10)]);
         $this->redirect_tools('ok', '已抽检远端对象。', 'check');
@@ -668,7 +668,7 @@ final class Wpsss_Admin
             && (string) wp_unslash($_POST['origin_protect']) === '1'
             && trim((string) ($opts['image_style'] ?? '')) === ''
         ) {
-            $this->quick_reject('须先在高级设置填写图片样式。');
+            $this->quick_reject('请先在高级设置填写图片样式。');
         }
         foreach (['keep_local', 'upload_thumbs', 'origin_protect'] as $key) {
             if (!isset($_POST[$key])) {

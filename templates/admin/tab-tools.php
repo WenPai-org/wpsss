@@ -23,8 +23,8 @@ $diagnose = isset($ops['diagnose']) && is_array($ops['diagnose']) ? $ops['diagno
 $head = isset($ops['head']) && is_array($ops['head']) ? $ops['head'] : [];
 $ledes = [
     'daily' => __('补传、连通测试与最近记录。', 'wpsss'),
-    'check' => __('图片无法显示、主机不对或桶里对象缺失时使用。', 'wpsss'),
-    'move' => __('拉回、改写、解除标记。高危操作会再确认一次。', 'wpsss'),
+    'check' => __('图片无法显示、访问地址不一致，或存储桶中的对象缺失时使用。', 'wpsss'),
+    'move' => __('拉回本地、改写地址、解除进桶标记。高危操作会再确认一次。', 'wpsss'),
 ];
 $panels = [
     'daily' => __('日常', 'wpsss'),

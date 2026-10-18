@@ -499,7 +499,7 @@
     var bucketHelp = form.querySelector(".js-wpsss-bucket-help");
     if (bucketHelp) {
       bucketHelp.textContent =
-        (cfg.bucketHelp && cfg.bucketHelp[driver]) || (cfg.copy && cfg.copy.bucketFallback) || "仅填写桶名";
+        (cfg.bucketHelp && cfg.bucketHelp[driver]) || (cfg.copy && cfg.copy.bucketFallback) || "只填写存储桶名称，不要带域名。";
     }
     syncS3Preset(form, driver);
     syncAppId(form, driver);
@@ -865,7 +865,7 @@
       if (pullScopeHint) {
         pullScopeHint.textContent = scope === "one"
           ? "仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。"
-          : "对已进桶的附件按媒体库编号从新到旧拉回，一次拉一个；关掉页面即停，再点「拉回」可继续。";
+          : "对已进桶的附件按媒体库编号从新到旧拉回，每次拉回一个。关闭页面即停止，再点「拉回」可继续。";
       }
       if (pullOne) {
         pullOne.hidden = scope !== "one";
@@ -1038,7 +1038,7 @@
           if (failStreak >= 5) {
             running = false;
             idle();
-            setProgress("页面补传连续 5 轮失败，已暂停。请到「工具 → 排障」查明原因后再重试。");
+            setProgress("补传已连续失败 5 次，已暂停。请到「工具 → 排障」查明原因后再点「开始补传」。");
             return;
           }
           setProgress((typeof pct === "number" ? pct + "% · " : "") + "本轮成功 " + totals.ok + "，失败 " + totals.fail + "，还剩 " + (left || 0) + "。");
@@ -1217,7 +1217,7 @@
           if (failStreak >= 5) {
             running = false;
             idle();
-            setProgress("页面补传连续 5 轮失败，已暂停。请到「工具 → 排障」查明原因后再继续。");
+            setProgress("拉回已连续失败 5 次，已暂停。请到「工具 → 排障」查明原因后再点「拉回」。");
             return;
           }
           var line = "本轮已拉回 " + totals.ok + "，失败 " + totals.fail;

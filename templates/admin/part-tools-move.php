@@ -56,7 +56,7 @@ $exist_modes = [
       </div>
       <p class="wpsss-pull-hint js-wpsss-pull-scope-hint"><?php echo $pull_scope === 'one'
           ? esc_html__('仅处理指定的一个附件。编号可在「媒体 → 媒体库」中打开文件后查看（例如 128）。', 'wpsss')
-          : esc_html__('对已进桶的附件按媒体库编号从新到旧拉回，一次拉一个；关掉页面即停，再点「拉回」可继续。', 'wpsss'); ?></p>
+          : esc_html__('对已进桶的附件按媒体库编号从新到旧拉回，每次拉回一个。关闭页面即停止，再点「拉回」可继续。', 'wpsss'); ?></p>
       <div class="field js-wpsss-pull-one"<?php echo $pull_scope === 'one' ? '' : ' hidden'; ?>>
         <div>
           <div class="field-label"><?php echo esc_html__('媒体库编号', 'wpsss'); ?></div>
@@ -109,16 +109,16 @@ $exist_modes = [
           <?php echo Wpsss_Icons::svg('info'); ?>
           <span><strong><?php echo esc_html__('桶里没有回收站。', 'wpsss'); ?></strong> <?php echo esc_html__('对象存储控制台通常也无法恢复。文章、缩略图、付费下载若仍指向桶地址，删除后前台图片将立即无法显示。', 'wpsss'); ?><?php echo class_exists('WooCommerce', false) ? ' ' . esc_html__('WooCommerce 付费下载若仍指向桶地址，删除对象将影响订单交付。', 'wpsss') : ''; ?></span>
         </div>
-        <p class="wpsss-backup-note"><?php echo esc_html__('先做完这三步，再勾下面：', 'wpsss'); ?></p>
+        <p class="wpsss-backup-note"><?php echo esc_html__('请先完成下面三步，再勾选确认项：', 'wpsss'); ?></p>
         <ol class="wpsss-backup-steps">
-          <li><?php echo esc_html__('先不要勾删除，只拉回本地。', 'wpsss'); ?></li>
-          <li><?php echo esc_html__('到媒体库打开文件，确认能看、体积正常。', 'wpsss'); ?></li>
+          <li><?php echo esc_html__('请先不要勾选删除，只把文件拉回本地。', 'wpsss'); ?></li>
+          <li><?php echo esc_html__('请到媒体库打开文件，确认可以查看，且文件大小正常。', 'wpsss'); ?></li>
           <li><?php echo $keep_on
-              ? esc_html__('确认本地备份仍开着，或你已经另存了一份。', 'wpsss')
-              : esc_html__('本地备份已关。请另存一份能打开的文件，再删桶。', 'wpsss'); ?></li>
+              ? esc_html__('请确认本地备份仍开启，或已经另行保存一份。', 'wpsss')
+              : esc_html__('本地备份已关闭。请另行保存一份可以打开的文件，再删除存储桶中的对象。', 'wpsss'); ?></li>
         </ol>
         <div class="chk">
-          <label><input type="checkbox" name="wpsss_pull_delete_confirm" value="1" /> <?php echo esc_html__('本地已经打开核对过，可以丢掉桶里那份', 'wpsss'); ?></label>
+          <label><input type="checkbox" name="wpsss_pull_delete_confirm" value="1" /> <?php echo esc_html__('我已在本地打开并核对，可以删除存储桶中的这份文件', 'wpsss'); ?></label>
         </div>
       </div>
       <div class="wpsss-progress is-indeterminate js-wpsss-pull-bar" hidden aria-hidden="true"><span></span></div>
@@ -133,7 +133,7 @@ $exist_modes = [
         ?></span>
         <span class="wpsss-actions">
           <?php if ((int) ($pull_cursor ?? 0) > 0 && $pull_id <= 0) : ?>
-            <button class="btn btn-ghost" type="submit" name="wpsss_pull_reset" value="1" title="<?php echo esc_attr__('清掉续传位置，下一轮从最新的附件重新扫起；本地已有的会按上面的规则处理。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
+            <button class="btn btn-ghost" type="submit" name="wpsss_pull_reset" value="1" title="<?php echo esc_attr__('清除续传位置。下一轮从最新的附件重新开始，本地已有文件按上面的规则处理。', 'wpsss'); ?>"><?php echo esc_html__('从最新开始', 'wpsss'); ?></button>
           <?php endif; ?>
           <button class="btn btn-ghost js-wpsss-pull-go" type="submit" name="wpsss_pull_apply" value=""><?php echo esc_html__('预览', 'wpsss'); ?></button>
           <button class="btn btn-ghost js-wpsss-pull-stop" type="button" hidden><?php echo esc_html__('暂停', 'wpsss'); ?></button>
@@ -167,7 +167,7 @@ $exist_modes = [
         <?php echo Wpsss_Icons::svg('info'); ?>
         <span><?php echo esc_html__('写入正文、摘要和文章自定义字段（post meta，含序列化数据），插件不能撤销。不会改网站设置（options）、主题设置（theme_mods）和磁盘上的 CSS。写完请清页面缓存和 CDN。', 'wpsss'); ?></span>
       </div>
-      <p class="wpsss-backup-note"><?php echo esc_html__('备份：先点预览看命中篇数。写入前用主机面板、备份插件或 wp db export 留一份数据库。', 'wpsss'); ?></p>
+      <p class="wpsss-backup-note"><?php echo esc_html__('请先预览，确认会改写的文章数量。写入前请用主机面板、备份插件或 wp db export 保留一份数据库。', 'wpsss'); ?></p>
       <?php if ($rewrite !== []) : ?>
         <?php
           $result = isset($rewrite['result']) && is_array($rewrite['result']) ? $rewrite['result'] : [];
@@ -204,7 +204,7 @@ $exist_modes = [
       <span class="tile warn"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
       <div>
         <h2 class="card-title"><?php echo esc_html__('解除进桶标记', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('插件不再改写这些附件。桶内对象保留。用于迁走插件或换对接方式。', 'wpsss'); ?></p>
+        <p class="card-sub"><?php echo esc_html__('插件不再改写这些附件，存储桶中的对象会保留。用于停用本插件，或改用其他对接方式。', 'wpsss'); ?></p>
       </div>
     </div>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_release_confirm">
@@ -213,11 +213,11 @@ $exist_modes = [
       <?php wp_nonce_field('wpsss_release'); ?>
       <div class="notice warn">
         <?php echo Wpsss_Icons::svg('info'); ?>
-        <span><?php echo esc_html__('只去掉插件的进桶标记，不删除桶内对象。前台可能改回本地 uploads 地址。改完请清页面缓存。', 'wpsss'); ?></span>
+        <span><?php echo esc_html__('只去掉插件的进桶标记，不删除存储桶中的对象。前台可能改回本地 uploads 地址。完成后请清除页面缓存。', 'wpsss'); ?></span>
       </div>
       <p class="wpsss-backup-note"><?php echo $keep_on
-          ? esc_html__('备份：本地备份已开启，前台通常会改回 uploads 地址。请先确认本地文件仍在。', 'wpsss')
-          : esc_html__('备份：本地备份已关闭。解除后若本地无文件，前台图片可能无法显示。请先拉回，或确认本地仍有副本。', 'wpsss'); ?></p>
+          ? esc_html__('本地备份已开启，前台通常会改回 uploads 地址。请先确认本地文件仍在。', 'wpsss')
+          : esc_html__('本地备份已关闭。解除后如果本地没有文件，前台图片可能无法显示。请先拉回，或确认本地仍有副本。', 'wpsss'); ?></p>
       <div class="chk wenpai-gate wpsss-gate">
         <label><input type="checkbox" name="wpsss_release_confirm" value="1" /> <?php echo $keep_on
             ? esc_html__('我明白前台会改回本地地址', 'wpsss')

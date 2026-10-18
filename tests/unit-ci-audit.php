@@ -18,7 +18,7 @@ function wpsss_assert(bool $ok, string $label): void
 }
 
 $help = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-help.php');
-wpsss_assert(strpos($help, '强制下载') !== false, 'help 强制下载');
+wpsss_assert(strpos($help, '当作文件下载') !== false, 'help 强制下载');
 wpsss_assert(strpos($help, 'WPSSS_DOCS_URL') !== false, 'help links to doc site');
 wpsss_assert(strpos($help, "WPSSS_DOCS_URL . '/' . \$slug") !== false, 'help uses doc links');
 wpsss_assert(strpos($help, '七牛') !== false, 'help 七牛');
@@ -36,11 +36,11 @@ wpsss_assert(strpos($help, "'choose-vendor'") !== false, 'help vendor doc linked
 wpsss_assert(strpos($help, "'object-access'") !== false, 'help access doc linked');
 
 $settings = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-settings.php');
-wpsss_assert(strpos($settings, '创建桶的主账号 APPID') !== false, 'settings COS AppId help');
+wpsss_assert(strpos($settings, '创建存储桶的主账号 APPID') !== false, 'settings COS AppId help');
 wpsss_assert(strpos($settings, '仅记录功能开关') === false, 'settings no 仅记录功能开关');
 wpsss_assert(strpos($settings, 'oss_signature') !== false, 'settings oss signature');
 wpsss_assert(strpos($settings, 'ECS 实例 RAM 角色') !== false, 'settings ram option');
-wpsss_assert(strpos($settings, 'CDN 已经指向存储桶') !== false, 'settings custom domain any cdn');
+wpsss_assert(strpos($settings, 'CDN 已指向存储桶') !== false, 'settings custom domain any cdn');
 wpsss_assert(strpos($settings, 'data-wpsss-preview') === false, 'settings no preview reload');
 wpsss_assert(strpos($settings, 'data-wpsss-disclose="site_mode"') !== false, 'settings disclose scene');
 wpsss_assert(strpos($settings, 'data-wpsss-disclose="driver"') !== false, 'settings disclose driver');

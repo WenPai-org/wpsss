@@ -21,24 +21,8 @@ $group_label = [
 ];
 $grouped_regions = Wpsss_Options::grouped_regions($driver);
 $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
-$driver_help = [
-    Wpsss_Options::DRIVER_ALIYUN => __('国内站点常用', 'wpsss'),
-    Wpsss_Options::DRIVER_COS => __('适合已有腾讯云 COS 桶', 'wpsss'),
-    Wpsss_Options::DRIVER_KODO => __('对外访问须配置自定义域名', 'wpsss'),
-    Wpsss_Options::DRIVER_OBS => __('适合已有华为云 OBS 桶', 'wpsss'),
-    Wpsss_Options::DRIVER_TOS => __('适合已有火山引擎 TOS 桶', 'wpsss'),
-    Wpsss_Options::DRIVER_S3 => __('兼容 AWS、Cloudflare R2、MinIO', 'wpsss'),
-    Wpsss_Options::DRIVER_GCS => __('适合 Google Cloud 存储桶', 'wpsss'),
-];
-$bucket_help = [
-    Wpsss_Options::DRIVER_ALIYUN => __('仅填写桶名，不含域名后缀', 'wpsss'),
-    Wpsss_Options::DRIVER_COS => __('格式 name-APPID', 'wpsss'),
-    Wpsss_Options::DRIVER_KODO => __('仅填写空间名称', 'wpsss'),
-    Wpsss_Options::DRIVER_OBS => __('仅填写桶名', 'wpsss'),
-    Wpsss_Options::DRIVER_TOS => __('仅填写桶名', 'wpsss'),
-    Wpsss_Options::DRIVER_S3 => __('仅填写桶名；Endpoint 可在高级设置调整', 'wpsss'),
-    Wpsss_Options::DRIVER_GCS => __('仅填写桶名；Endpoint 可在高级设置调整', 'wpsss'),
-];
+$driver_help = Wpsss_Options::driver_help();
+$bucket_help = Wpsss_Options::bucket_help();
 $show_app_id = $driver === Wpsss_Options::DRIVER_COS
     || ($driver === Wpsss_Options::DRIVER_S3 && ($opts['s3_preset'] ?? '') === 'r2');
 $id_set = $opts['access_key_id'] !== '';
@@ -51,7 +35,7 @@ $region_label = $regions[$opts['region']] ?? $opts['region'];
 $steps = [
     1 => __('站点场景', 'wpsss'),
     2 => __('连接存储', 'wpsss'),
-    3 => __('已为你配置', 'wpsss'),
+    3 => __('默认项已就绪', 'wpsss'),
     4 => __('完成', 'wpsss'),
 ];
 $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_Options::DRIVER_TOS ? 'tos' : 'aws');
@@ -96,7 +80,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
       </div>
       <div class="actions">
         <button class="btn btn-primary" type="submit"><?php echo esc_html__('下一步', 'wpsss'); ?></button>
-        <a class="btn btn-ghost" href="<?php echo esc_url($url('overview')); ?>"><?php echo esc_html__('稍后再说', 'wpsss'); ?></a>
+        <a class="btn btn-ghost" href="<?php echo esc_url($url('overview')); ?>"><?php echo esc_html__('以后再设置', 'wpsss'); ?></a>
       </div>
     </form>
 
@@ -158,7 +142,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
           </select>
         </div></div>
         <?php if ($show_app_id) : ?>
-        <div class="field"><div><div class="field-label"><?php echo ($opts['s3_preset'] ?? '') === 'r2' ? esc_html__('R2 Account ID', 'wpsss') : esc_html__('APPID（COS）', 'wpsss'); ?></div><div class="field-help"><?php echo ($opts['s3_preset'] ?? '') === 'r2' ? esc_html__('用于拼接服务 Endpoint。', 'wpsss') : esc_html__('若桶名已含 APPID 可留空。', 'wpsss'); ?></div></div><div class="field-ctl"><input class="js-wpsss-app-id" name="app_id" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" /></div></div>
+        <div class="field"><div><div class="field-label"><?php echo ($opts['s3_preset'] ?? '') === 'r2' ? esc_html__('R2 Account ID', 'wpsss') : esc_html__('APPID（COS）', 'wpsss'); ?></div><div class="field-help"><?php echo ($opts['s3_preset'] ?? '') === 'r2' ? esc_html__('用于拼接服务 Endpoint。', 'wpsss') : esc_html__('桶名已包含 APPID 时可以留空。', 'wpsss'); ?></div></div><div class="field-ctl"><input class="js-wpsss-app-id" name="app_id" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" /></div></div>
         <?php endif; ?>
         <div class="field"><div><div class="field-label"><?php echo esc_html__('访问密钥 ID', 'wpsss'); ?></div><div class="field-help"><?php echo $id_set ? esc_html(sprintf(__('已保存 · 末四位 %s', 'wpsss'), $id_tail)) : esc_html__('RAM 子用户 AccessKey ID', 'wpsss'); ?></div></div><div class="field-ctl"><input name="access_key_id" type="text" value="" autocomplete="off" placeholder="<?php echo $id_set ? esc_attr('••••' . $id_tail) : ''; ?>" <?php echo $id_set ? '' : 'required'; ?> /></div></div>
         <div class="field"><div><div class="field-label"><?php echo esc_html__('访问密钥 Secret', 'wpsss'); ?></div><div class="field-help"><?php echo $view['secret_set'] ? esc_html__('已保存；留空保存时保持不变。', 'wpsss') : esc_html__('不会在页面中显示', 'wpsss'); ?></div></div><div class="field-ctl"><input name="access_key_secret" type="password" value="" autocomplete="new-password" <?php echo $view['secret_set'] ? '' : 'required'; ?> /></div></div>
@@ -179,8 +163,8 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
     </form>
 
   <?php elseif ($step === 3) : ?>
-    <h1><?php echo esc_html__('已为你配置', 'wpsss'); ?></h1>
-    <p class="lede"><?php echo esc_html__('以下默认项已就绪；细项可在设置页调整。', 'wpsss'); ?></p>
+    <h1><?php echo esc_html__('默认项已就绪', 'wpsss'); ?></h1>
+    <p class="lede"><?php echo esc_html__('以下默认项已经就绪。详细选项可以在设置页调整。', 'wpsss'); ?></p>
     <ul class="wpsss-done-list">
       <?php foreach ($done_rows as $row) : ?>
         <li>
@@ -206,7 +190,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
     </div>
 
   <?php else : ?>
-    <h1><?php echo esc_html__('可以开始用了', 'wpsss'); ?></h1>
+    <h1><?php echo esc_html__('可以开始使用', 'wpsss'); ?></h1>
     <p class="lede"><?php echo esc_html__('建议先测试连通，再上传媒体或补传历史附件。', 'wpsss'); ?></p>
     <section class="card wpsss-setup-summary">
       <div class="simple-row">

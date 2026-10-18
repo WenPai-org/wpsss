@@ -27,7 +27,7 @@ $pending = (int) ($stats['pending'] ?? 0);
   <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
   <div>
     <strong><?php echo esc_html__('尚未连接存储桶', 'wpsss'); ?></strong>
-    <div class="meta"><?php echo esc_html__('跟随 4 步设置向导填写桶与密钥，或在高级设置中手动配置。', 'wpsss'); ?></div>
+    <div class="meta"><?php echo esc_html__('请按 4 步设置向导填写存储桶与密钥，或在高级设置中手动配置。', 'wpsss'); ?></div>
   </div>
   <div class="next-actions">
     <a class="btn btn-primary" href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('开始设置向导', 'wpsss'); ?></a>
@@ -68,7 +68,7 @@ $pending = (int) ($stats['pending'] ?? 0);
       <div class="t"><?php echo esc_html__('本地备份', 'wpsss'); ?></div>
       <div class="d"><?php echo $keep
           ? esc_html__('文件进桶后仍留在 uploads', 'wpsss')
-          : esc_html__('仅对象存储中保留文件', 'wpsss'); ?></div>
+          : esc_html__('文件只保留在对象存储中', 'wpsss'); ?></div>
     </div>
     <div class="r"><span class="pill<?php echo $keep ? ' ok' : ' warn'; ?>"><?php echo $keep ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></span></div>
   </div>
@@ -87,13 +87,13 @@ $pending = (int) ($stats['pending'] ?? 0);
     </div>
     <div class="r">
       <?php if ($pending > 0) : ?>
-        <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('补传', 'wpsss'); ?></a>
+        <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('开始补传', 'wpsss'); ?></a>
       <?php endif; ?>
     </div>
   </div>
   <?php endif; ?>
   <div class="card-foot start">
-    <span class="meta"><?php echo esc_html__('开关与密钥在设置页。', 'wpsss'); ?></span>
+    <span class="meta"><?php echo esc_html__('开关和密钥请到设置页修改。', 'wpsss'); ?></span>
     <span class="wpsss-actions">
       <a class="btn btn-ghost" href="<?php echo esc_url($url('tools', ['panel' => 'daily'])); ?>"><?php echo esc_html__('测试连通', 'wpsss'); ?></a>
     </span>
