@@ -905,6 +905,13 @@ details > .wpsss-doctor-summary {
 .wpsss-scope p + p {
   margin-top: 4px;
 }
+.wpsss-scope a {
+  color: var(--wenpai-accent);
+  text-decoration: none;
+}
+.wpsss-scope a:hover {
+  color: var(--wenpai-accent-hover, #2c47c5);
+}
 .wpsss-doctor-list {
   list-style: none;
   margin: 0;

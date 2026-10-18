@@ -115,6 +115,14 @@ $docs = static function (string $slug): string {
         <span><?php echo esc_html__('上传的媒体进入存储桶。页面和文章仍从本站服务器打开。', 'wpsss'); ?></span>
       </li>
       <li>
+        <strong><?php echo esc_html__('厂商', 'wpsss'); ?></strong>
+        <span><?php
+          echo esc_html__('目前接入阿里云 OSS、腾讯云 COS、华为云 OBS、七牛云、火山 TOS、Google Cloud Storage 和 S3 兼容存储。没有你的厂商时，请从页面右上角「', 'wpsss');
+          echo '<a href="' . esc_url(WPSSS_SUPPORT_URL) . '" target="_blank" rel="noopener">' . esc_html__('反馈', 'wpsss') . '</a>';
+          echo esc_html__('」告诉我们。', 'wpsss');
+        ?></span>
+      </li>
+      <li>
         <strong><?php echo esc_html__('大文件', 'wpsss'); ?></strong>
         <span>
           <p><?php echo esc_html__('可以分片：阿里云 OSS、S3 兼容存储。', 'wpsss'); ?></p>
