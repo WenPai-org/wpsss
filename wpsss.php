@@ -3,7 +3,7 @@
  * Plugin Name: WPSSS
  * Plugin URI: https://wpcy.com/object-storage
  * Description: 文派智储。媒体进桶，网页仍从自己的服务器打开。支持国内云、S3 兼容与自定义 CDN 域名。
- * Version: 0.9.2
+ * Version: 0.9.3
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: 文派
@@ -40,7 +40,7 @@ if (PHP_VERSION_ID < 80000) {
     }
 }
 
-define('WPSSS_VERSION', '0.9.2');
+define('WPSSS_VERSION', '0.9.3');
 define('WPSSS_FILE', __FILE__);
 define('WPSSS_DIR', plugin_dir_path(__FILE__));
 /* Plugin URI 占位 /object-storage；页脚「文档」走 DOCS，产品官网暂回主站（占位页未上） */

@@ -1,8 +1,9 @@
-## Unreleased
+## 0.9.3（2026-11-01）
 
 ### WPFonts 联动
 - 监听 `wpfonts_package_installed` / `wpfonts_package_deleted`（WPFonts ≥2.0.0-rc.9），把 `uploads/wpfonts/packages/*` 同步进当前驱动；MIME：css→text/css、woff2→font/woff2。
 - `wp sss upload` 改为扩展名优先，避免 `.css` 被标成 text/plain。
+- 版本号 0.9.2 → 0.9.3。联调依赖 WPFonts rc.9；**不自动部署 wpcy 生产**。
 
 ## Unreleased
 
