@@ -77,6 +77,8 @@ require_once WPSSS_DIR . 'includes/class-wpsss-media.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-icons.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-admin.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-plugin.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-mime.php';
+require_once WPSSS_DIR . 'includes/class-wpsss-wpfonts.php';
 require_once WPSSS_DIR . 'includes/class-wpsss-cli.php';
 
 function wpsss(): Wpsss_Plugin

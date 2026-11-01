@@ -50,6 +50,7 @@ final class Wpsss_Plugin
         $this->library->register();
         (new Wpsss_Woo())->register();
         (new Wpsss_Ci())->register();
+        (new Wpsss_Wpfonts($this))->register();
     }
 
     public function offload(): Wpsss_Offload
