@@ -854,7 +854,10 @@ final class Wpsss_CLI
         }
         $key = isset($assoc_args['key']) ? ltrim((string) $assoc_args['key'], '/') : basename($file);
         $key = Wpsss_Options::apply_object_prefix($key);
-        $mime = (string) (function_exists('mime_content_type') ? (mime_content_type($file) ?: '') : '');
+        // 扩展名优先：mime_content_type() 常把 .css 标成 text/plain。
+        $mime = class_exists('Wpsss_Mime', false)
+            ? Wpsss_Mime::for_file($file, $key)
+            : (string) (function_exists('mime_content_type') ? (mime_content_type($file) ?: '') : '');
         $result = wpsss()->active_driver()->put_object(Wpsss_Options::get(), $key, $file, $mime);
         if (is_wp_error($result)) {
             WP_CLI::error($result->get_error_message());
