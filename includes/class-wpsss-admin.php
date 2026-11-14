@@ -17,6 +17,7 @@ final class Wpsss_Admin
     public function register(): void
     {
         add_action('admin_menu', [$this, 'register_menu']);
+        add_action('admin_init', [$this, 'redirect_legacy_admin_url']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue']);
         add_filter('admin_body_class', [$this, 'body_class']);
         add_action('admin_post_wpsss_probe', [$this, 'handle_probe']);
@@ -93,15 +94,41 @@ final class Wpsss_Admin
 
     public function register_menu(): void
     {
-        add_menu_page(
-            '文派智储',
-            '文派智储',
-            'manage_options',
-            'wpsss',
-            [$this, 'render'],
-            'dashicons-cloud',
-            81
-        );
+        if (class_exists('Wenpai_Admin_Menu')) {
+            Wenpai_Admin_Menu::register([
+                'slug' => 'wpsss',
+                'label' => '文派智储',
+                'title' => '文派智储',
+                'capability' => 'manage_options',
+                'render' => [$this, 'render'],
+            ]);
+            return;
+        }
+        add_options_page('文派智储', '文派智储', 'manage_options', 'wpsss', [$this, 'render']);
+    }
+
+    /**
+     * 0.9 之前的文档和书签把插件页挂在 admin 根下。菜单移到「设置」后
+     * 这个入口不再注册，转到新地址，避免旧链接 403。
+     */
+    public function redirect_legacy_admin_url(): void
+    {
+        if (!isset($_GET['page']) || sanitize_key((string) $_GET['page']) !== 'wpsss') {
+            return;
+        }
+        $script = isset($_SERVER['SCRIPT_NAME']) ? (string) $_SERVER['SCRIPT_NAME'] : '';
+        if (substr($script, -9) !== 'admin.php') {
+            return;
+        }
+        $tab = $this->tab();
+        $extra = [];
+        foreach (['mode', 'panel', 'step', 'wpsss_notice', 'wpsss_level'] as $key) {
+            if (isset($_GET[$key])) {
+                $extra[$key] = sanitize_text_field(wp_unslash((string) $_GET[$key]));
+            }
+        }
+        wp_safe_redirect($this->url($tab, $extra));
+        exit;
     }
 
     public function render(): void
@@ -162,17 +189,51 @@ final class Wpsss_Admin
             ),
         ];
 
-        echo '<div class="wenpai-app">';
-        $this->include_template('shell-head', $view);
-        echo '<main class="wenpai-main wenpai-wrap">';
+        $shell = [
+            'slug' => 'wpsss',
+            'name' => '文派智储',
+            'mark_html' => Wpsss_Icons::svg('cloud'),
+            'current' => $tab,
+            'version' => '文派智储 ' . WPSSS_VERSION,
+            'doc_url' => WPSSS_DOCS_URL,
+            'doc_label' => __('文档', 'wpsss'),
+            'links' => [
+                ['url' => WPSSS_SUPPORT_URL, 'label' => __('支持', 'wpsss')],
+            ],
+            'help_url' => $this->url('help'),
+            'help_label' => __('帮助', 'wpsss'),
+            'help_icon_html' => Wpsss_Icons::svg('help'),
+            'feedback_url' => WPSSS_SUPPORT_URL,
+            'feedback_label' => __('反馈', 'wpsss'),
+            'feedback_icon_html' => Wpsss_Icons::svg('feedback'),
+        ];
+        if ($tab === 'setup') {
+            $shell['head_extra'] = '<div class="wpsss-setup-exit-wrap"><a class="btn btn-ghost wpsss-setup-exit" href="'
+                . esc_url($this->url('overview')) . '">' . Wpsss_Icons::svg('home')
+                . esc_html__('退出向导', 'wpsss') . '</a></div>';
+        } else {
+            $shell['tabs'] = [
+                ['id' => 'overview', 'label' => __('概览', 'wpsss'), 'url' => $this->url('overview'), 'icon_html' => Wpsss_Icons::svg('home')],
+                ['id' => 'settings', 'label' => __('设置', 'wpsss'), 'url' => $this->url('settings'), 'icon_html' => Wpsss_Icons::svg('equalizer')],
+                ['id' => 'tools', 'label' => __('工具', 'wpsss'), 'url' => $this->url('tools'), 'icon_html' => Wpsss_Icons::svg('server')],
+            ];
+        }
+
+        Wenpai_Admin_Shell::open($shell);
+        if ($notice !== '') {
+            $cls = 'info';
+            if ($level === 'ok') {
+                $cls = 'ok';
+            } elseif ($level === 'error') {
+                $cls = 'warn';
+            }
+            echo '<div class="wpsss-notice-wrap"><div class="notice ' . esc_attr($cls) . '">';
+            echo Wpsss_Icons::svg('info');
+            echo '<span>' . esc_html($notice) . '</span>';
+            echo '</div></div>';
+        }
         $this->include_template('tab-' . $tab, $view);
-        echo '<footer class="foot">';
-        echo '<span>文派智储 ' . esc_html(WPSSS_VERSION) . '</span>';
-        echo '<span class="r">';
-        echo '<a href="' . esc_url(WPSSS_DOCS_URL) . '" target="_blank" rel="noopener">' . esc_html__('文档', 'wpsss') . '</a>';
-        echo '<a href="' . esc_url(WPSSS_SUPPORT_URL) . '" target="_blank" rel="noopener">' . esc_html__('支持', 'wpsss') . '</a>';
-        echo '</span></footer>';
-        echo '</main></div>';
+        Wenpai_Admin_Shell::close($shell);
     }
 
     /**
@@ -739,8 +800,11 @@ final class Wpsss_Admin
      */
     public function url(string $tab, array $extra = []): string
     {
-        $args = array_merge(['page' => 'wpsss', 'tab' => $tab], $extra);
-        return add_query_arg($args, admin_url('admin.php'));
+        $args = array_merge(['tab' => $tab], $extra);
+        if (class_exists('Wenpai_Admin_Menu')) {
+            return Wenpai_Admin_Menu::url('wpsss', $args);
+        }
+        return add_query_arg(array_merge(['page' => 'wpsss'], $args), admin_url('options-general.php'));
     }
 
     /**
