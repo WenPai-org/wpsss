@@ -6,14 +6,9 @@ defined('ABSPATH') || exit;
 /** @var array<string, mixed> $stats */
 /** @var array<int, array<string, mixed>> $history */
 ?>
-  <section class="card">
-    <div class="card-head">
-      <span class="tile accent"><?php echo Wpsss_Icons::svg('plug'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('测试连通', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('向存储桶写入探测对象并立即删除，用于验证密钥与权限。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('plug'), 'state' => 'accent', 'title' => __( '测试连通', 'wpsss' ), 'sub' => __( '向存储桶写入探测对象并立即删除，用于验证密钥与权限。', 'wpsss' ) ) );
+?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_probe" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
@@ -89,17 +84,12 @@ defined('ABSPATH') || exit;
     <?php endif; ?>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('操作记录', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('最近 50 条上传、失败、删除与拉回的操作记录。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'title' => __( '操作记录', 'wpsss' ), 'sub' => __( '最近 50 条上传、失败、删除与拉回的操作记录。', 'wpsss' ) ) );
+?>
     <?php if ($history === []) : ?>
       <div class="empty">
-        <div class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></div>
+        <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('cloud') ) ); ?>
         <p><?php echo esc_html__('暂无记录', 'wpsss'); ?></p>
         <p class="meta"><?php echo esc_html__('补传、拉回或删除附件后将显示在此。', 'wpsss'); ?></p>
       </div>

@@ -6,14 +6,9 @@ defined('ABSPATH') || exit;
 /** @var array<string, mixed> $diagnose */
 /** @var array<string, mixed> $head */
 ?>
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('equalizer'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('媒体体检', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('只读扫描最近一批附件：本地文件缺失、访问域名不一致、仍是 http 明文、带失败标记、存储路径前缀不符。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('equalizer'), 'title' => __( '媒体体检', 'wpsss' ), 'sub' => __( '只读扫描最近一批附件：本地文件缺失、访问域名不一致、仍是 http 明文、带失败标记、存储路径前缀不符。', 'wpsss' ) ) );
+?>
     <?php if ($scan !== []) : ?>
       <div class="notice info">
         <?php echo Wpsss_Icons::svg('info'); ?>
@@ -60,14 +55,9 @@ defined('ABSPATH') || exit;
     </form>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('eye'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('诊断一条地址', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('粘贴附件 ID 或完整 URL，看它是不是媒体库里的、主机对不对、本地还在不在。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('eye'), 'title' => __( '诊断一条地址', 'wpsss' ), 'sub' => __( '粘贴附件 ID 或完整 URL，看它是不是媒体库里的、主机对不对、本地还在不在。', 'wpsss' ) ) );
+?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_diagnose" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
@@ -115,14 +105,9 @@ defined('ABSPATH') || exit;
     </form>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('抽检远端对象', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('对已进桶的附件执行 HEAD 请求。媒体库显示已进桶、但桶里查不到该对象，通常是对象被手动删除，或换过存储桶。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'title' => __( '抽检远端对象', 'wpsss' ), 'sub' => __( '对已进桶的附件执行 HEAD 请求。媒体库显示已进桶、但桶里查不到该对象，通常是对象被手动删除，或换过存储桶。', 'wpsss' ) ) );
+?>
     <?php if ($head !== []) : ?>
       <div class="notice <?php echo empty($head['missing']) ? 'ok' : 'warn'; ?>">
         <?php echo Wpsss_Icons::svg('info'); ?>
@@ -148,14 +133,9 @@ defined('ABSPATH') || exit;
     </form>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile warn"><?php echo Wpsss_Icons::svg('sparkle'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('清除失败标记', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('只去掉错误提示，不会重新上传。之后可在日常里重试失败项。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('sparkle'), 'state' => 'warn', 'title' => __( '清除失败标记', 'wpsss' ), 'sub' => __( '只去掉错误提示，不会重新上传。之后可在日常里重试失败项。', 'wpsss' ) ) );
+?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_clear_confirm">
       <input type="hidden" name="action" value="wpsss_clear_errors" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />

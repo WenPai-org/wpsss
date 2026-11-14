@@ -184,7 +184,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
     <ul class="wpsss-done-list">
       <?php foreach ($done_rows as $row) : ?>
         <li>
-          <span class="tile ok"><?php echo Wpsss_Icons::svg('sparkle'); ?></span>
+          <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('sparkle'), 'state' => 'ok' ) ); ?>
           <div>
             <div class="t"><?php echo esc_html($row['t']); ?></div>
             <div class="d"><?php echo esc_html($row['d']); ?></div>
@@ -209,16 +209,13 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
     <h1><?php echo esc_html__('可以开始用了', 'wpsss'); ?></h1>
     <p class="lede"><?php echo esc_html__('建议先测试连通，再上传媒体或补传历史附件。', 'wpsss'); ?></p>
     <section class="card wpsss-setup-summary">
+      <?php
+ob_start();
+?><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span><?php
+echo Wenpai_Admin_UI::row_html( array( 'icon_html' => Wpsss_Icons::svg($saved_driver), 'state' => 'ok', 'title' => __( '存储桶', 'wpsss' ), 'desc' => ($drivers[$saved_driver] ?? $saved_driver) . ' · ' . $region_label . ' · ' . $opts['bucket'], 'control_html' => (string) ob_get_clean() ) );
+?>
       <div class="simple-row">
-        <div class="tile ok"><?php echo Wpsss_Icons::vendor($saved_driver); ?></div>
-        <div>
-          <div class="t"><?php echo esc_html__('存储桶', 'wpsss'); ?></div>
-          <div class="d"><?php echo esc_html(($drivers[$saved_driver] ?? $saved_driver) . ' · ' . $region_label . ' · ' . $opts['bucket']); ?></div>
-        </div>
-        <div class="r"><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span></div>
-      </div>
-      <div class="simple-row">
-        <div class="tile"><?php echo Wpsss_Icons::svg('map'); ?></div>
+        <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('map') ) ); ?>
         <div>
           <div class="t"><?php echo esc_html__('站点场景', 'wpsss'); ?></div>
           <div class="d"><?php echo esc_html($site_modes[$site_mode]['label'] ?? $site_mode); ?></div>

@@ -31,14 +31,9 @@ $exist_modes = [
     ],
 ];
 ?>
-  <section class="card">
-    <div class="card-head">
-      <span class="tile warn"><?php echo Wpsss_Icons::svg('download'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('拉回本地', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('把桶里的文件下载回服务器的 uploads 目录。请先选择范围，再选择本地已有同名文件时的处理方式。默认只写磁盘，对外地址仍指向存储桶。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('download'), 'state' => 'warn', 'title' => __( '拉回本地', 'wpsss' ), 'sub' => __( '把桶里的文件下载回服务器的 uploads 目录。请先选择范围，再选择本地已有同名文件时的处理方式。默认只写磁盘，对外地址仍指向存储桶。', 'wpsss' ) ) );
+?>
     <form class="js-wpsss-pull-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-mode="<?php echo esc_attr($pull_exist); ?>" data-scope="<?php echo esc_attr($pull_scope); ?>">
       <input type="hidden" name="action" value="wpsss_pull" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
@@ -143,14 +138,9 @@ $exist_modes = [
     </form>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('改写文章中的媒体地址', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('只替换你填写的来源地址。会写入正文、摘要和文章自定义字段（post meta，含序列化数据）。不会改网站设置（options）、主题设置（theme_mods）和磁盘上的 CSS。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('server'), 'title' => __( '改写文章中的媒体地址', 'wpsss' ), 'sub' => __( '只替换你填写的来源地址。会写入正文、摘要和文章自定义字段（post meta，含序列化数据）。不会改网站设置（options）、主题设置（theme_mods）和磁盘上的 CSS。', 'wpsss' ) ) );
+?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_rewrite_confirm">
       <input type="hidden" name="action" value="wpsss_rewrite" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
@@ -199,14 +189,9 @@ $exist_modes = [
     </form>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile warn"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('解除进桶标记', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('插件不再改写这些附件。桶内对象保留。用于迁走插件或换对接方式。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'state' => 'warn', 'title' => __( '解除进桶标记', 'wpsss' ), 'sub' => __( '插件不再改写这些附件。桶内对象保留。用于迁走插件或换对接方式。', 'wpsss' ) ) );
+?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-wpsss-need="wpsss_release_confirm">
       <input type="hidden" name="action" value="wpsss_release" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
@@ -230,14 +215,9 @@ $exist_modes = [
     </form>
   </section>
 
-  <section class="card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('导出设置', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('下载不含密钥的 JSON，便于备份或在另一站点对照。密钥不会写入文件。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('server'), 'title' => __( '导出设置', 'wpsss' ), 'sub' => __( '下载不含密钥的 JSON，便于备份或在另一站点对照。密钥不会写入文件。', 'wpsss' ) ) );
+?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_export" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />

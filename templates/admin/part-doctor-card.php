@@ -28,7 +28,7 @@ if ($blockers !== []) {
 <section class="card wpsss-doctor-card<?php echo esc_attr($card_mod); ?>">
   <?php if (!$show_body) : ?>
   <div class="wpsss-doctor-summary">
-    <span class="tile<?php echo esc_attr($tile_cls); ?>"><?php echo Wpsss_Icons::svg('info'); ?></span>
+    <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('info'), 'state' => $tile_cls ) ); ?>
     <div class="wpsss-doctor-summary-text">
       <h2 class="card-title"><?php echo esc_html__('运行体检', 'wpsss'); ?></h2>
       <p class="card-sub wpsss-doctor-summary-meta"><?php echo esc_html($summary); ?></p>
@@ -40,7 +40,7 @@ if ($blockers !== []) {
   <?php else : ?>
   <details class="wpsss-doctor-details"<?php echo $expanded ? ' open' : ''; ?>>
     <summary class="wpsss-doctor-summary">
-      <span class="tile<?php echo esc_attr($tile_cls); ?>"><?php echo Wpsss_Icons::svg('info'); ?></span>
+      <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('info'), 'state' => $tile_cls ) ); ?>
       <div class="wpsss-doctor-summary-text">
         <h2 class="card-title"><?php echo esc_html__('运行体检', 'wpsss'); ?></h2>
         <p class="card-sub wpsss-doctor-summary-meta"><?php echo esc_html($summary); ?></p>

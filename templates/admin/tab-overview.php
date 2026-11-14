@@ -23,28 +23,17 @@ $pending = (int) ($stats['pending'] ?? 0);
 
 <div class="wenpai-stack">
 <?php if (!$on) : ?>
-<div class="next">
-  <span class="tile"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-  <div>
-    <strong><?php echo esc_html__('尚未连接存储桶', 'wpsss'); ?></strong>
-    <div class="meta"><?php echo esc_html__('跟随 4 步设置向导填写桶与密钥，或在高级设置中手动配置。', 'wpsss'); ?></div>
-  </div>
-  <div class="next-actions">
-    <a class="btn btn-primary" href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('开始设置向导', 'wpsss'); ?></a>
-    <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>"><?php echo esc_html__('高级设置', 'wpsss'); ?></a>
-  </div>
-</div>
+<?php
+Wenpai_Admin_UI::next( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'title' => __( '尚未连接存储桶', 'wpsss' ), 'desc' => __( '跟随 4 步设置向导填写桶与密钥，或在高级设置中手动配置。', 'wpsss' ), 'actions' => array( array( 'label' => __( '开始设置向导', 'wpsss' ), 'variant' => 'primary', 'href' => $url('setup') ), array( 'label' => __( '高级设置', 'wpsss' ), 'variant' => 'ghost', 'href' => $url('settings', ['mode' => 'advanced']) ) ) ) );
+?>
 <?php else : ?>
 <section class="card">
   <h2 class="section-title"><?php echo esc_html__('运行状态', 'wpsss'); ?></h2>
-  <div class="simple-row is-static">
-    <div class="tile ok"><?php echo Wpsss_Icons::vendor($opts['driver']); ?></div>
-    <div>
-      <div class="t"><?php echo esc_html__('存储桶', 'wpsss'); ?></div>
-      <div class="d"><?php echo esc_html(sprintf('%s · %s · %s', $view['driver']->label(), $region_label, $opts['bucket'])); ?></div>
-    </div>
-    <div class="r"><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span></div>
-  </div>
+  <?php
+ob_start();
+?><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span><?php
+echo Wenpai_Admin_UI::row_html( array( 'icon_html' => Wpsss_Icons::svg($opts['driver']), 'state' => 'ok', 'title' => __( '存储桶', 'wpsss' ), 'desc' => sprintf('%s · %s · %s', $view['driver']->label(), $region_label, $opts['bucket']), 'control_html' => (string) ob_get_clean() ) );
+?>
   <div class="simple-row is-static">
     <div class="tile<?php echo $public_base !== '' ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('external'); ?></div>
     <div>
