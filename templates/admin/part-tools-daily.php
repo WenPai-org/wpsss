@@ -21,19 +21,20 @@ echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('pl
   </section>
 
   <section class="card">
-    <div class="card-head">
-      <span class="tile<?php echo $failed > 0 ? ' warn' : ($pending > 0 ? '' : ' ok'); ?>"><?php echo Wpsss_Icons::svg('image'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('补传已有附件', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html(sprintf(
+    <?php
+    echo Wenpai_Admin_UI::card_open_html(array(
+      'icon_html' => Wpsss_Icons::svg('image'),
+      'state' => $failed > 0 ? 'warn' : ($pending > 0 ? '' : 'ok'),
+      'title' => __('补传已有附件', 'wpsss'),
+      'sub' => sprintf(
             '已进桶 %d / 共 %d 个附件，待补传 %d，失败 %d。',
             (int) $stats['offloaded'],
             (int) $stats['total'],
             (int) $stats['pending'],
             (int) ($stats['failed'] ?? 0)
-        )); ?></p>
-      </div>
-    </div>
+        ),
+    ));
+    ?>
     <form class="js-wpsss-offload-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
       <input type="hidden" name="action" value="wpsss_offload" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
@@ -88,17 +89,19 @@ echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('pl
 echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'title' => __( '操作记录', 'wpsss' ), 'sub' => __( '最近 50 条上传、失败、删除与拉回的操作记录。', 'wpsss' ) ) );
 ?>
     <?php if ($history === []) : ?>
-      <div class="empty">
-        <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('cloud') ) ); ?>
-        <p><?php echo esc_html__('暂无记录', 'wpsss'); ?></p>
-        <p class="meta"><?php echo esc_html__('补传、拉回或删除附件后将显示在此。', 'wpsss'); ?></p>
-      </div>
+      <?php
+      echo Wenpai_Admin_UI::empty_state_html(array(
+        'icon_html' => Wpsss_Icons::svg('cloud'),
+        'text' => __('暂无记录', 'wpsss'),
+        'meta' => __('补传、拉回或删除附件后将显示在此。', 'wpsss'),
+      ));
+      ?>
     <?php else : ?>
       <ul class="wpsss-log">
         <?php foreach ($history as $row) : ?>
           <?php $event = (string) ($row['event'] ?? ''); ?>
           <li>
-            <div class="n"><span class="pill <?php echo esc_attr(Wpsss_History::event_tone($event)); ?>"><?php echo esc_html(Wpsss_History::event_label($event)); ?></span><?php if ((int) ($row['count'] ?? 1) > 1) : ?><span class="meta"> ×<?php echo (int) $row['count']; ?></span><?php endif; ?></div>
+            <div class="n"><?php echo Wenpai_Admin_UI::pill_html(array('state' => Wpsss_History::event_tone($event), 'text' => Wpsss_History::event_label($event))); ?><?php if ((int) ($row['count'] ?? 1) > 1) : ?><span class="meta"> ×<?php echo (int) $row['count']; ?></span><?php endif; ?></div>
             <div class="p"><?php
                 $detail = Wpsss_History::format_detail($event, (string) ($row['detail'] ?? ''));
                 $time = Wpsss_History::format_time((string) ($row['t'] ?? ''));

@@ -37,13 +37,15 @@ $panels = [
     <h1 class="wenpai-h1"><?php echo esc_html__('工具', 'wpsss'); ?></h1>
     <p class="wenpai-lede"><?php echo esc_html($ledes[$panel]); ?></p>
   </div>
-  <div class="mode">
-    <span class="seg" role="tablist" aria-label="<?php echo esc_attr__('工具分组', 'wpsss'); ?>">
-      <?php foreach ($panels as $id => $label) : ?>
-        <a role="tab"<?php echo $panel === $id ? ' class="on" aria-selected="true"' : ' aria-selected="false"'; ?> href="<?php echo esc_url($url('tools', ['panel' => $id])); ?>"><?php echo esc_html($label); ?></a>
-      <?php endforeach; ?>
-    </span>
-  </div>
+  <?php
+  echo Wenpai_Admin_UI::subnav_html(array(
+    'current' => $panel,
+    'label' => __('工具分组', 'wpsss'),
+    'items' => array_map(static function ($id, $label) use ($url) {
+      return array('id' => $id, 'label' => $label, 'url' => $url('tools', array('panel' => $id)));
+    }, array_keys($panels), array_values($panels)),
+  ));
+  ?>
 </div>
 <div class="wenpai-stack">
   <?php include WPSSS_DIR . 'templates/admin/part-tools-' . $panel . '.php'; ?>

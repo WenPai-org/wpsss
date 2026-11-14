@@ -31,7 +31,7 @@ echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('eq
         <ul class="wpsss-log">
           <?php foreach ($rows as $row) : ?>
             <li>
-              <div class="n"><span class="pill warn"><?php echo esc_html($label); ?></span><span class="meta">#<?php echo (int) ($row['id'] ?? 0); ?></span></div>
+              <div class="n"><?php echo Wenpai_Admin_UI::pill_html(array('state' => 'warn', 'text' => $label)); ?><span class="meta">#<?php echo (int) ($row['id'] ?? 0); ?></span></div>
               <div class="p"><?php echo esc_html((string) ($row['host'] ?? $row['key'] ?? '')); ?></div>
             </li>
           <?php endforeach; ?>

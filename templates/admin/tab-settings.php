@@ -46,11 +46,18 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
       <p class="wpsss-setup-hint"><a href="<?php echo esc_url($url('setup')); ?>"><?php echo esc_html__('首次配置？走 4 步设置向导', 'wpsss'); ?></a></p>
     <?php endif; ?>
   </div>
-  <div class="mode"><?php echo Wpsss_Icons::svg('eye'); ?><span><?php echo esc_html__('显示', 'wpsss'); ?></span>
-    <span class="seg">
-      <a class="<?php echo $adv ? '' : 'on'; ?>" href="<?php echo esc_url($url('settings', ['mode' => 'simple'])); ?>"><?php echo esc_html__('简单', 'wpsss'); ?></a>
-      <a class="<?php echo $adv ? 'on' : ''; ?>" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>"><?php echo esc_html__('高级', 'wpsss'); ?></a>
-    </span>
+  <div class="mode">
+    <?php
+    echo Wenpai_Admin_UI::mode_switch_html(array(
+      'icon' => 'eye',
+      'label' => __('显示', 'wpsss'),
+      'wrap' => false,
+      'items' => array(
+        array('label' => __('简单', 'wpsss'), 'href' => $url('settings', ['mode' => 'simple']), 'current' => !$adv),
+        array('label' => __('高级', 'wpsss'), 'href' => $url('settings', ['mode' => 'advanced']), 'current' => $adv),
+      ),
+    ));
+    ?>
     <?php if ($adv) : ?>
       <button class="btn btn-primary" type="submit" form="wpsss-settings-form"><?php echo esc_html__('保存设置', 'wpsss'); ?></button>
     <?php endif; ?>

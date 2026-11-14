@@ -31,13 +31,13 @@ Wenpai_Admin_UI::next( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'title' 
   <h2 class="section-title"><?php echo esc_html__('运行状态', 'wpsss'); ?></h2>
   <?php
 ob_start();
-?><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span><?php
+?><?php echo Wenpai_Admin_UI::pill_html(array('state' => 'ok', 'text' => __('已连接', 'wpsss'))); ?><?php
 echo Wenpai_Admin_UI::row_html( array( 'icon_html' => Wpsss_Icons::svg($opts['driver']), 'state' => 'ok', 'title' => __( '存储桶', 'wpsss' ), 'desc' => sprintf('%s · %s · %s', $view['driver']->label(), $region_label, $opts['bucket']), 'control_html' => (string) ob_get_clean() ) );
 ?>
   <?php
   ob_start();
   ?>
-  <span class="pill<?php echo $public_base !== '' ? ' ok' : ' warn'; ?>"><?php echo $url_access === 'signed' ? esc_html__('签名访问', 'wpsss') : ($custom ? esc_html__('自定义域名', 'wpsss') : esc_html__('默认域名', 'wpsss')); ?></span>
+  <?php echo Wenpai_Admin_UI::pill_html(array('state' => $public_base !== '' ? 'ok' : 'warn', 'text' => $url_access === 'signed' ? __('签名访问', 'wpsss') : ($custom ? __('自定义域名', 'wpsss') : __('默认域名', 'wpsss')))); ?>
   <?php if (!$custom) : ?>
     <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
   <?php endif;
