@@ -99,15 +99,15 @@ final class Wpsss_Media
         }
         $err = Wpsss_Library::last_error($post_id);
         if ($err !== '') {
-            echo '<span class="pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
+            echo '<span class="wpsss-pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
             echo '<div class="p">' . esc_html($err) . '</div>';
             return;
         }
         if (Wpsss_Library::is_offloaded($post_id)) {
-            echo '<span class="pill ok" data-wpsss-offloaded="1">' . esc_html__('已进桶', 'wpsss') . '</span>';
+            echo '<span class="wpsss-pill ok" data-wpsss-offloaded="1">' . esc_html__('已进桶', 'wpsss') . '</span>';
             return;
         }
-        echo '<span class="pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
+        echo '<span class="wpsss-pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
     }
 
     /**
@@ -258,11 +258,11 @@ final class Wpsss_Media
         echo '<div class="wpsss-metabox">';
         echo '<div class="wpsss-metabox-status">';
         if ($off) {
-            echo '<span class="pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
+            echo '<span class="wpsss-pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
         } elseif ($err !== '') {
-            echo '<span class="pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
+            echo '<span class="wpsss-pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
         } else {
-            echo '<span class="pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
+            echo '<span class="wpsss-pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
         }
         echo '</div>';
         if ($err !== '') {

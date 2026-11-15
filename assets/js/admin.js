@@ -57,7 +57,7 @@
     });
   }
   var deleteOne = document.querySelector("#delete-action a.submitdelete");
-  if (deleteOne && document.querySelector(".wpsss-metabox .pill.ok")) {
+  if (deleteOne && document.querySelector(".wpsss-metabox .wpsss-pill.ok")) {
     deleteOne.setAttribute(
       "data-wpsss-confirm",
       copy.confirmMediaDelete || "此附件已进桶。永久删除会同时删掉桶内对象，没有回收站。先确认本地还有副本。仍要删除吗？"
@@ -101,9 +101,9 @@
       btn.appendChild(knob);
     }
     btn.appendChild(document.createTextNode(on ? onText : offText));
-    var row = closest(btn, ".simple-row");
+    var row = closest(btn, ".wpsss-row");
     if (row) {
-      var tile = row.querySelector(".tile");
+      var tile = row.querySelector(".wpsss-tile");
       if (tile) {
         tile.classList.toggle("ok", on);
       }

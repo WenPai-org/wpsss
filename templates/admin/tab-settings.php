@@ -117,8 +117,8 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
     <h2 class="section-title"><?php echo Wpsss_Icons::svg('cloud'); ?> <?php echo esc_html__('云厂商', 'wpsss'); ?></h2>
     <p class="section-desc"><?php echo esc_html__('请选择与存储桶对应的厂商。', 'wpsss'); ?></p>
     <details class="wpsss-vendor-more"<?php echo $view['configured'] ? '' : ' open'; ?>>
-      <summary class="simple-row">
-        <div class="tile js-wpsss-vendor-tile<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::vendor($driver); ?></div>
+      <summary class="wpsss-row">
+        <div class="wpsss-tile js-wpsss-vendor-tile<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::vendor($driver); ?></div>
         <div>
           <div class="t js-wpsss-vendor-title"><?php echo esc_html($drivers[$driver] ?? $driver); ?></div>
           <div class="d js-wpsss-vendor-help"><?php echo esc_html($driver_help[$driver] ?? __('点击更换厂商', 'wpsss')); ?></div>
@@ -134,7 +134,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
                 <?php $on = $driver === $id; ?>
                 <label class="choice<?php echo $on ? ' is-on' : ''; ?>">
                   <input type="radio" name="<?php echo esc_attr($key); ?>[driver]" value="<?php echo esc_attr($id); ?>" data-wpsss-disclose="driver" <?php checked($on); ?> />
-                  <span class="tile vendor-tile<?php echo $on ? ' accent' : ''; ?>"><?php echo Wpsss_Icons::vendor($id); ?></span>
+                  <span class="wpsss-tile vendor-tile<?php echo $on ? ' accent' : ''; ?>"><?php echo Wpsss_Icons::vendor($id); ?></span>
                   <span>
                     <div class="t"><?php echo esc_html($label); ?></div>
                     <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
@@ -153,13 +153,13 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
   <section class="card">
     <h2 class="section-title"><?php echo esc_html__('当前组合', 'wpsss'); ?></h2>
     <p class="section-desc"><?php echo esc_html__('更换云厂商或密钥，请切换到高级模式。', 'wpsss'); ?></p>
-    <div class="simple-row is-static">
-      <div class="tile<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::vendor($driver); ?></div>
+    <div class="wpsss-row is-static">
+      <div class="wpsss-tile<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::vendor($driver); ?></div>
       <div><div class="t"><?php echo esc_html__('存储桶', 'wpsss'); ?></div><div class="d"><?php echo esc_html(($drivers[$driver] ?? $driver) . ' · ' . $region_label); ?></div></div>
-      <div class="r"><span class="pill<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo $opts['bucket'] !== '' ? esc_html($opts['bucket']) : esc_html__('未设置', 'wpsss'); ?></span></div>
+      <div class="r"><span class="wpsss-pill<?php echo $view['configured'] ? ' ok' : ''; ?>"><?php echo $opts['bucket'] !== '' ? esc_html($opts['bucket']) : esc_html__('未设置', 'wpsss'); ?></span></div>
     </div>
-    <div class="simple-row is-static">
-      <div class="tile<?php echo $opts['custom_domain'] !== '' ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('external'); ?></div>
+    <div class="wpsss-row is-static">
+      <div class="wpsss-tile<?php echo $opts['custom_domain'] !== '' ? ' ok' : ' warn'; ?>"><?php echo Wpsss_Icons::svg('external'); ?></div>
       <div>
         <div class="t"><?php echo esc_html__('对外地址', 'wpsss'); ?></div>
         <div class="d<?php echo $public_base !== '' ? ' is-url' : ''; ?>"><?php
@@ -174,7 +174,7 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
       </div>
       <div class="r">
         <?php if ($opts['custom_domain'] !== '') : ?>
-          <span class="pill ok"><?php echo esc_html__('自定义域名', 'wpsss'); ?></span>
+          <span class="wpsss-pill ok"><?php echo esc_html__('自定义域名', 'wpsss'); ?></span>
         <?php else : ?>
           <a class="btn btn-ghost" href="<?php echo esc_url($url('settings', ['mode' => 'advanced'])); ?>#wpsss-access"><?php echo esc_html__('填写自定义域名', 'wpsss'); ?></a>
         <?php endif; ?>
@@ -186,8 +186,8 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
         'origin_protect' => ['原图保护', '媒体库与文章中的原图也会带上图片样式；未填写样式时不生效', 'sparkle'],
     ] as $field => $copy) : ?>
       <?php $on = $opts[$field] === '1'; ?>
-      <div class="simple-row is-action">
-        <div class="tile<?php echo $on ? ' ok' : ($field === 'keep_local' ? ' warn' : ''); ?>"><?php echo Wpsss_Icons::svg($copy[2]); ?></div>
+      <div class="wpsss-row is-action">
+        <div class="wpsss-tile<?php echo $on ? ' ok' : ($field === 'keep_local' ? ' warn' : ''); ?>"><?php echo Wpsss_Icons::svg($copy[2]); ?></div>
         <div>
           <div class="t"><?php echo esc_html($copy[0]); ?></div>
           <div class="d"><?php
@@ -217,8 +217,8 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
         </div>
       </div>
     <?php endforeach; ?>
-    <div class="simple-row is-action">
-      <div class="tile<?php echo $url_access === 'signed' ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('eye'); ?></div>
+    <div class="wpsss-row is-action">
+      <div class="wpsss-tile<?php echo $url_access === 'signed' ? ' ok' : ''; ?>"><?php echo Wpsss_Icons::svg('eye'); ?></div>
       <div>
         <div class="t"><?php echo esc_html__('对象访问', 'wpsss'); ?></div>
         <div class="d"><?php echo $url_access === 'signed'

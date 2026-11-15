@@ -128,7 +128,7 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
               <?php $active = $driver === $id; ?>
               <label class="choice<?php echo $active ? ' is-on' : ''; ?>">
                 <input type="radio" name="driver" value="<?php echo esc_attr($id); ?>" data-wpsss-setup-driver="1" <?php checked($active); ?> />
-                <span class="tile vendor-tile<?php echo $active ? ' accent' : ''; ?>"><?php echo Wpsss_Icons::vendor($id); ?></span>
+                <span class="wpsss-tile vendor-tile<?php echo $active ? ' accent' : ''; ?>"><?php echo Wpsss_Icons::vendor($id); ?></span>
                 <span>
                   <div class="t"><?php echo esc_html($label); ?></div>
                   <div class="d"><?php echo esc_html($driver_help[$id] ?? ''); ?></div>
@@ -211,10 +211,10 @@ $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_
     <section class="card wpsss-setup-summary">
       <?php
 ob_start();
-?><span class="pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span><?php
+?><span class="wpsss-pill ok"><?php echo esc_html__('已连接', 'wpsss'); ?></span><?php
 echo Wenpai_Admin_UI::row_html( array( 'icon_html' => Wpsss_Icons::svg($saved_driver), 'state' => 'ok', 'title' => __( '存储桶', 'wpsss' ), 'desc' => ($drivers[$saved_driver] ?? $saved_driver) . ' · ' . $region_label . ' · ' . $opts['bucket'], 'control_html' => (string) ob_get_clean() ) );
 ?>
-      <div class="simple-row">
+      <div class="wpsss-row">
         <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('map') ) ); ?>
         <div>
           <div class="t"><?php echo esc_html__('站点场景', 'wpsss'); ?></div>
