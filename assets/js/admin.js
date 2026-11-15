@@ -809,9 +809,9 @@
   function bindOffload(form) {
     var runBtn = form.querySelector(".js-wpsss-offload-run");
     var stopBtn = form.querySelector(".js-wpsss-offload-stop");
-    var progress = form.querySelector(".js-wpsss-offload-progress");
-    var bar = form.querySelector(".js-wpsss-offload-bar");
-    var barFill = bar ? bar.querySelector("span") : null;
+    var progress = form.querySelector(".js-wpsss-offload-progress") || form.querySelector(".wenpai-task-meta");
+    var bar = form.querySelector(".js-wpsss-offload-bar") || form.querySelector(".wenpai-task-bar");
+    var barFill = bar ? (bar.querySelector("i") || bar.querySelector("span")) : null;
     if (!runBtn || !cfg.ajaxUrl || !cfg.offloadNonce) {
       return;
     }

@@ -156,7 +156,7 @@ wpsss_assert(strpos($tools, '一次拉一个') !== false, 'tools pull one-at-a-t
 wpsss_assert(strpos($tools, '待补传已清完') !== false, 'tools queue-drained copy');
 wpsss_assert(strpos($tools, '点「重试失败项」只处理它们') !== false, 'tools retry copy');
 wpsss_assert(strpos($tools, '后台每分钟最多补 2 个') !== false, 'tools cron fallback copy');
-wpsss_assert(strpos($tools, 'js-wpsss-offload-bar') !== false, 'tools offload bar element');
+wpsss_assert(strpos($tools, 'js-wpsss-offload-bar') !== false || strpos($tools, 'js-wpsss-offload-task') !== false, 'tools offload bar element');
 wpsss_assert(strpos($tools, 'js-wpsss-pull-bar') !== false, 'tools pull bar element');
 
 $entry = (string) file_get_contents(dirname(__DIR__) . '/wpsss.php');

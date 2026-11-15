@@ -963,3 +963,23 @@ a.simple-row:focus-visible { outline: var(--wenpai-focus-width) solid var(--wenp
   font-weight: var(--wenpai-weight-regular);
 }
 .field-ctl-row .field-addon { max-width: none; flex: 1 1 auto; }
+
+/* 0.5: card head right slot (pill / buttons) and flexible title block. */
+.card-head > div { flex: 1; min-width: 0; }
+.card-head .head-actions { margin-left: auto; display: flex; gap: var(--wenpai-space-2); align-items: center; flex: none; }
+/* 0.5: async task block (progress + counts + live meta). */
+.wenpai-task { display: grid; gap: 10px; padding: 18px 0; border-top: 1px solid var(--wenpai-line-soft); }
+.wenpai-task:first-of-type { border-top: 0; padding-top: var(--wenpai-space-2); }
+.wenpai-task-bar { height: 8px; border-radius: var(--wenpai-radius-sm); background: var(--wenpai-line-soft); overflow: hidden; }
+.wenpai-task-bar i { display: block; height: 100%; background: var(--wenpai-accent); border-radius: var(--wenpai-radius-sm); transition: width var(--wenpai-motion-base) var(--wenpai-motion-ease); }
+.wenpai-task-bar.is-stopped i { background: var(--wenpai-warn); }
+.wenpai-task-bar.is-bad i { background: var(--wenpai-bad); }
+.wenpai-task-counts { display: flex; gap: var(--wenpai-space-2); flex-wrap: wrap; align-items: center; }
+.wenpai-task-meta { color: var(--wenpai-ink-3); font-size: var(--wenpai-text-meta); line-height: var(--wenpai-leading-meta); margin: 0; }
+/* 0.5: read-only log list. */
+.wenpai-log { list-style: none; margin: 0; padding: 0; }
+.wenpai-log li { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--wenpai-line-soft); }
+.wenpai-log li:first-child { border-top: 0; }
+.wenpai-log .n { display: flex; gap: var(--wenpai-space-2); align-items: center; }
+.wenpai-log .when { grid-column: 2; color: var(--wenpai-ink-3); font-size: 11px; }
+.wenpai-log .p { grid-column: 2; color: var(--wenpai-ink-3); font-size: var(--wenpai-text-meta); line-height: var(--wenpai-leading-meta); overflow-wrap: anywhere; }

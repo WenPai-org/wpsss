@@ -39,8 +39,15 @@ echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('pl
       <input type="hidden" name="action" value="wpsss_offload" />
       <input type="hidden" name="wpsss_tools_panel" value="<?php echo esc_attr($panel); ?>" />
       <?php wp_nonce_field('wpsss_offload'); ?>
-      <div class="wpsss-progress js-wpsss-offload-bar" hidden aria-hidden="true"><span></span></div>
-      <p class="meta js-wpsss-offload-progress" aria-live="polite"></p>
+      <?php
+      echo Wenpai_Admin_UI::task_html(array(
+        'now' => 0,
+        'total' => 0,
+        'meta' => '',
+        'class' => 'js-wpsss-offload-task',
+        'attrs' => array('hidden' => true),
+      ));
+      ?>
       <div class="card-foot start">
         <span class="meta js-wpsss-offload-hint"><?php
           if ($pending > 0 && (int) ($failed ?? 0) > 0) {
@@ -97,18 +104,21 @@ echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('cl
       ));
       ?>
     <?php else : ?>
-      <ul class="wpsss-log">
-        <?php foreach ($history as $row) : ?>
-          <?php $event = (string) ($row['event'] ?? ''); ?>
-          <li>
-            <div class="n"><?php echo Wenpai_Admin_UI::pill_html(array('state' => Wpsss_History::event_tone($event), 'text' => Wpsss_History::event_label($event))); ?><?php if ((int) ($row['count'] ?? 1) > 1) : ?><span class="meta"> ×<?php echo (int) $row['count']; ?></span><?php endif; ?></div>
-            <div class="p"><?php
-                $detail = Wpsss_History::format_detail($event, (string) ($row['detail'] ?? ''));
-                $time = Wpsss_History::format_time((string) ($row['t'] ?? ''));
-                echo esc_html($detail !== '' ? $time . ' · ' . $detail : $time);
-            ?></div>
-          </li>
-        <?php endforeach; ?>
-      </ul>
+      <?php
+      $wpsss_log_items = array();
+      foreach ($history as $row) {
+        $event = (string) ($row['event'] ?? '');
+        $detail = Wpsss_History::format_detail($event, (string) ($row['detail'] ?? ''));
+        $time = Wpsss_History::format_time((string) ($row['t'] ?? ''));
+        $wpsss_log_items[] = array(
+          'tone' => Wpsss_History::event_tone($event),
+          'label' => Wpsss_History::event_label($event),
+          'count' => (int) ($row['count'] ?? 1),
+          'when' => $time,
+          'detail' => $detail,
+        );
+      }
+      echo Wenpai_Admin_UI::log_list_html(array('items' => $wpsss_log_items));
+      ?>
     <?php endif; ?>
   </section>

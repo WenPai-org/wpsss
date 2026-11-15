@@ -347,6 +347,8 @@ if ( ! class_exists( 'Wenpai_Admin_UI', false ) ) {
 		 *     @type int    $heading  Title level, default 2.
 		 *     @type string $class    Extra classes on section.card.
 		 *     @type array  $attrs    Extra attributes on section.card.
+		 *     @type string $head_actions_html Right slot HTML (kses post) after the title block,
+		 *                                wrapped in .head-actions (0.5.0).
 		 * }
 		 * @return string
 		 */
@@ -381,7 +383,11 @@ if ( ! class_exists( 'Wenpai_Admin_UI', false ) ) {
 			} elseif ( isset( $args['sub'] ) && '' !== (string) $args['sub'] ) {
 				$html .= '<p class="card-sub">' . esc_html( (string) $args['sub'] ) . '</p>';
 			}
-			return $html . '</div></div>';
+			$html .= '</div>';
+			if ( isset( $args['head_actions_html'] ) && '' !== (string) $args['head_actions_html'] ) {
+				$html .= '<span class="head-actions">' . self::kses( (string) $args['head_actions_html'], 'post' ) . '</span>';
+			}
+			return $html . '</div>';
 		}
 
 		/**
@@ -485,6 +491,117 @@ if ( ! class_exists( 'Wenpai_Admin_UI', false ) ) {
 		}
 
 		/**
+		 * Echo an async task block (progress + counts + live meta).
+		 *
+		 * @param array $args Arguments.
+		 */
+		public static function task( $args = array() ) {
+			self::emit( self::task_html( $args ) );
+		}
+
+		/**
+		 * Return task block markup. Product wraps it in card_open / card_foot.
+		 *
+		 * @param array $args {
+		 *     Helper arguments.
+		 *
+		 *     @type int    $now    Current progress value.
+		 *     @type int    $total  Maximum value.
+		 *     @type bool   $stopped Bar turns warn (paused / stalled).
+		 *     @type bool   $bad    Bar turns bad (failed batch).
+		 *     @type array  $counts Pill argument arrays (ok / pending / failed / state).
+		 *     @type string $meta   Live region sentence (aria-live polite).
+		 *     @type string $class  Extra classes on .wenpai-task.
+		 *     @type array  $attrs  Extra attributes.
+		 * }
+		 * @return string
+		 */
+		public static function task_html( $args = array() ) {
+			$args  = self::args( $args, 'Wenpai_Admin_UI::task' );
+			$now   = (int) ( isset( $args['now'] ) ? $args['now'] : 0 );
+			$total = (int) ( isset( $args['total'] ) ? $args['total'] : 0 );
+			$pct   = $total > 0 ? min( 100, (int) round( $now * 100 / $total ) ) : 0;
+			$bar   = 'wenpai-task-bar';
+			if ( ! empty( $args['stopped'] ) ) {
+				$bar .= ' is-stopped';
+			}
+			if ( ! empty( $args['bad'] ) ) {
+				$bar .= ' is-bad';
+			}
+			$now      = (int) ( isset( $args['now'] ) ? $args['now'] : 0 );
+			$total    = (int) ( isset( $args['total'] ) ? $args['total'] : 0 );
+			$pct      = $total > 0 ? min( 100, (int) round( $now * 100 / $total ) ) : 0;
+			$bar_html = '<div class="' . esc_attr( $bar ) . '" role="progressbar" aria-valuemin="0" aria-valuemax="' . esc_attr( (string) $total ) . '" aria-valuenow="' . esc_attr( (string) $now ) . '"><i style="width:' . $pct . '%"></i></div>';
+			$counts   = isset( $args['counts'] ) && is_array( $args['counts'] ) ? $args['counts'] : array();
+			$html     = '<div class="' . esc_attr( self::classes( array( 'wenpai-task', self::extra_class( $args ) ) ) ) . '"' . self::extra_attrs( $args ) . '>' . $bar_html;
+			if ( array() !== $counts ) {
+				$html .= '<div class="wenpai-task-counts">';
+				foreach ( $counts as $pill ) {
+					if ( is_array( $pill ) ) {
+						$html .= self::pill_html( $pill );
+					}
+				}
+				$html .= '</div>';
+			}
+			if ( isset( $args['meta'] ) && '' !== (string) $args['meta'] ) {
+				$html .= '<p class="wenpai-task-meta" aria-live="polite">' . esc_html( (string) $args['meta'] ) . '</p>';
+			}
+			return $html . '</div>';
+		}
+
+		/**
+		 * Echo a read-only log list.
+		 *
+		 * @param array $args Arguments.
+		 */
+		public static function log_list( $args = array() ) {
+			self::emit( self::log_list_html( $args ) );
+		}
+
+		/**
+		 * Return log list markup.
+		 *
+		 * @param array $args {
+		 *     Helper arguments.
+		 *
+		 *     @type array $items array of array{ tone, label, count?, when?, detail }.
+		 *     @type array $empty Optional empty_state arguments when items is empty.
+		 *     @type string $class Extra classes on ul.wenpai-log.
+		 *     @type array $attrs  Extra attributes.
+		 * }
+		 * @return string
+		 */
+		public static function log_list_html( $args = array() ) {
+			$args  = self::args( $args, 'Wenpai_Admin_UI::log_list' );
+			$items = isset( $args['items'] ) && is_array( $args['items'] ) ? $args['items'] : array();
+			if ( array() === $items ) {
+				return isset( $args['empty'] ) && is_array( $args['empty'] ) ? self::empty_state_html( $args['empty'] ) : '';
+			}
+			$html = '<ul class="' . esc_attr( self::classes( array( 'wenpai-log', self::extra_class( $args ) ) ) ) . '"' . self::extra_attrs( $args ) . '>';
+			foreach ( $items as $item ) {
+				if ( ! is_array( $item ) ) {
+					continue;
+				}
+				$html .= '<li><div class="n">';
+				$html .= self::pill_html(
+					array(
+						'state' => isset( $item['tone'] ) ? (string) $item['tone'] : '',
+						'text'  => isset( $item['label'] ) ? (string) $item['label'] : '',
+					)
+				);
+				if ( ! empty( $item['count'] ) && 1 < (int) $item['count'] ) {
+					$html .= '<span class="meta"> ×' . (int) $item['count'] . '</span>';
+				}
+				$html .= '</div>';
+				if ( isset( $item['when'] ) && '' !== (string) $item['when'] ) {
+					$html .= '<div class="when">' . esc_html( (string) $item['when'] ) . '</div>';
+				}
+				$html .= '<div class="p">' . esc_html( isset( $item['detail'] ) ? (string) $item['detail'] : '' ) . '</div></li>';
+			}
+			return $html . '</ul>';
+		}
+
+		/**
 		 * Echo a section title.
 		 *
 		 * @param array $args Arguments.
@@ -501,6 +618,7 @@ if ( ! class_exists( 'Wenpai_Admin_UI', false ) ) {
 		 *
 		 *     @type string $title   Title.
 		 *     @type string $desc    Optional description.
+		 *     @type string $desc_html Optional description HTML (kses post), wins over $desc.
 		 *     @type int    $heading Level, default 2.
 		 *     @type string $class   Extra classes on the heading.
 		 *     @type array  $attrs   Extra attributes on the heading.
@@ -573,7 +691,9 @@ if ( ! class_exists( 'Wenpai_Admin_UI', false ) ) {
 			if ( isset( $args['title'] ) && '' !== (string) $args['title'] ) {
 				$body .= '<div class="t"' . self::id_attr( $args, 'title_id' ) . '>' . esc_html( (string) $args['title'] ) . '</div>';
 			}
-			if ( isset( $args['desc'] ) && '' !== (string) $args['desc'] ) {
+			if ( array_key_exists( 'desc_html', $args ) && '' !== (string) $args['desc_html'] ) {
+				$body .= '<div class="d"' . self::id_attr( $args, 'desc_id' ) . '>' . self::kses( (string) $args['desc_html'], 'post' ) . '</div>';
+			} elseif ( isset( $args['desc'] ) && '' !== (string) $args['desc'] ) {
 				$body .= '<div class="d"' . self::id_attr( $args, 'desc_id' ) . '>' . esc_html( (string) $args['desc'] ) . '</div>';
 			}
 			$body .= '</div>';
