@@ -602,6 +602,101 @@ if ( ! class_exists( 'Wenpai_Admin_UI', false ) ) {
 		}
 
 		/**
+		 * Echo a media-library column cell (pill + one-line key).
+		 *
+		 * @param array $args Arguments.
+		 */
+		public static function native_column( $args = array() ) {
+			self::emit( self::native_column_html( $args ) );
+		}
+
+		/**
+		 * Return column cell markup.
+		 *
+		 * @param array $args {
+		 *     Helper arguments.
+		 *
+		 *     @type array  $pill Pill arguments (text, state).
+		 *     @type string $code Optional object key shown as one-line code chip.
+		 *     @type string $meta Optional extra meta line.
+		 * }
+		 * @return string
+		 */
+		public static function native_column_html( $args = array() ) {
+			$args = self::args( $args, 'Wenpai_Admin_UI::native_column' );
+			$html = '<div class="wenpai-native wenpai-native-col">';
+			if ( isset( $args['pill'] ) && is_array( $args['pill'] ) ) {
+				$html .= self::pill_html( $args['pill'] );
+			}
+			if ( isset( $args['code'] ) && '' !== (string) $args['code'] ) {
+				$html .= '<code>' . esc_html( (string) $args['code'] ) . '</code>';
+			}
+			if ( isset( $args['meta'] ) && '' !== (string) $args['meta'] ) {
+				$html .= '<span class="meta">' . esc_html( (string) $args['meta'] ) . '</span>';
+			}
+			return $html . '</div>';
+		}
+
+		/**
+		 * Echo an attachment metabox body (status + lines + actions + note).
+		 *
+		 * @param array $args Arguments.
+		 */
+		public static function native_metabox( $args = array() ) {
+			self::emit( self::native_metabox_html( $args ) );
+		}
+
+		/**
+		 * Return metabox body markup. Product registers the metabox itself.
+		 *
+		 * @param array $args {
+		 *     Helper arguments.
+		 *
+		 *     @type array  $pill    Status pill arguments.
+		 *     @type array  $lines   array of array{ kind: meta|code|link, text, href? }.
+		 *     @type array  $actions Button argument arrays (href renders <a>).
+		 *     @type string $note    Closing warning sentence.
+		 * }
+		 * @return string
+		 */
+		public static function native_metabox_html( $args = array() ) {
+			$args = self::args( $args, 'Wenpai_Admin_UI::native_metabox' );
+			$html = '<div class="wenpai-native wenpai-native-metabox">';
+			if ( isset( $args['pill'] ) && is_array( $args['pill'] ) ) {
+				$html .= '<div class="head">' . self::pill_html( $args['pill'] ) . '</div>';
+			}
+			$lines = isset( $args['lines'] ) && is_array( $args['lines'] ) ? $args['lines'] : array();
+			foreach ( $lines as $line ) {
+				if ( ! is_array( $line ) ) {
+					continue;
+				}
+				$kind = isset( $line['kind'] ) ? (string) $line['kind'] : 'meta';
+				$text = isset( $line['text'] ) ? (string) $line['text'] : '';
+				if ( 'code' === $kind ) {
+					$html .= '<p class="meta"><code>' . esc_html( $text ) . '</code></p>';
+				} elseif ( 'link' === $kind && ! empty( $line['href'] ) ) {
+					$html .= '<p class="meta"><a href="' . esc_url( (string) $line['href'] ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $text ) . '</a></p>';
+				} else {
+					$html .= '<p class="meta">' . esc_html( $text ) . '</p>';
+				}
+			}
+			$actions = isset( $args['actions'] ) && is_array( $args['actions'] ) ? $args['actions'] : array();
+			if ( array() !== $actions ) {
+				$html .= '<div class="actions">';
+				foreach ( $actions as $btn ) {
+					if ( is_array( $btn ) ) {
+						$html .= self::button_html( $btn );
+					}
+				}
+				$html .= '</div>';
+			}
+			if ( isset( $args['note'] ) && '' !== (string) $args['note'] ) {
+				$html .= '<p class="meta">' . esc_html( (string) $args['note'] ) . '</p>';
+			}
+			return $html . '</div>';
+		}
+
+		/**
 		 * Echo a section title.
 		 *
 		 * @param array $args Arguments.

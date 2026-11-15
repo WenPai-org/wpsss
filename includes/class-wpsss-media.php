@@ -99,15 +99,21 @@ final class Wpsss_Media
         }
         $err = Wpsss_Library::last_error($post_id);
         if ($err !== '') {
-            echo '<span class="wpsss-pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
-            echo '<div class="p">' . esc_html($err) . '</div>';
+            echo Wenpai_Admin_UI::native_column_html([
+                'pill' => ['state' => 'warn', 'text' => __('失败', 'wpsss')],
+                'meta' => $err,
+            ]);
             return;
         }
         if (Wpsss_Library::is_offloaded($post_id)) {
-            echo '<span class="wpsss-pill ok" data-wpsss-offloaded="1">' . esc_html__('已进桶', 'wpsss') . '</span>';
+            echo Wenpai_Admin_UI::native_column_html([
+                'pill' => ['state' => 'ok', 'text' => __('已进桶', 'wpsss'), 'attrs' => ['data-wpsss-offloaded' => '1']],
+            ]);
             return;
         }
-        echo '<span class="wpsss-pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
+        echo Wenpai_Admin_UI::native_column_html([
+            'pill' => ['text' => __('未进桶', 'wpsss')],
+        ]);
     }
 
     /**
@@ -255,42 +261,49 @@ final class Wpsss_Media
         $key = (string) get_post_meta($id, Wpsss_Library::META_KEY, true);
         $url = wp_get_attachment_url($id);
         $err = Wpsss_Library::last_error($id);
-        echo '<div class="wpsss-metabox">';
-        echo '<div class="wpsss-metabox-status">';
-        if ($off) {
-            echo '<span class="wpsss-pill ok">' . esc_html__('已进桶', 'wpsss') . '</span>';
-        } elseif ($err !== '') {
-            echo '<span class="wpsss-pill warn">' . esc_html__('失败', 'wpsss') . '</span>';
-        } else {
-            echo '<span class="wpsss-pill">' . esc_html__('未进桶', 'wpsss') . '</span>';
-        }
-        echo '</div>';
+        $lines = [];
         if ($err !== '') {
-            echo '<p class="wpsss-metabox-meta">' . esc_html($err) . '</p>';
+            $lines[] = ['kind' => 'meta', 'text' => $err];
         }
         if ($key !== '') {
-            echo '<p class="wpsss-metabox-key"><code>' . esc_html(Wpsss_History::short_key($key)) . '</code></p>';
+            $lines[] = ['kind' => 'code', 'text' => Wpsss_History::short_key($key)];
         }
         if (is_string($url) && $url !== '') {
-            echo '<p class="wpsss-metabox-link"><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html__('打开地址', 'wpsss') . '</a></p>';
-            echo '<p class="wpsss-metabox-url"><code>' . esc_html($url) . '</code></p>';
+            $lines[] = ['kind' => 'link', 'text' => __('打开地址', 'wpsss'), 'href' => $url];
         }
-        echo '<div class="wpsss-metabox-actions">';
+        $actions = [];
+        $note = '';
         if ($off) {
             $pull = wp_nonce_url(
                 admin_url('admin-post.php?action=wpsss_pull_one&id=' . $id),
                 'wpsss_pull_one_' . $id
             );
-            echo '<a class="btn btn-ghost" href="' . esc_url($pull) . '" data-wpsss-confirm="' . esc_attr__('确认把此附件拉回本地？已有同名文件会旁路改名成 原名-local-时间，再写入桶里那份。', 'wpsss') . '">' . esc_html__('拉回本地', 'wpsss') . '</a>';
-            echo '<p class="wpsss-metabox-meta">' . esc_html__('从媒体库永久删除此附件时，桶内对象会一并删除。', 'wpsss') . '</p>';
+            $actions[] = [
+                'label' => __('拉回本地', 'wpsss'),
+                'variant' => 'ghost',
+                'href' => $pull,
+                'attrs' => ['data-wpsss-confirm' => __('确认把此附件拉回本地？已有同名文件会旁路改名成 原名-local-时间，再写入桶里那份。', 'wpsss')],
+            ];
+            $note = __('从媒体库永久删除此附件时，桶内对象会一并删除。', 'wpsss');
         } else {
             $href = wp_nonce_url(
                 admin_url('admin-post.php?action=wpsss_offload_one&id=' . $id),
                 'wpsss_offload_one_' . $id
             );
-            echo '<a class="btn btn-secondary" href="' . esc_url($href) . '">' . esc_html__('补传到桶', 'wpsss') . '</a>';
+            $actions[] = [
+                'label' => __('补传到桶', 'wpsss'),
+                'variant' => 'secondary',
+                'href' => $href,
+            ];
         }
-        echo '</div></div>';
+        Wenpai_Admin_UI::native_metabox([
+            'pill' => $off
+                ? ['state' => 'ok', 'text' => __('已进桶', 'wpsss')]
+                : ($err !== '' ? ['state' => 'warn', 'text' => __('失败', 'wpsss')] : ['text' => __('未进桶', 'wpsss')]),
+            'lines' => $lines,
+            'actions' => $actions,
+            'note' => $note,
+        ]);
     }
 
     public function admin_notices(): void

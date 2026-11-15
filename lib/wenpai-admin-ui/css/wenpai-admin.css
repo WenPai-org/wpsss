@@ -983,3 +983,22 @@ a.simple-row:focus-visible { outline: var(--wenpai-focus-width) solid var(--wenp
 .wenpai-log .n { display: flex; gap: var(--wenpai-space-2); align-items: center; }
 .wenpai-log .when { grid-column: 2; color: var(--wenpai-ink-3); font-size: 11px; }
 .wenpai-log .p { grid-column: 2; color: var(--wenpai-ink-3); font-size: var(--wenpai-text-meta); line-height: var(--wenpai-leading-meta); overflow-wrap: anywhere; }
+
+/* 0.5.1: native-screen module (media column, metabox) and wizard contract.
+   Scoped to WP native screens via body classes; never restyles core chrome. */
+.wenpai-native-col { display: grid; gap: var(--wenpai-space-2); justify-items: start; }
+.wenpai-native-col code { font-size: var(--wenpai-text-meta); line-height: var(--wenpai-leading-meta); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: var(--wenpai-line-soft); padding: 2px 6px; border-radius: var(--wenpai-radius-sm); }
+.wenpai-native-metabox { display: grid; gap: var(--wenpai-space-3); font-size: var(--wenpai-text-meta); }
+.wenpai-native-metabox .head { display: flex; align-items: center; gap: var(--wenpai-space-2); }
+.wenpai-native-metabox .meta { color: var(--wenpai-ink-3); margin: 0; }
+.wenpai-native-metabox code { background: var(--wenpai-line-soft); padding: 2px 6px; border-radius: var(--wenpai-radius-sm); overflow-wrap: anywhere; }
+.wenpai-native-metabox .actions { display: flex; gap: var(--wenpai-space-2); flex-wrap: wrap; }
+.wenpai-native-metabox .btn { margin-left: -16px; }
+/* Wizard: narrow column, 16px rhythm, stacked fields. */
+.wenpai-wizard { display: grid; gap: var(--wenpai-space-4); max-width: var(--wenpai-size-wizard, 640px); margin: 0 auto; }
+.wenpai-wizard .steps { margin-bottom: 0; }
+.wenpai-wizard .notice { margin: 0; }
+.wenpai-wizard .card-head { margin-bottom: 0; }
+.wenpai-wizard .field { display: grid; grid-template-columns: 1fr; gap: var(--wenpai-space-2); margin-top: var(--wenpai-space-4); padding: var(--wenpai-space-4) 0 0; border-top: 1px solid var(--wenpai-line-soft); }
+.wenpai-wizard .choice-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--wenpai-space-3); }
+.wenpai-wizard .card-foot { margin-top: var(--wenpai-space-4); }

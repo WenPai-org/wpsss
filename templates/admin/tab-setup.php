@@ -56,7 +56,7 @@ $steps = [
 ];
 $s3_preset = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_Options::DRIVER_TOS ? 'tos' : 'aws');
 ?>
-<div class="wizard wpsss-setup">
+<div class="wizard wpsss-setup wenpai-wizard">
   <nav class="steps" aria-label="<?php echo esc_attr__('设置向导步骤', 'wpsss'); ?>">
     <?php foreach ($steps as $num => $label) : ?>
       <?php
