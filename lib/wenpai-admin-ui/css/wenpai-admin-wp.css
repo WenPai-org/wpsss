@@ -598,7 +598,9 @@ body.wenpai-ui-page .wenpai-app .simple-row {
   margin: 0 -8px;
   padding-left: var(--wenpai-space-2);
   padding-right: var(--wenpai-space-2);
-  border-radius: var(--wenpai-radius-md);
+  /* Bottom corners only: a full radius bends the border-top separator's ends
+     into arcs. The hover band still gets rounded lower corners. */
+  border-radius: 0 0 var(--wenpai-radius-md) var(--wenpai-radius-md);
 }
 
 body.wenpai-ui-page .wenpai-app .simple-row.is-static {
@@ -759,3 +761,9 @@ body.wenpai-ui-page .wenpai-app .wenpai-field.is-invalid input[type="radio"] {
   outline: 1px solid var(--wenpai-bad);
   outline-offset: 1px;
 }
+
+/* 0.5.5: native bulk select must keep intrinsic width; wp-scoped select rules above set width:100%. */
+body.wenpai-ui-page .wenpai-native-bulk select { width: auto; min-width: 10em; max-width: 18em; }
+
+/* 0.6.0: media/date controls keep intrinsic width; wp-scoped 100% rules above would stretch them. */
+body.wenpai-ui-page .wenpai-app .wenpai-media-row input[type="text"] { width: 16em; }
