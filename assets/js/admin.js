@@ -139,7 +139,8 @@
   }
 
   function field(form, key) {
-    return form.querySelector('[name$="[' + key + ']"]');
+    // Settings form uses wpsss_options[key]; the setup wizard posts flat names.
+    return form.querySelector('[name$="[' + key + ']"], [name="' + key + '"]');
   }
 
   function stashDraft(form) {
@@ -635,25 +636,9 @@
     });
   });
 
-  app.querySelectorAll(".js-wpsss-flip").forEach(function (btn) {
-    // Legacy hook kept for any remaining hand-written toggle; kit switch
-    // fields do not use it.
-    btn.addEventListener("click", function (event) {
-      event.preventDefault();
-      if (btn.disabled) {
-        return;
-      }
-      var ctl = closest(btn, ".field-ctl");
-      var hidden = ctl ? ctl.querySelector('input[type="hidden"]') : null;
-      if (!hidden) {
-        return;
-      }
-      var on = hidden.value !== "1";
-      hidden.value = on ? "1" : "0";
-      btn.classList.toggle("on", on);
-      setToggleText(btn, on);
-    });
-  });
+  // Kit switch fields (force_path_style, use_internal, origin_protect,
+  // skip_exist, ci_*) are native checkboxes styled by wenpai-admin-ui; no
+  // product handler needed.
 
   app.querySelectorAll("form[data-wpsss-need]").forEach(function (form) {
     var name = form.getAttribute("data-wpsss-need");
