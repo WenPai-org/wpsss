@@ -841,8 +841,8 @@ final class Wpsss_Admin
 
     private function mode(): string
     {
-        $mode = isset($_GET['mode']) ? sanitize_key((string) $_GET['mode']) : 'simple';
-        return $mode === 'advanced' ? 'advanced' : 'simple';
+        // Kit 0.9 view contract: ?mode= simple|advanced, anything else = simple.
+        return class_exists('Wenpai_Admin_UI') ? Wenpai_Admin_UI::mode() : 'simple';
     }
 
     private function sanitize_tools_panel(string $panel): string
