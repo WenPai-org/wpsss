@@ -56,7 +56,6 @@ body.wpsss-admin .wenpai-app .toggle {
   box-shadow: none;
   padding: 0;
   margin: 0;
-  min-height: 0;
   color: var(--wenpai-ink);
   font: inherit;
   line-height: 20px;
