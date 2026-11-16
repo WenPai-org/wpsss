@@ -12,7 +12,6 @@ $site_mode = $saved_site_mode;
 $site_modes = Wpsss_Options::site_modes();
 $regions = Wpsss_Options::regions_for($driver);
 $region_label = $regions[$opts['region']] ?? $opts['region'];
-$grouped_regions = Wpsss_Options::grouped_regions($driver);
 $adv = $mode === 'advanced';
 $drivers = Wpsss_Options::driver_ids();
 $public_base = (string) ($view['public_base'] ?? '');
@@ -22,20 +21,8 @@ $group_label = [
     'cn' => '国内云',
     'intl' => '国际与兼容云',
 ];
-$s3_family = Wpsss_Options::is_s3_family($driver);
 $driver_help = Wpsss_Options::driver_help();
-$bucket_help = Wpsss_Options::bucket_help();
 $url_access = ($opts['url_access'] ?? 'public') === 'signed' ? 'signed' : 'public';
-$oss_signature = (($opts['oss_signature'] ?? 'v4') === 'v1') ? 'v1' : 'v4';
-$oss_auth = (($opts['oss_auth'] ?? 'ak') === 'ram') ? 'ram' : 'ak';
-$s3_locked = $driver === Wpsss_Options::DRIVER_GCS ? 'gcs' : ($driver === Wpsss_Options::DRIVER_TOS ? 'tos' : '');
-$show_app_id = $driver === Wpsss_Options::DRIVER_COS
-    || ($driver === Wpsss_Options::DRIVER_S3 && ($opts['s3_preset'] ?? '') === 'r2');
-$id_set = $opts['access_key_id'] !== '';
-$id_tail = $id_set ? substr($opts['access_key_id'], -4) : '';
-$region_in_list = isset($regions[$opts['region']]);
-$show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
-    && in_array((string) $opts['region'], ['oss-accelerate', 'oss-accelerate-overseas'], true);
 ?>
 <?php $setup_done = ($opts['setup_completed_at'] ?? '') !== ''; ?>
 <div class="wenpai-page-head">
@@ -240,96 +227,25 @@ $show_origin = $driver === Wpsss_Options::DRIVER_ALIYUN
   <section class="card" id="wpsss-fields">
     <h2 class="section-title"><?php echo esc_html__('桶与密钥', 'wpsss'); ?></h2>
     <p class="section-desc"><?php echo esc_html__('建议使用子用户密钥，并仅授予当前存储桶权限。', 'wpsss'); ?></p>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('桶名', 'wpsss'); ?></div><div class="field-help js-wpsss-bucket-help"><?php echo esc_html($bucket_help[$driver] ?? __('仅填写桶名', 'wpsss')); ?></div></div><div class="field-ctl">
-        <div class="field-ctl-row">
-          <input name="<?php echo esc_attr($key); ?>[bucket]" type="text" value="<?php echo esc_attr($opts['bucket']); ?>" class="js-wpsss-bucket" autocomplete="off" />
-          <button type="button" class="btn btn-secondary js-wpsss-inspect"><?php echo esc_html__('读取桶信息', 'wpsss'); ?></button>
-        </div>
-        <p class="hint js-wpsss-inspect-hint" hidden></p>
-      </div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('填写桶名与密钥后，可点击「读取桶信息」自动回填。', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[region]" class="js-wpsss-region"><?php if ($opts['region'] !== '' && !$region_in_list) : ?><option value="<?php echo esc_attr($opts['region']); ?>" selected><?php echo esc_html($opts['region'] . '（当前保存）'); ?></option><?php endif; ?><?php foreach (['cn' => '国内', 'overseas' => '海外'] as $rid => $rlabel) : if ($grouped_regions[$rid] === []) { continue; } ?><optgroup label="<?php echo esc_attr($rlabel); ?>"><?php foreach ($grouped_regions[$rid] as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"<?php selected($opts['region'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></optgroup><?php endforeach; ?></select></div></div>
-      <div class="field js-wpsss-for-aliyun js-wpsss-origin-region"<?php echo $show_origin ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('源区域', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('使用传输加速时，仍按这个区域连接阿里云。可留空，默认杭州。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[origin_region]" type="text" value="<?php echo esc_attr((string) ($opts['origin_region'] ?? '')); ?>" placeholder="oss-cn-hangzhou" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('对象访问', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('公开读要求存储桶允许匿名访问。签名访问支持阿里云 OSS 与 S3 / TOS / GCS，其余厂商请使用公开读。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <select name="<?php echo esc_attr($key); ?>[url_access]" class="js-wpsss-access">
-          <option value="public"<?php selected($url_access, 'public'); ?>><?php echo esc_html__('公开读', 'wpsss'); ?></option>
-          <option value="signed"<?php selected($url_access, 'signed'); ?>><?php echo esc_html__('签名访问', 'wpsss'); ?></option>
-        </select>
-      </div></div>
-      <div class="field js-wpsss-ttl"<?php echo $url_access === 'signed' ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('签名有效期（秒）', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('默认 3600 秒，最长 7 天。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[signed_ttl]" type="number" min="60" max="604800" value="<?php echo esc_attr((string) ($opts['signed_ttl'] ?? '3600')); ?>" /></div></div>
-      <div class="field js-wpsss-for-s3"<?php echo $s3_family ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('S3 预设', 'wpsss'); ?></div><div class="field-help js-wpsss-s3-preset-help"><?php echo $s3_locked === 'gcs' ? esc_html__('Google 云固定为此预设。', 'wpsss') : ($s3_locked === 'tos' ? esc_html__('火山引擎固定为此预设。', 'wpsss') : esc_html__('将自动填入默认 Endpoint。', 'wpsss')); ?></div></div><div class="field-ctl">
-        <select name="<?php echo esc_attr($key); ?>[s3_preset]" class="js-wpsss-s3-preset"<?php echo $s3_locked !== '' ? ' hidden' : ''; ?>>
-          <?php foreach (Wpsss_Options::s3_presets() as $id => $label) : ?>
-            <option value="<?php echo esc_attr($id); ?>"<?php selected($s3_locked !== '' ? $s3_locked : $opts['s3_preset'], $id); ?>><?php echo esc_html($label); ?></option>
-          <?php endforeach; ?>
-        </select>
-        <input type="text" class="js-wpsss-s3-lock-label" value="<?php echo $s3_locked !== '' ? esc_attr(Wpsss_Options::s3_presets()[$s3_locked]) : ''; ?>" disabled<?php echo $s3_locked !== '' ? '' : ' hidden'; ?> />
-      </div></div>
-      <div class="field js-wpsss-for-s3"<?php echo $s3_family ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('Endpoint', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('留空则按上方预设生成。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[endpoint]" type="text" value="<?php echo esc_attr($opts['endpoint']); ?>" placeholder="https://tos-s3-cn-beijing.volces.com" /></div></div>
-      <div class="field js-wpsss-for-s3"<?php echo $s3_family ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('路径风格访问', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('R2、MinIO 等平台通常需要启用。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[force_path_style]" value="<?php echo $opts['force_path_style'] === '1' ? '1' : '0'; ?>" />
-        <button type="button" class="toggle<?php echo $opts['force_path_style'] === '1' ? ' on' : ''; ?> js-wpsss-flip" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo $opts['force_path_style'] === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
-      </div></div>
-      <div class="field js-wpsss-app-id-field"<?php echo $show_app_id ? '' : ' hidden'; ?>><div><div class="field-label js-wpsss-app-id-label"><?php echo ($opts['s3_preset'] ?? '') === 'r2' && $driver === Wpsss_Options::DRIVER_S3 ? esc_html__('R2 Account ID', 'wpsss') : esc_html__('APPID（COS）', 'wpsss'); ?></div><div class="field-help js-wpsss-app-id-help"><?php echo ($opts['s3_preset'] ?? '') === 'r2' && $driver === Wpsss_Options::DRIVER_S3 ? esc_html__('用于拼接服务 Endpoint。', 'wpsss') : esc_html__('创建桶的主账号 APPID。子账户的 APPID 无效。桶名已含 APPID 可留空。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[app_id]" type="text" value="<?php echo esc_attr($opts['app_id']); ?>" autocomplete="off" class="js-wpsss-app-id" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('访问密钥 ID', 'wpsss'); ?></div><div class="field-help"><?php echo $id_set ? esc_html(sprintf('已保存 · 末四位 %s', $id_tail)) : esc_html__('RAM 子用户 AccessKey ID', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_id]" type="text" value="" autocomplete="off" placeholder="<?php echo $id_set ? esc_attr('••••' . $id_tail) : ''; ?>" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('访问密钥 Secret', 'wpsss'); ?></div><div class="field-help"><?php echo $view['secret_set'] ? esc_html__('已保存；留空保存时保持不变。', 'wpsss') : esc_html__('不会在页面中显示', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[access_key_secret]" type="password" value="" autocomplete="new-password" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('走内网', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('网站服务器与存储桶在同一区域时可启用。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[use_internal]" value="<?php echo $opts['use_internal'] === '1' ? '1' : '0'; ?>" />
-        <button type="button" class="toggle<?php echo $opts['use_internal'] === '1' ? ' on' : ''; ?> js-wpsss-flip" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo $opts['use_internal'] === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
-      </div></div>
-      <div class="field js-wpsss-for-aliyun"<?php echo $driver === Wpsss_Options::DRIVER_ALIYUN ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('签名版本', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('默认 V4。部分新区域只认 V4；旧对接可改回 V1。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <select name="<?php echo esc_attr($key); ?>[oss_signature]">
-          <option value="v4"<?php selected($oss_signature, 'v4'); ?>><?php echo esc_html__('V4（推荐）', 'wpsss'); ?></option>
-          <option value="v1"<?php selected($oss_signature, 'v1'); ?>><?php echo esc_html__('V1', 'wpsss'); ?></option>
-        </select>
-      </div></div>
-      <div class="field js-wpsss-for-aliyun"<?php echo $driver === Wpsss_Options::DRIVER_ALIYUN ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('凭证', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('一般用 RAM 子用户密钥。网站服务器是阿里云 ECS 且绑了角色时，可选实例角色，不必再填密钥。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <select name="<?php echo esc_attr($key); ?>[oss_auth]" class="js-wpsss-oss-auth">
-          <option value="ak"<?php selected($oss_auth, 'ak'); ?>><?php echo esc_html__('AccessKey', 'wpsss'); ?></option>
-          <option value="ram"<?php selected($oss_auth, 'ram'); ?>><?php echo esc_html__('ECS 实例 RAM 角色', 'wpsss'); ?></option>
-        </select>
-      </div></div>
-      <div class="field js-wpsss-for-aliyun js-wpsss-ram-role"<?php echo $driver === Wpsss_Options::DRIVER_ALIYUN && $oss_auth === 'ram' ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('RAM 角色名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('可留空，由实例元数据返回。临时密钥不会写入设置。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[oss_ram_role]" type="text" value="<?php echo esc_attr((string) ($opts['oss_ram_role'] ?? '')); ?>" autocomplete="off" /></div></div>
+    <?php
+    $fw = $view['fw'] ?? null;
+    if ($fw) {
+        foreach (['bucket', 'region', 'origin_region', 'url_access', 'signed_ttl', 's3_preset', 'endpoint', 'force_path_style', 'app_id', 'access_key_id', 'access_key_secret', 'use_internal', 'oss_signature', 'oss_auth', 'oss_ram_role'] as $fid) {
+            echo $fw->field_html($fid);
+        }
+    }
+    ?>
   </section>
   <section class="card" id="wpsss-access">
     <h2 class="section-title"><?php echo esc_html__('访问与处理', 'wpsss'); ?></h2>
     <p class="section-desc"><?php echo esc_html__('访客看到的地址，以及上传后的命名与图片处理。', 'wpsss'); ?></p>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('自定义域名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('访客看到的媒体地址。只要 CDN 已经指向存储桶，填它的 HTTPS 地址即可，不限定厂商。七牛必须填写。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[custom_domain]" type="text" value="<?php echo esc_attr($opts['custom_domain']); ?>" placeholder="https://static.example.com" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('对象前缀 / 子目录', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('相当于对象路径前缀，如 media。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[object_prefix]" type="text" value="<?php echo esc_attr($opts['object_prefix']); ?>" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('自动重命名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('上传时自动重命名，降低直链被猜测的风险。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <select name="<?php echo esc_attr($key); ?>[auto_rename]">
-          <option value="off"<?php selected($opts['auto_rename'], 'off'); ?>><?php echo esc_html__('不改文件名', 'wpsss'); ?></option>
-          <option value="md5"<?php selected($opts['auto_rename'], 'md5'); ?>><?php echo esc_html__('MD5', 'wpsss'); ?></option>
-          <option value="time"<?php selected($opts['auto_rename'], 'time'); ?>><?php echo esc_html__('时间戳+随机', 'wpsss'); ?></option>
-        </select>
-      </div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('图片样式', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('填写后接到每张图片地址后面，由存储桶做缩放或质量处理。以 ? 开头视为查询参数，例如 ?x-oss-process=image/quality,q_80。GIF 与 SVG 不会追加。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[image_style]" type="text" value="<?php echo esc_attr($opts['image_style']); ?>" class="js-wpsss-style" placeholder="?x-oss-process=image/quality,q_80" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('原图保护', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('打开后，媒体库和文章里的原图也会带上上面的样式，避免访客直接打开未处理的原图。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[origin_protect]" value="<?php echo $opts['origin_protect'] === '1' ? '1' : '0'; ?>" />
-        <button type="button" class="toggle<?php echo $opts['origin_protect'] === '1' ? ' on' : ''; ?> js-wpsss-flip js-wpsss-protect-toggle<?php echo !$has_style && $opts['origin_protect'] !== '1' ? ' is-locked' : ''; ?>"<?php echo !$has_style && $opts['origin_protect'] !== '1' ? ' disabled' : ''; ?> title="<?php echo !$has_style ? esc_attr__('须先填写图片样式', 'wpsss') : ''; ?>" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo $opts['origin_protect'] === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
-        <p class="hint js-wpsss-protect-hint"<?php echo trim((string) ($opts['image_style'] ?? '')) !== '' ? ' hidden' : ''; ?>><?php echo esc_html__('未填写图片样式时，此开关不会生效。', 'wpsss'); ?></p>
-      </div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('不进桶的扩展名', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('逗号分隔。php、htaccess 等可执行文件始终拒绝。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[exclude_ext]" type="text" value="<?php echo esc_attr((string) ($opts['exclude_ext'] ?? '')); ?>" placeholder="svg,zip,exe" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('付费下载目录', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('uploads/woocommerce_uploads 里的商品文件。不进桶=留在服务器，靠本地权限拦截；私有进桶=对象不公开，下载地址带签名；照常=跟随全站设置。', 'wpsss'); ?></div></div><div class="field-ctl"><select name="<?php echo esc_attr($key); ?>[woo_policy]">
-        <option value="exclude"<?php selected(($opts['woo_policy'] ?? 'exclude'), 'exclude'); ?>><?php echo esc_html__('不进桶（推荐）', 'wpsss'); ?></option>
-        <option value="private"<?php selected(($opts['woo_policy'] ?? 'exclude'), 'private'); ?>><?php echo esc_html__('私有进桶，下载走签名', 'wpsss'); ?></option>
-        <option value="off"<?php selected(($opts['woo_policy'] ?? 'exclude'), 'off'); ?>><?php echo esc_html__('照常进桶', 'wpsss'); ?></option>
-      </select></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('远端已有则跳过', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('补传前先检查桶里是否已有同名对象；已有则跳过，不覆盖。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[skip_exist]" value="<?php echo (($opts['skip_exist'] ?? '0') === '1') ? '1' : '0'; ?>" />
-        <button type="button" class="toggle<?php echo ($opts['skip_exist'] ?? '0') === '1' ? ' on' : ''; ?> js-wpsss-flip" data-on="<?php echo esc_attr__('已开启', 'wpsss'); ?>" data-off="<?php echo esc_attr__('未开启', 'wpsss'); ?>"><i></i><?php echo ($opts['skip_exist'] ?? '0') === '1' ? esc_html__('已开启', 'wpsss') : esc_html__('未开启', 'wpsss'); ?></button>
-      </div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('Cache-Control', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('写入对象响应头。留空则公开读 30 天、签名访问 1 小时。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[cache_control]" type="text" value="<?php echo esc_attr((string) ($opts['cache_control'] ?? '')); ?>" placeholder="public, max-age=2592000" /></div></div>
-      <div class="field"><div><div class="field-label"><?php echo esc_html__('额外改写来源', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('迁移域名时，在此填写原 CDN 地址。', 'wpsss'); ?></div></div><div class="field-ctl"><input name="<?php echo esc_attr($key); ?>[rewrite_from]" type="text" value="<?php echo esc_attr($opts['rewrite_from']); ?>" placeholder="https://old-cdn.example.com" /></div></div>
-      <div class="field js-wpsss-for-cos"<?php echo $driver === Wpsss_Options::DRIVER_COS ? '' : ' hidden'; ?>><div><div class="field-label"><?php echo esc_html__('COS 数据万象', 'wpsss'); ?></div><div class="field-help"><?php echo esc_html__('压缩与文档预览追加到 URL。内容审核会检查新评论。', 'wpsss'); ?></div></div><div class="field-ctl">
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_slim]" value="0" />
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_preview]" value="0" />
-        <input type="hidden" name="<?php echo esc_attr($key); ?>[ci_audit]" value="0" />
-        <div class="chk">
-          <label><input type="checkbox" name="<?php echo esc_attr($key); ?>[ci_slim]" value="1" <?php checked($opts['ci_slim'], '1'); ?> /> <?php echo esc_html__('图片极智压缩 / webp', 'wpsss'); ?></label>
-          <label><input type="checkbox" name="<?php echo esc_attr($key); ?>[ci_preview]" value="1" <?php checked($opts['ci_preview'], '1'); ?> /> <?php echo esc_html__('文档预览参数', 'wpsss'); ?></label>
-          <label><input type="checkbox" name="<?php echo esc_attr($key); ?>[ci_audit]" value="1" <?php checked($opts['ci_audit'], '1'); ?> /> <?php echo esc_html__('内容审核', 'wpsss'); ?></label>
-        </div>
-      </div></div>
+    <?php
+    if ($fw) {
+        foreach (['custom_domain', 'object_prefix', 'auto_rename', 'image_style', 'origin_protect', 'exclude_ext', 'woo_policy', 'skip_exist', 'cache_control', 'rewrite_from', 'ci_group'] as $fid) {
+            echo $fw->field_html($fid);
+        }
+    }
+    ?>
       <input type="hidden" name="<?php echo esc_attr($key); ?>[keep_local]" value="<?php echo esc_attr($opts['keep_local']); ?>" />
       <input type="hidden" name="<?php echo esc_attr($key); ?>[upload_thumbs]" value="<?php echo esc_attr($opts['upload_thumbs']); ?>" />
   </section>

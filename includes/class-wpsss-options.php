@@ -135,7 +135,12 @@ class Wpsss_Options
         $input = is_array($input) ? $input : [];
 
         $secret = isset($input['access_key_secret']) ? (string) $input['access_key_secret'] : '';
-        if ($secret === '') {
+        // Kit secret fields submit {option}[__wenpai_clear][] with the field
+        // id to wipe; an empty secret otherwise means "keep the saved value".
+        $clear = isset($input['__wenpai_clear']) ? (array) $input['__wenpai_clear'] : [];
+        if (in_array('access_key_secret', $clear, true)) {
+            $secret = '';
+        } elseif ($secret === '') {
             $secret = $current['access_key_secret'];
         }
 

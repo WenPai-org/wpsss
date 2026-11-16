@@ -37,6 +37,7 @@ final class Wpsss_Admin
         add_action('admin_post_wpsss_quick', [$this, 'handle_quick']);
         add_action('admin_post_wpsss_setup', [$this, 'handle_setup']);
         add_action('wp_ajax_wpsss_inspect', [$this, 'handle_inspect']);
+        add_action('admin_init', [$this, 'register_settings_framework']);
         add_filter('wp_redirect', [$this, 'after_options_redirect']);
         add_filter('plugin_action_links_' . plugin_basename(WPSSS_FILE), [$this, 'action_links']);
     }
@@ -187,6 +188,7 @@ final class Wpsss_Admin
                 Wpsss_Options::sanitize_site_mode($opts['site_mode'] ?? 'domestic'),
                 $opts
             ),
+            'fw' => $tab === 'settings' ? $this->getFramework() : null,
         ];
 
         $shell = [
@@ -651,39 +653,11 @@ final class Wpsss_Admin
         }
         check_ajax_referer('wpsss_inspect', 'nonce');
 
-        $saved = Wpsss_Options::get();
-        $driver_id = isset($_POST['driver']) ? sanitize_key((string) wp_unslash($_POST['driver'])) : (string) $saved['driver'];
-        $driver = $this->plugin->driver($driver_id);
-        if ($driver === null) {
-            wp_send_json_error(['message' => __('未知厂商。', 'wpsss')]);
-        }
-
-        $settings = $saved;
-        $settings['driver'] = $driver_id;
-        $text_keys = ['bucket', 'region', 'access_key_id', 'access_key_secret', 'app_id', 'endpoint', 's3_preset', 'force_path_style', 'use_internal', 'custom_domain'];
-        foreach ($text_keys as $key) {
-            if (!isset($_POST[$key])) {
-                continue;
-            }
-            $value = sanitize_text_field((string) wp_unslash($_POST[$key]));
-            if (in_array($key, ['endpoint', 'custom_domain'], true) && $value !== '' && self::points_at_private_host($value)) {
-                wp_send_json_error(['message' => __('探测地址不能指向内网、回环或链路本地地址。', 'wpsss')]);
-            }
-            if ($value !== '') {
-                $settings[$key] = $value;
-            }
-        }
-        if (($settings['access_key_id'] ?? '') === '') {
-            $settings['access_key_id'] = $saved['access_key_id'];
-        }
-        if (($settings['access_key_secret'] ?? '') === '') {
-            $settings['access_key_secret'] = $saved['access_key_secret'];
-        }
-        if (($settings['bucket'] ?? '') === '' || ($settings['access_key_id'] ?? '') === '' || ($settings['access_key_secret'] ?? '') === '') {
-            wp_send_json_error(['message' => __('请先填写桶名与密钥；已保存的密钥可留空。', 'wpsss')]);
-        }
-
-        $result = $driver->inspect_bucket($settings);
+        // Legacy flat-POST endpoint; the settings form now uses the kit field
+        // action (wpsss_inspect_bucket). Kept for any stale localized caller.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- check_ajax_referer above.
+        $in = wp_unslash($_POST);
+        $result = $this->inspect_core(is_array($in) ? $in : []);
         if (is_wp_error($result)) {
             wp_send_json_error(['message' => $result->get_error_message()]);
         }
@@ -994,5 +968,412 @@ final class Wpsss_Admin
         }
         wp_safe_redirect(add_query_arg($flag, $ok ? 'ok' : 'fail', $target));
         exit;
+    }
+
+    // ------------------------------------------------------------------
+    // Kit settings framework (Wenpai_Admin_Settings) — advanced form.
+    // ------------------------------------------------------------------
+
+    /**
+     * The kit settings instance for wpsss_options, registered once on
+     * admin_init (admin-ajax.php fires admin_init too, so the field action
+     * endpoint exists there).
+     *
+     * Wpsss_Plugin::register_settings() owns register_setting() — the
+     * cross-field rules in Wpsss_Options::sanitize() cannot be expressed
+     * per-field — so the kit's own admin_init register_setting is removed.
+     *
+     * @return Wenpai_Admin_Settings|null
+     */
+    public function getFramework()
+    {
+        if (!class_exists('Wenpai_Admin_Settings')) {
+            return null;
+        }
+        $fw = Wenpai_Admin_Settings::get_instance(Wpsss_Options::OPTION_KEY);
+        if (null === $fw) {
+            $fw = Wenpai_Admin_Settings::register(
+                Wpsss_Options::OPTION_KEY,
+                $this->settingsSchema(),
+                [
+                    'group' => 'wpsss',
+                    'layout' => 'row',
+                ]
+            );
+            if (function_exists('remove_action')) {
+                remove_action('admin_init', [$fw, 'register_setting']);
+            }
+            $fw->ajax_action('wpsss_inspect_bucket', [$this, 'inspectAction'], ['capability' => 'manage_options']);
+        }
+        return $fw;
+    }
+
+    /**
+     * admin_init hook: build the schema instance early enough for
+     * wp_ajax_wpsss_inspect_bucket on admin-ajax.php.
+     */
+    public function register_settings_framework(): void
+    {
+        $this->getFramework();
+    }
+
+    /**
+     * depends_on 'hide' tree helpers.
+     */
+    private static function depRule(string $field, $value): array
+    {
+        return ['field' => $field, 'value' => $value];
+    }
+
+    private static function depAnd(array $rules): array
+    {
+        return ['mode' => 'hide', 'relation' => 'AND', 'rules' => $rules];
+    }
+
+    private static function depOr(array $rules): array
+    {
+        return ['mode' => 'hide', 'relation' => 'OR', 'rules' => $rules];
+    }
+
+    /**
+     * Schema for every key of wpsss_options that the advanced form edits.
+     * site_mode / driver are registered for depends_on triggers and kit
+     * flatten; their widgets stay custom (instant scene form, vendor grid).
+     * keep_local / upload_thumbs stay hidden inputs (instant toggles own them).
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function settingsSchema(): array
+    {
+        $s3 = [Wpsss_Options::DRIVER_S3, Wpsss_Options::DRIVER_TOS, Wpsss_Options::DRIVER_GCS];
+        $aliyun = Wpsss_Options::DRIVER_ALIYUN;
+        $cos = Wpsss_Options::DRIVER_COS;
+
+        $region_choices = static function () {
+            $opts = Wpsss_Options::get();
+            $driver = (string) ($opts['driver'] ?? Wpsss_Options::DRIVER_ALIYUN);
+            $current = (string) ($opts['region'] ?? '');
+            $known = Wpsss_Options::regions_for($driver);
+            $choices = [];
+            if ($current !== '' && !isset($known[$current])) {
+                $choices[$current] = ['label' => $current . '（' . __('当前保存', 'wpsss') . '）'];
+            }
+            foreach (Wpsss_Options::grouped_regions($driver) as $gid => $map) {
+                foreach ($map as $id => $label) {
+                    $choices[$id] = ['label' => $label, 'group' => $gid];
+                }
+            }
+            return $choices;
+        };
+
+        return [
+            'site_mode' => [
+                'type' => 'choice',
+                'default' => 'domestic',
+                'label' => __('站点场景', 'wpsss'),
+                'choices' => static function () {
+                    $out = [];
+                    foreach (Wpsss_Options::site_modes() as $id => $row) {
+                        $out[$id] = ['label' => $row['label'], 'desc' => $row['help']];
+                    }
+                    return $out;
+                },
+            ],
+            'driver' => [
+                'type' => 'choice',
+                'default' => Wpsss_Options::DRIVER_ALIYUN,
+                'label' => __('云厂商', 'wpsss'),
+                'choices' => static function () {
+                    $out = [];
+                    foreach (Wpsss_Options::driver_ids() as $id => $label) {
+                        $out[$id] = ['label' => $label, 'desc' => Wpsss_Options::driver_help()[$id] ?? ''];
+                    }
+                    return $out;
+                },
+            ],
+            'bucket' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('桶名', 'wpsss'),
+                'desc' => __('仅填写桶名', 'wpsss'),
+                'actions' => [[
+                    'id' => 'inspect',
+                    'label' => __('读取桶信息', 'wpsss'),
+                    'ajax' => 'wpsss_inspect_bucket',
+                    'busy' => __('正在读取', 'wpsss'),
+                    'include' => ['bucket', 'region', 'access_key_id', 'access_key_secret', 'app_id', 'endpoint', 's3_preset', 'force_path_style', 'use_internal', 'custom_domain', 'driver'],
+                ]],
+            ],
+            'region' => [
+                'type' => 'select',
+                'default' => 'oss-cn-hangzhou',
+                'label' => __('区域', 'wpsss'),
+                'desc' => __('填写桶名与密钥后，可点击「读取桶信息」自动回填。', 'wpsss'),
+                'groups' => ['cn' => __('国内', 'wpsss'), 'overseas' => __('海外', 'wpsss')],
+                'choices' => $region_choices,
+            ],
+            'origin_region' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('源区域', 'wpsss'),
+                'desc' => __('使用传输加速时，仍按这个区域连接阿里云。可留空，默认杭州。', 'wpsss'),
+                'depends_on' => self::depAnd([
+                    self::depRule('driver', $aliyun),
+                    self::depRule('region', ['oss-accelerate', 'oss-accelerate-overseas']),
+                ]),
+            ],
+            'url_access' => [
+                'type' => 'select',
+                'default' => 'public',
+                'label' => __('对象访问', 'wpsss'),
+                'desc' => __('公开读要求存储桶允许匿名访问。签名访问支持阿里云 OSS 与 S3 / TOS / GCS，其余厂商请使用公开读。', 'wpsss'),
+                'choices' => ['public' => __('公开读', 'wpsss'), 'signed' => __('签名访问', 'wpsss')],
+            ],
+            'signed_ttl' => [
+                'type' => 'number',
+                'default' => '3600',
+                'min' => 60,
+                'max' => 604800,
+                'label' => __('签名有效期（秒）', 'wpsss'),
+                'desc' => __('默认 3600 秒，最长 7 天。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('url_access', 'signed')]),
+            ],
+            's3_preset' => [
+                'type' => 'select',
+                'default' => 'aws',
+                'label' => __('S3 预设', 'wpsss'),
+                'desc' => __('将自动填入默认 Endpoint。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('driver', $s3)]),
+                'choices' => static function () {
+                    return Wpsss_Options::s3_presets();
+                },
+            ],
+            'endpoint' => [
+                'type' => 'url',
+                'default' => '',
+                'label' => __('Endpoint', 'wpsss'),
+                'desc' => __('留空则按上方预设生成。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('driver', $s3)]),
+            ],
+            'force_path_style' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('路径风格访问', 'wpsss'),
+                'desc' => __('R2、MinIO 等平台通常需要启用。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('driver', $s3)]),
+            ],
+            'app_id' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('APPID（COS）', 'wpsss'),
+                'desc' => __('创建桶的主账号 APPID。子账户的 APPID 无效。桶名已含 APPID 可留空。', 'wpsss'),
+                'depends_on' => self::depOr([
+                    self::depRule('driver', $cos),
+                    ['relation' => 'AND', 'rules' => [
+                        self::depRule('driver', Wpsss_Options::DRIVER_S3),
+                        self::depRule('s3_preset', 'r2'),
+                    ]],
+                ]),
+            ],
+            'access_key_id' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('访问密钥 ID', 'wpsss'),
+                'desc' => __('RAM 子用户 AccessKey ID', 'wpsss'),
+            ],
+            'access_key_secret' => [
+                'type' => 'secret',
+                'default' => '',
+                'label' => __('访问密钥 Secret', 'wpsss'),
+                'desc' => __('不会在页面中显示；留空保存时保持不变。', 'wpsss'),
+            ],
+            'use_internal' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('走内网', 'wpsss'),
+                'desc' => __('网站服务器与存储桶在同一区域时可启用。', 'wpsss'),
+            ],
+            'oss_signature' => [
+                'type' => 'select',
+                'default' => 'v4',
+                'label' => __('签名版本', 'wpsss'),
+                'desc' => __('默认 V4。部分新区域只认 V4；旧对接可改回 V1。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('driver', $aliyun)]),
+                'choices' => ['v4' => 'V4（推荐）', 'v1' => 'V1'],
+            ],
+            'oss_auth' => [
+                'type' => 'select',
+                'default' => 'ak',
+                'label' => __('凭证', 'wpsss'),
+                'desc' => __('一般用 RAM 子用户密钥。网站服务器是阿里云 ECS 且绑了角色时，可选实例角色，不必再填密钥。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('driver', $aliyun)]),
+                'choices' => ['ak' => 'AccessKey', 'ram' => 'ECS 实例 RAM 角色'],
+            ],
+            'oss_ram_role' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('RAM 角色名', 'wpsss'),
+                'desc' => __('可留空，由实例元数据返回。临时密钥不会写入设置。', 'wpsss'),
+                'depends_on' => self::depAnd([
+                    self::depRule('driver', $aliyun),
+                    self::depRule('oss_auth', 'ram'),
+                ]),
+            ],
+            'custom_domain' => [
+                'type' => 'url',
+                'default' => '',
+                'label' => __('自定义域名', 'wpsss'),
+                'desc' => __('访客看到的媒体地址。只要 CDN 已经指向存储桶，填它的 HTTPS 地址即可，不限定厂商。七牛必须填写。', 'wpsss'),
+            ],
+            'object_prefix' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('对象前缀 / 子目录', 'wpsss'),
+                'desc' => __('相当于对象路径前缀，如 media。', 'wpsss'),
+            ],
+            'auto_rename' => [
+                'type' => 'select',
+                'default' => 'off',
+                'label' => __('自动重命名', 'wpsss'),
+                'desc' => __('上传时自动重命名，降低直链被猜测的风险。', 'wpsss'),
+                'choices' => [
+                    'off' => __('不改文件名', 'wpsss'),
+                    'md5' => 'MD5',
+                    'time' => __('时间戳+随机', 'wpsss'),
+                ],
+            ],
+            'image_style' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('图片样式', 'wpsss'),
+                'desc' => __('填写后接到每张图片地址后面，由存储桶做缩放或质量处理。以 ? 开头视为查询参数，例如 ?x-oss-process=image/quality,q_80。GIF 与 SVG 不会追加。', 'wpsss'),
+            ],
+            'origin_protect' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('原图保护', 'wpsss'),
+                'desc' => __('打开后，媒体库和文章里的原图也会带上上面的样式，避免访客直接打开未处理的原图。未填写图片样式时不生效。', 'wpsss'),
+            ],
+            'exclude_ext' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => __('不进桶的扩展名', 'wpsss'),
+                'desc' => __('逗号分隔。php、htaccess 等可执行文件始终拒绝。', 'wpsss'),
+            ],
+            'woo_policy' => [
+                'type' => 'select',
+                'default' => 'exclude',
+                'label' => __('付费下载目录', 'wpsss'),
+                'desc' => __('uploads/woocommerce_uploads 里的商品文件。不进桶=留在服务器，靠本地权限拦截；私有进桶=对象不公开，下载地址带签名；照常=跟随全站设置。', 'wpsss'),
+                'choices' => [
+                    'exclude' => __('不进桶（推荐）', 'wpsss'),
+                    'private' => __('私有进桶，下载走签名', 'wpsss'),
+                    'off' => __('照常进桶', 'wpsss'),
+                ],
+            ],
+            'skip_exist' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('远端已有则跳过', 'wpsss'),
+                'desc' => __('补传前先检查桶里是否已有同名对象；已有则跳过，不覆盖。', 'wpsss'),
+            ],
+            'cache_control' => [
+                'type' => 'text',
+                'default' => '',
+                'label' => 'Cache-Control',
+                'desc' => __('写入对象响应头。留空则公开读 30 天、签名访问 1 小时。', 'wpsss'),
+            ],
+            'rewrite_from' => [
+                'type' => 'url',
+                'default' => '',
+                'label' => __('额外改写来源', 'wpsss'),
+                'desc' => __('迁移域名时，在此填写原 CDN 地址。', 'wpsss'),
+            ],
+            'ci_group' => [
+                'type' => 'group',
+                'label' => __('COS 数据万象', 'wpsss'),
+                'desc' => __('压缩与文档预览追加到 URL。内容审核会检查新评论。', 'wpsss'),
+                'depends_on' => self::depAnd([self::depRule('driver', $cos)]),
+                'fields' => ['ci_slim', 'ci_preview', 'ci_audit'],
+            ],
+            'ci_slim' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('图片极智压缩 / webp', 'wpsss'),
+            ],
+            'ci_preview' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('文档预览参数', 'wpsss'),
+            ],
+            'ci_audit' => [
+                'type' => 'toggle',
+                'default' => false,
+                'label' => __('内容审核', 'wpsss'),
+            ],
+        ];
+    }
+
+    /**
+     * Kit field action: 读取桶信息. posted_values() hands over sanitized
+     * field values keyed by field id; fill logic lives in admin.js listening
+     * for the `wenpai:action` event.
+     *
+     * @param array<string, mixed> $values
+     * @return array{ok: bool, message: string, data?: array<string, mixed>}
+     */
+    public function inspectAction(array $values): array
+    {
+        $result = $this->inspect_core($values);
+        if (is_wp_error($result)) {
+            return ['ok' => false, 'message' => $result->get_error_message()];
+        }
+        $notes = array_values(array_filter((array) ($result['notes'] ?? [])));
+        $message = $notes !== [] ? implode(' ', array_map('strval', $notes)) : __('已填入建议值，请点「保存设置」。', 'wpsss');
+        return ['ok' => true, 'message' => $message, 'data' => $result];
+    }
+
+    /**
+     * Shared inspect core for the legacy wp_ajax_wpsss_inspect handler and
+     * the kit field action. Input keys are the flat option keys.
+     *
+     * @param array<string, mixed> $in
+     * @return array<string, mixed>|WP_Error
+     */
+    private function inspect_core(array $in)
+    {
+        $saved = Wpsss_Options::get();
+        $driver_id = isset($in['driver']) ? sanitize_key((string) $in['driver']) : (string) $saved['driver'];
+        $driver = $this->plugin->driver($driver_id);
+        if ($driver === null) {
+            return new WP_Error('wpsss_driver', __('未知厂商。', 'wpsss'));
+        }
+
+        $settings = $saved;
+        $settings['driver'] = $driver_id;
+        $text_keys = ['bucket', 'region', 'access_key_id', 'access_key_secret', 'app_id', 'endpoint', 's3_preset', 'force_path_style', 'use_internal', 'custom_domain'];
+        foreach ($text_keys as $key) {
+            if (!isset($in[$key])) {
+                continue;
+            }
+            $value = sanitize_text_field((string) wp_unslash((string) $in[$key]));
+            if (in_array($key, ['endpoint', 'custom_domain'], true) && $value !== '' && self::points_at_private_host($value)) {
+                return new WP_Error('wpsss_private_host', __('探测地址不能指向内网、回环或链路本地地址。', 'wpsss'));
+            }
+            if ($value !== '') {
+                $settings[$key] = $value;
+            }
+        }
+        if (($settings['access_key_id'] ?? '') === '') {
+            $settings['access_key_id'] = $saved['access_key_id'];
+        }
+        if (($settings['access_key_secret'] ?? '') === '') {
+            $settings['access_key_secret'] = $saved['access_key_secret'];
+        }
+        if (($settings['bucket'] ?? '') === '' || ($settings['access_key_id'] ?? '') === '' || ($settings['access_key_secret'] ?? '') === '') {
+            return new WP_Error('wpsss_incomplete', __('请先填写桶名与密钥；已保存的密钥可留空。', 'wpsss'));
+        }
+
+        return $driver->inspect_bucket($settings);
     }
 }

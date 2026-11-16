@@ -310,7 +310,7 @@ body.wpsss-admin .wenpai-app .choice-cards.is-compact:not(.is-vendors) .choice {
   height: 20px;
   color: inherit;
 }
-body.wpsss-admin .wenpai-app .field {
+body.wpsss-admin .wenpai-app .field:not(.wenpai-field) {
   align-items: start;
 }
 body.wpsss-admin .wenpai-app .field[hidden] {
@@ -383,11 +383,11 @@ body.wpsss-admin .wenpai-app .notice {
   font-size: 12px;
   line-height: 18px;
 }
-body.wpsss-admin .wenpai-app .field {
+body.wpsss-admin .wenpai-app .field:not(.wenpai-field) {
   padding: 14px 0;
   gap: 20px;
 }
-body.wpsss-admin .wenpai-app .field:first-of-type {
+body.wpsss-admin .wenpai-app .field:not(.wenpai-field):first-of-type {
   padding-top: 8px;
 }
 body.wpsss-admin .wenpai-app .choice {

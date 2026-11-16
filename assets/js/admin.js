@@ -146,12 +146,23 @@
     if (!form) {
       return;
     }
+    // Kit toggles render a hidden "0" companion plus a "1" checkbox under the
+    // same name; only the checkbox carries the real state.
+    var boxNames = {};
+    form.querySelectorAll('input[type="checkbox"]').forEach(function (el) {
+      if (el.name) {
+        boxNames[el.name] = true;
+      }
+    });
     var data = {};
     form.querySelectorAll("input, select").forEach(function (el) {
       if (!el.name || el.type === "file") {
         return;
       }
       if (el.name.indexOf("[access_key_secret]") !== -1) {
+        return;
+      }
+      if (el.type === "hidden" && boxNames[el.name]) {
         return;
       }
       if (el.type === "radio" && !el.checked) {
@@ -191,28 +202,30 @@
       if (name.indexOf("[driver]") !== -1 || name.indexOf("[site_mode]") !== -1) {
         return;
       }
-      var el = form.querySelector('[name="' + name + '"]');
-      if (!el) {
+      var els = form.querySelectorAll('[name="' + name + '"]');
+      if (!els.length) {
         return;
       }
-      var ctl = closest(el, ".field-ctl");
-      var flip = ctl ? ctl.querySelector(".js-wpsss-flip") : null;
-      if (flip && el.type === "hidden") {
-        el.value = data[name];
-        var on = data[name] === "1";
-        flip.classList.toggle("on", on);
-        setToggleText(flip, on);
-        return;
+      var el = els[0];
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].type === "checkbox") {
+          el = els[i];
+          break;
+        }
       }
       if (el.type === "checkbox") {
         el.checked = data[name] === el.value;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
         return;
       }
       if (el.tagName === "SELECT") {
         setSelectValue(el, data[name]);
+        el.dispatchEvent(new Event("change", { bubbles: true }));
         return;
       }
       el.value = data[name];
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
     });
     form.setAttribute("data-wpsss-restored", "1");
   }
@@ -236,33 +249,21 @@
     select.value = value;
   }
 
-  function syncTtl(form) {
+  function syncProtect(form) {
     if (!form) {
       return;
     }
-    var access = form.querySelector(".js-wpsss-access");
-    var row = form.querySelector(".js-wpsss-ttl");
-    if (access && row) {
-      row.hidden = access.value !== "signed";
-    }
-  }
-
-  function syncProtectHint(form) {
-    if (!form) {
+    var style = field(form, "image_style");
+    var wrap = form.querySelector('[data-wenpai-field="origin_protect"]');
+    if (!wrap) {
       return;
     }
-    var style = form.querySelector(".js-wpsss-style");
-    var hint = form.querySelector(".js-wpsss-protect-hint");
-    var toggle = form.querySelector(".js-wpsss-protect-toggle");
+    var box = wrap.querySelector('input[type="checkbox"][name$="[origin_protect]"]');
     var hasStyle = !!(style && style.value.trim() !== "");
-    if (hint) {
-      hint.hidden = hasStyle;
-    }
-    if (toggle) {
-      var hidden = toggle.parentNode ? toggle.parentNode.querySelector('input[type="hidden"]') : null;
-      var on = hidden ? hidden.value === "1" : toggle.classList.contains("on");
-      toggle.disabled = !hasStyle && !on;
-      toggle.classList.toggle("is-locked", toggle.disabled);
+    if (box) {
+      // Kit cannot express "non-empty" depends_on; keep the old lock: an
+      // already-on switch stays enabled so it can be turned off.
+      box.disabled = !hasStyle && !box.checked;
     }
   }
 
@@ -292,7 +293,7 @@
   }
 
   function fillRegions(form, driver) {
-    var select = form.querySelector(".js-wpsss-region");
+    var select = form.querySelector('select[name$="[region]"]');
     if (!select || !cfg.regions || !cfg.regions[driver]) {
       return;
     }
@@ -323,54 +324,50 @@
     } else if (cfg.defaults && cfg.defaults[driver]) {
       select.value = cfg.defaults[driver];
     }
+    // Kit depends_on (origin_region accelerate check) listens for change.
+    select.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   function syncS3Preset(form, driver) {
-    var select = form.querySelector(".js-wpsss-s3-preset");
-    var lock = form.querySelector(".js-wpsss-s3-lock-label");
-    var help = form.querySelector(".js-wpsss-s3-preset-help");
-    var locked = cfg.lockedPreset && cfg.lockedPreset[driver];
-    var copy = cfg.copy || {};
-    if (select && locked) {
-      select.value = locked;
-      select.hidden = true;
-      if (lock) {
-        lock.hidden = false;
-        lock.value = (cfg.s3Presets && cfg.s3Presets[locked]) || locked;
-      }
-      if (help) {
-        help.textContent = driver === "gcs" ? copy.gcsHelp || "" : copy.tosHelp || "";
-      }
+    var select = form.querySelector('select[name$="[s3_preset]"]');
+    if (!select) {
       return;
     }
-    if (select) {
-      select.hidden = false;
+    var locked = cfg.lockedPreset && cfg.lockedPreset[driver];
+    var copy = cfg.copy || {};
+    if (locked) {
+      select.value = locked;
+      // Disabled controls do not submit; sanitize() forces the same preset
+      // for volc-tos / gcs anyway.
+      select.disabled = true;
+    } else {
+      select.disabled = false;
     }
-    if (lock) {
-      lock.hidden = true;
+    var wrap = closest(select, ".wenpai-field");
+    var desc = wrap ? wrap.querySelector(".wenpai-field__desc") : null;
+    if (desc) {
+      desc.textContent = locked
+        ? (driver === "gcs" ? copy.gcsHelp || "" : copy.tosHelp || "")
+        : copy.s3Help || "";
     }
-    if (help) {
-      help.textContent = copy.s3Help || "";
-    }
+    select.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   function syncAppId(form, driver) {
-    var row = form.querySelector(".js-wpsss-app-id-field");
-    if (!row) {
+    var wrap = form.querySelector('[data-wenpai-field="app_id"]');
+    if (!wrap) {
       return;
     }
     var preset = field(form, "s3_preset");
-    var show = driver === "qcloud-cos" || (driver === "s3-compat" && preset && preset.value === "r2");
-    row.hidden = !show;
-    var label = row.querySelector(".js-wpsss-app-id-label");
-    var help = row.querySelector(".js-wpsss-app-id-help");
+    var r2 = driver === "s3-compat" && preset && preset.value === "r2";
     var copy = cfg.copy || {};
-    var r2 = driver === "s3-compat";
+    var label = wrap.querySelector(".wenpai-field__label");
+    var desc = wrap.querySelector(".wenpai-field__desc");
     if (label) {
       label.textContent = r2 ? copy.appIdR2 || "" : copy.appIdCos || "";
     }
-    if (help) {
-      help.textContent = r2 ? copy.appIdR2Help || "" : copy.appIdCosHelp || "";
+    if (desc) {
+      desc.textContent = r2 ? copy.appIdR2Help || "" : copy.appIdCosHelp || "";
     }
   }
 
@@ -494,26 +491,18 @@
       return;
     }
     var driver = currentDriver(form);
-    var s3 = (cfg.s3Family || []).indexOf(driver) !== -1;
-    form.querySelectorAll(".js-wpsss-for-s3").forEach(function (el) {
-      el.hidden = !s3;
-    });
-    form.querySelectorAll(".js-wpsss-for-aliyun").forEach(function (el) {
-      el.hidden = driver !== "aliyun-oss";
-    });
-    form.querySelectorAll(".js-wpsss-for-cos").forEach(function (el) {
-      el.hidden = driver !== "qcloud-cos";
-    });
+    // Field visibility is kit depends_on (data-wenpai-depends-on); the driver
+    // radio change event already re-evaluates it. This only syncs the dynamic
+    // bits kit cannot express.
     fillRegions(form, driver);
-    var bucketHelp = form.querySelector(".js-wpsss-bucket-help");
+    var bucketWrap = form.querySelector('[data-wenpai-field="bucket"]');
+    var bucketHelp = bucketWrap ? bucketWrap.querySelector(".wenpai-field__desc") : null;
     if (bucketHelp) {
       bucketHelp.textContent =
         (cfg.bucketHelp && cfg.bucketHelp[driver]) || (cfg.copy && cfg.copy.bucketFallback) || "仅填写桶名";
     }
     syncS3Preset(form, driver);
     syncAppId(form, driver);
-    syncOssExtras(form);
-    syncTtl(form);
     updateVendorSummary(form, driver);
     revealChoiceHelp(form, "driver");
     syncPreview(form);
@@ -524,57 +513,59 @@
     var drv = form.querySelector('[name$="[driver]"][value="' + cfg.savedDriver + '"]');
     if (scene) {
       scene.checked = true;
-      syncChoice(scene);
+      scene.dispatchEvent(new Event("change", { bubbles: true }));
     }
     if (drv) {
       drv.checked = true;
-      syncChoice(drv);
+      drv.dispatchEvent(new Event("change", { bubbles: true }));
     }
     applyScene(form);
     applyDriver(form);
-  }
-
-  function syncOssExtras(form) {
-    if (!form) {
-      return;
-    }
-    var driver = currentDriver(form);
-    var region = form.querySelector(".js-wpsss-region");
-    var origin = form.querySelector(".js-wpsss-origin-region");
-    if (region && origin) {
-      origin.hidden = driver !== "aliyun-oss" || String(region.value || "").indexOf("accelerate") === -1;
-    }
-    var auth = form.querySelector(".js-wpsss-oss-auth");
-    var role = form.querySelector(".js-wpsss-ram-role");
-    if (auth && role) {
-      role.hidden = driver !== "aliyun-oss" || auth.value !== "ram";
-    }
   }
 
   function fillCosAppId(form) {
     if (!form) {
       return;
     }
-    var bucket = form.querySelector(".js-wpsss-bucket");
-    var app = form.querySelector(".js-wpsss-app-id");
+    var bucket = field(form, "bucket");
+    var app = field(form, "app_id");
     if (!bucket || !app || app.value) {
       return;
     }
     var match = bucket.value.trim().match(/-(\d{8,})$/);
     if (match) {
       app.value = match[1];
+      app.dispatchEvent(new Event("input", { bubbles: true }));
+      app.dispatchEvent(new Event("change", { bubbles: true }));
     }
   }
 
-  function inspectHint(form, text, ok) {
-    var hint = form.querySelector(".js-wpsss-inspect-hint");
-    if (!hint) {
+  function inspectFill(form, data) {
+    if (!form || !data) {
       return;
     }
-    hint.hidden = !text;
-    hint.textContent = text || "";
-    hint.classList.toggle("is-ok", !!ok);
-    hint.classList.toggle("is-bad", !ok && !!text);
+    var region = form.querySelector('select[name$="[region]"]');
+    if (region && data.region) {
+      setSelectValue(region, data.region);
+      region.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    var accessEl = form.querySelector('select[name$="[url_access]"]');
+    if (accessEl && data.url_access) {
+      accessEl.value = data.url_access;
+      accessEl.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    var app = field(form, "app_id");
+    if (app && data.app_id && !app.value) {
+      app.value = data.app_id;
+      app.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    var domain = field(form, "custom_domain");
+    if (domain && data.custom_domain && !domain.value) {
+      domain.value = data.custom_domain;
+      domain.dispatchEvent(new Event("input", { bubbles: true }));
+      domain.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    syncAppId(form, currentDriver(form));
   }
 
   app.querySelectorAll(".choice").forEach(function (label) {
@@ -645,6 +636,8 @@
   });
 
   app.querySelectorAll(".js-wpsss-flip").forEach(function (btn) {
+    // Legacy hook kept for any remaining hand-written toggle; kit switch
+    // fields do not use it.
     btn.addEventListener("click", function (event) {
       event.preventDefault();
       if (btn.disabled) {
@@ -1233,9 +1226,7 @@
     }
     applyScene(settingsForm);
     applyDriver(settingsForm);
-    syncTtl(settingsForm);
-    syncOssExtras(settingsForm);
-    syncProtectHint(settingsForm);
+    syncProtect(settingsForm);
     fillCosAppId(settingsForm);
     var revert = document.querySelector(".js-wpsss-revert");
     if (revert) {
@@ -1244,108 +1235,37 @@
         revertSaved(settingsForm);
       });
     }
-    var s3preset = settingsForm.querySelector(".js-wpsss-s3-preset");
+    var s3preset = settingsForm.querySelector('select[name$="[s3_preset]"]');
     if (s3preset) {
       s3preset.addEventListener("change", function () {
         syncAppId(settingsForm, currentDriver(settingsForm));
       });
     }
-    var styleInput = settingsForm.querySelector(".js-wpsss-style");
+    var styleInput = field(settingsForm, "image_style");
     if (styleInput) {
       styleInput.addEventListener("input", function () {
-        syncProtectHint(settingsForm);
+        syncProtect(settingsForm);
       });
     }
-    var access = settingsForm.querySelector(".js-wpsss-access");
-    if (access) {
-      access.addEventListener("change", function () {
-        syncTtl(settingsForm);
-      });
-    }
-    var region = settingsForm.querySelector(".js-wpsss-region");
-    if (region) {
-      region.addEventListener("change", function () {
-        syncOssExtras(settingsForm);
-      });
-    }
-    var ossAuth = settingsForm.querySelector(".js-wpsss-oss-auth");
-    if (ossAuth) {
-      ossAuth.addEventListener("change", function () {
-        syncOssExtras(settingsForm);
-      });
-    }
-    var bucket = settingsForm.querySelector(".js-wpsss-bucket");
+    var bucket = field(settingsForm, "bucket");
     if (bucket) {
       bucket.addEventListener("blur", function () {
         fillCosAppId(settingsForm);
       });
     }
-    var inspectBtn = settingsForm.querySelector(".js-wpsss-inspect");
-    if (inspectBtn) {
-      inspectBtn.addEventListener("click", function () {
-        if (!window.wpsssAdmin || inspectBtn.disabled) {
-          return;
-        }
-        fillCosAppId(settingsForm);
-        inspectHint(settingsForm, "正在读取…", true);
-        inspectBtn.disabled = true;
-        var body = new URLSearchParams();
-        body.set("action", "wpsss_inspect");
-        body.set("nonce", wpsssAdmin.inspectNonce);
-        var driver = settingsForm.querySelector('[name$="[driver]"]:checked');
-        body.set("driver", driver ? driver.value : "");
-        ["bucket", "region", "access_key_id", "access_key_secret", "app_id", "endpoint", "s3_preset", "force_path_style", "use_internal", "custom_domain"].forEach(function (key) {
-          var el = field(settingsForm, key);
-          if (el) {
-            body.set(key, el.value);
-          }
-        });
-        fetch(wpsssAdmin.ajaxUrl, {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-          body: body.toString(),
-        })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (json) {
-            inspectBtn.disabled = false;
-            if (!json || !json.success) {
-              inspectHint(settingsForm, (json && json.data && json.data.message) || "读取桶信息失败，请稍后重试。", false);
-              return;
-            }
-            var data = json.data || {};
-            var region = field(settingsForm, "region");
-            if (region && data.region) {
-              setSelectValue(region, data.region);
-              syncOssExtras(settingsForm);
-            }
-            var accessEl = settingsForm.querySelector(".js-wpsss-access");
-            if (accessEl && data.url_access) {
-              accessEl.value = data.url_access;
-              syncTtl(settingsForm);
-            }
-            var app = settingsForm.querySelector(".js-wpsss-app-id");
-            if (app && data.app_id && !app.value) {
-              app.value = data.app_id;
-            }
-            var domain = field(settingsForm, "custom_domain");
-            if (domain && data.custom_domain && !domain.value) {
-              domain.value = data.custom_domain;
-            }
-            var notes = (data.notes || []).filter(Boolean);
-            inspectHint(
-              settingsForm,
-              notes.length ? notes.join(" ") : "已填入建议值，请点「保存设置」。",
-              true
-            );
-          })
-          .catch(function () {
-            inspectBtn.disabled = false;
-            inspectHint(settingsForm, "读取桶信息失败，请稍后重试。", false);
-          });
-      });
-    }
   }
+
+  // Kit field action 「读取桶信息」: the kit button posts wpsss_options[...]
+  // and shows the result line itself; we only fill the suggested values.
+  document.addEventListener("wenpai:action", function (event) {
+    var detail = event.detail || {};
+    if (detail.action !== "wpsss_inspect_bucket" || !detail.ok || !detail.data) {
+      return;
+    }
+    var form = document.getElementById("wpsss-settings-form");
+    if (form) {
+      fillCosAppId(form);
+      inspectFill(form, detail.data);
+    }
+  });
 })();

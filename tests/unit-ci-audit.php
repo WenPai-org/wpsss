@@ -35,7 +35,8 @@ wpsss_assert(strpos($help, "'access-keys'") !== false, 'help keys doc linked');
 wpsss_assert(strpos($help, "'choose-vendor'") !== false, 'help vendor doc linked');
 wpsss_assert(strpos($help, "'object-access'") !== false, 'help access doc linked');
 
-$settings = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-settings.php');
+$settings = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/tab-settings.php')
+    . (string) file_get_contents(dirname(__DIR__) . '/includes/class-wpsss-admin.php');
 wpsss_assert(strpos($settings, '创建桶的主账号 APPID') !== false, 'settings COS AppId help');
 wpsss_assert(strpos($settings, '仅记录功能开关') === false, 'settings no 仅记录功能开关');
 wpsss_assert(strpos($settings, 'oss_signature') !== false, 'settings oss signature');
