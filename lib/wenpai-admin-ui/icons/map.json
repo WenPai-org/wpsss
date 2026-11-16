@@ -17,5 +17,6 @@
   "plug": "plug-line",
   "image": "image-line",
   "map": "map-pin-line",
-  "flash": "flashlight-line"
+  "flash": "flashlight-line",
+  "feather": "lucide-feather"
 }

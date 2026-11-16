@@ -28,25 +28,25 @@ if ($blockers !== []) {
 <section class="card wpsss-doctor-card<?php echo esc_attr($card_mod); ?>">
   <?php if (!$show_body) : ?>
   <div class="wpsss-doctor-summary">
-    <span class="tile<?php echo esc_attr($tile_cls); ?>"><?php echo Wpsss_Icons::svg('info'); ?></span>
+    <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('info'), 'state' => $tile_cls ) ); ?>
     <div class="wpsss-doctor-summary-text">
       <h2 class="card-title"><?php echo esc_html__('运行体检', 'wpsss'); ?></h2>
       <p class="card-sub wpsss-doctor-summary-meta"><?php echo esc_html($summary); ?></p>
     </div>
     <div class="wpsss-doctor-summary-side">
-      <span class="pill <?php echo esc_attr($pill_cls); ?>"><?php echo esc_html((string) ($doctor['label'] ?? '')); ?></span>
+      <span class="wpsss-pill <?php echo esc_attr($pill_cls); ?>"><?php echo esc_html((string) ($doctor['label'] ?? '')); ?></span>
     </div>
   </div>
   <?php else : ?>
   <details class="wpsss-doctor-details"<?php echo $expanded ? ' open' : ''; ?>>
     <summary class="wpsss-doctor-summary">
-      <span class="tile<?php echo esc_attr($tile_cls); ?>"><?php echo Wpsss_Icons::svg('info'); ?></span>
+      <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('info'), 'state' => $tile_cls ) ); ?>
       <div class="wpsss-doctor-summary-text">
         <h2 class="card-title"><?php echo esc_html__('运行体检', 'wpsss'); ?></h2>
         <p class="card-sub wpsss-doctor-summary-meta"><?php echo esc_html($summary); ?></p>
       </div>
       <div class="wpsss-doctor-summary-side">
-        <span class="pill <?php echo esc_attr($pill_cls); ?>"><?php echo esc_html((string) ($doctor['label'] ?? '')); ?></span>
+        <span class="wpsss-pill <?php echo esc_attr($pill_cls); ?>"><?php echo esc_html((string) ($doctor['label'] ?? '')); ?></span>
         <span class="wpsss-doctor-toggle-hint" aria-hidden="true">
           <span class="wpsss-doctor-toggle-label">
             <span class="when-closed"><?php echo esc_html__('展开明细', 'wpsss'); ?></span>
@@ -59,14 +59,14 @@ if ($blockers !== []) {
     <div class="wpsss-doctor-body">
       <ul class="wpsss-doctor-list">
         <?php foreach ($blockers as $line) : ?>
-          <li class="is-block"><span class="pill bad"><?php echo esc_html__('阻断', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
+          <li class="is-block"><span class="wpsss-pill bad"><?php echo esc_html__('阻断', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
         <?php endforeach; ?>
         <?php foreach ($warnings as $line) : ?>
-          <li class="is-warn"><span class="pill warn"><?php echo esc_html__('警告', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
+          <li class="is-warn"><span class="wpsss-pill warn"><?php echo esc_html__('警告', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
         <?php endforeach; ?>
         <?php if ($context === 'setup') : ?>
           <?php foreach ($oks as $line) : ?>
-            <li class="is-ok"><span class="pill ok"><?php echo esc_html__('正常', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
+            <li class="is-ok"><span class="wpsss-pill ok"><?php echo esc_html__('正常', 'wpsss'); ?></span><span><?php echo esc_html((string) $line); ?></span></li>
           <?php endforeach; ?>
         <?php endif; ?>
       </ul>

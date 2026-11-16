@@ -14,14 +14,9 @@ $docs = static function (string $slug): string {
   </div>
 </div>
 
-<section class="card wpsss-help-card">
-  <div class="card-head">
-    <span class="tile ok"><?php echo Wpsss_Icons::svg('cloud'); ?></span>
-    <div>
-      <h2 class="card-title"><?php echo esc_html__('快速开始', 'wpsss'); ?></h2>
-      <p class="card-sub"><?php echo esc_html__('首次配置按以下顺序完成。', 'wpsss'); ?></p>
-    </div>
-  </div>
+<?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('cloud'), 'state' => 'ok', 'title' => __( '快速开始', 'wpsss' ), 'sub' => __( '首次配置按以下顺序完成。', 'wpsss' ), 'class' => 'wpsss-help-card' ) );
+?>
   <ol class="wpsss-help-steps">
     <li>
       <strong><?php echo esc_html__('填写桶与密钥', 'wpsss'); ?></strong>
@@ -54,14 +49,9 @@ $docs = static function (string $slug): string {
   <?php endif; ?>
 </section>
 
-<section class="card wpsss-help-card">
-  <div class="card-head">
-    <span class="tile"><?php echo Wpsss_Icons::svg('help'); ?></span>
-    <div>
-      <h2 class="card-title"><?php echo esc_html__('完整文档', 'wpsss'); ?></h2>
-      <p class="card-sub"><?php echo esc_html__('每篇教程都在 wpcy.com 文档站，持续更新。', 'wpsss'); ?></p>
-    </div>
-  </div>
+<?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('help'), 'title' => __( '完整文档', 'wpsss' ), 'sub' => __( '每篇教程都在 wpcy.com 文档站，持续更新。', 'wpsss' ), 'class' => 'wpsss-help-card' ) );
+?>
   <dl class="wpsss-help-dl">
     <dt><?php echo esc_html__('入门与配置', 'wpsss'); ?></dt>
     <dd>
@@ -91,7 +81,7 @@ $docs = static function (string $slug): string {
 <div class="wpsss-help-stack">
   <details class="card wpsss-help-details" open>
     <summary>
-      <span class="tile"><?php echo Wpsss_Icons::svg('home'); ?></span>
+      <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('home') ) ); ?>
       <span class="wpsss-help-summary-text">
         <strong><?php echo esc_html__('后台页面', 'wpsss'); ?></strong>
         <span><?php echo esc_html__('概览、设置、工具各负责什么。', 'wpsss'); ?></span>
@@ -113,7 +103,7 @@ $docs = static function (string $slug): string {
 
   <details class="card wpsss-help-details">
     <summary>
-      <span class="tile"><?php echo Wpsss_Icons::svg('info'); ?></span>
+      <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('info') ) ); ?>
       <span class="wpsss-help-summary-text">
         <strong><?php echo esc_html__('常见问题速答', 'wpsss'); ?></strong>
         <span><?php echo esc_html__('最常见的六个问题；完整排障见文档。', 'wpsss'); ?></span>
@@ -140,7 +130,7 @@ $docs = static function (string $slug): string {
 
   <details class="card wpsss-help-details">
     <summary>
-      <span class="tile"><?php echo Wpsss_Icons::svg('server'); ?></span>
+      <?php echo Wenpai_Admin_UI::tile_html( array( 'icon_html' => Wpsss_Icons::svg('server') ) ); ?>
       <span class="wpsss-help-summary-text">
         <strong><?php echo esc_html__('WP-CLI', 'wpsss'); ?></strong>
         <span><?php echo esc_html__('在已激活插件的站点上可用。', 'wpsss'); ?></span>
@@ -158,27 +148,17 @@ wp sss copy --to-bucket=新桶 --dry-run</code></pre>
     </div>
   </details>
 
-  <section class="card wpsss-help-card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('info'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('边界与支持范围', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('这些场景目前不支持或有限制，使用前请先了解。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('info'), 'title' => __( '边界与支持范围', 'wpsss' ), 'sub' => __( '这些场景目前不支持或有限制，使用前请先了解。', 'wpsss' ), 'class' => 'wpsss-help-card' ) );
+?>
     <ul class="wpsss-edge-list">
       <li><?php echo esc_html__('多站点（Multisite）暂不支持；不要在网络层激活。', 'wpsss'); ?></li>
       <li><?php echo esc_html__('COS / OBS / 七牛云的超大文件上传是单请求（超时按体积放大）；百兆以上建议用 OSS / S3 兼容厂商。', 'wpsss'); ?></li>
     </ul>
   </section>
-  <section class="card wpsss-help-card">
-    <div class="card-head">
-      <span class="tile"><?php echo Wpsss_Icons::svg('feedback'); ?></span>
-      <div>
-        <h2 class="card-title"><?php echo esc_html__('需要更多帮助', 'wpsss'); ?></h2>
-        <p class="card-sub"><?php echo esc_html__('产品文档与工单支持请访问 wpcy.com。', 'wpsss'); ?></p>
-      </div>
-    </div>
+  <?php
+echo Wenpai_Admin_UI::card_open_html( array( 'icon_html' => Wpsss_Icons::svg('feedback'), 'title' => __( '需要更多帮助', 'wpsss' ), 'sub' => __( '产品文档与工单支持请访问 wpcy.com。', 'wpsss' ), 'class' => 'wpsss-help-card' ) );
+?>
     <div class="card-foot wpsss-help-cta">
       <a class="btn btn-secondary" href="<?php echo esc_url(WPSSS_DOCS_URL); ?>" target="_blank" rel="noopener"><?php echo Wpsss_Icons::svg('external'); ?><?php echo esc_html__('文档中心', 'wpsss'); ?></a>
       <a class="btn btn-ghost" href="<?php echo esc_url(WPSSS_PRODUCT_URL); ?>" target="_blank" rel="noopener"><?php echo esc_html__('产品官网', 'wpsss'); ?></a>

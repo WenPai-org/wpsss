@@ -2,7 +2,7 @@
 body.wpsss-admin #wpcontent,
 body.wpsss-admin #wpbody,
 body.wpsss-admin #wpbody-content {
-  background: var(--wenpai-bg, #f0f0f1);
+  background: var(--wenpai-bg);
 }
 body.wpsss-admin #wpcontent {
   padding: 0;
@@ -45,7 +45,7 @@ body.wpsss-admin .wenpai-app .wenpai-stack > form {
 body.wpsss-admin .wenpai-app h1,
 body.wpsss-admin .wenpai-app h2,
 body.wpsss-admin .wenpai-app h3 {
-  color: var(--wenpai-ink, #1e1e1e);
+  color: var(--wenpai-ink);
 }
 body.wpsss-admin .wenpai-app button.toggle,
 body.wpsss-admin .wenpai-app .toggle {
@@ -57,7 +57,7 @@ body.wpsss-admin .wenpai-app .toggle {
   padding: 0;
   margin: 0;
   min-height: 0;
-  color: var(--wenpai-ink, #1e1e1e);
+  color: var(--wenpai-ink);
   font: inherit;
   line-height: 20px;
   cursor: pointer;
@@ -68,13 +68,13 @@ body.wpsss-admin .wenpai-app button.toggle:active {
   background: transparent;
   border: 0;
   box-shadow: none;
-  color: var(--wenpai-ink, #1e1e1e);
+  color: var(--wenpai-ink);
 }
 body.wpsss-admin .wenpai-app button.toggle[disabled],
 body.wpsss-admin .wenpai-app button.toggle[disabled]:hover {
   opacity: 1;
   cursor: default;
-  color: var(--wenpai-ink-2, #50575e);
+  color: var(--wenpai-ink-2);
   background: transparent;
   border: 0;
 }
@@ -95,12 +95,12 @@ body.wpsss-admin .wenpai-app select {
   max-height: 36px;
   padding: 0 10px;
   line-height: 20px;
-  border: 1px solid #c3c4c7;
+  border: 1px solid var(--wenpai-line-strong);
   border-radius: 6px;
   font: inherit;
   font-size: 14px;
   color: var(--wenpai-ink);
-  background-color: #fff;
+  background-color: var(--wenpai-on-accent);
   box-shadow: none;
 }
 body.wpsss-admin .wenpai-app select {
@@ -108,7 +108,7 @@ body.wpsss-admin .wenpai-app select {
   -webkit-appearance: none;
   padding-right: 32px;
   cursor: pointer;
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23646970'%3E%3Cpath d='M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z'/%3E%3C/svg%3E") no-repeat right 10px center / 16px 16px;
+  background: var(--wenpai-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23646970'%3E%3Cpath d='M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z'/%3E%3C/svg%3E") no-repeat right 10px center / 16px 16px;
 }
 /* 跟 WPCY 4.0 E：系统原生圆点 + accent，不自绘 18px 圈。 */
 body.wpsss-admin .wenpai-app .choice input[type="radio"] {
@@ -125,7 +125,7 @@ body.wpsss-admin .wenpai-app .choice input[type="radio"] {
   background: none;
   background-image: none;
   box-shadow: none;
-  accent-color: var(--wenpai-accent, #3858e9);
+  accent-color: var(--wenpai-accent, var(--wenpai-accent));
   flex: none;
   cursor: pointer;
 }
@@ -135,7 +135,7 @@ body.wpsss-admin .wenpai-app .choice.is-on input[type="radio"] {
   background: none !important;
   background-image: none !important;
   box-shadow: none !important;
-  accent-color: var(--wenpai-accent, #3858e9);
+  accent-color: var(--wenpai-accent, var(--wenpai-accent));
 }
 body.wpsss-admin .wenpai-app .choice input[type="radio"]::before {
   display: none !important;
@@ -175,17 +175,17 @@ body.wpsss-admin .wenpai-app a.btn:focus,
 body.wpsss-admin .wenpai-app button.btn-primary:hover,
 body.wpsss-admin .wenpai-app button.btn-primary:focus {
   background: var(--wenpai-accent-hover);
-  color: #fff;
+  color: var(--wenpai-on-accent);
   border-color: transparent;
 }
 body.wpsss-admin .wenpai-app button.btn-secondary,
 body.wpsss-admin .wenpai-app button.btn-secondary:focus {
-  background: #fff;
+  background: var(--wenpai-card);
   color: var(--wenpai-ink);
-  border: 1px solid #c3c4c7;
+  border: 1px solid var(--wenpai-line-strong);
 }
 body.wpsss-admin .wenpai-app button.btn-secondary:hover {
-  background: #fff;
+  background: var(--wenpai-card);
   color: var(--wenpai-ink);
   border-color: var(--wenpai-ink-3);
 }
@@ -233,11 +233,11 @@ body.wpsss-admin .wenpai-app .choice-cards.is-compact:not(.is-vendors) .choice {
 .wpsss-vendor-more > summary::-webkit-details-marker {
   display: none;
 }
-.wpsss-vendor-more > summary.simple-row {
+.wpsss-vendor-more > summary.wpsss-row {
   border-top: 0;
   padding-top: 8px;
 }
-.wpsss-vendor-more[open] > summary.simple-row {
+.wpsss-vendor-more[open] > summary.wpsss-row {
   margin-bottom: 4px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--wenpai-line-soft);
@@ -305,7 +305,7 @@ body.wpsss-admin .wenpai-app .choice-cards.is-compact:not(.is-vendors) .choice {
 .choice-cards.is-vendors .choice input {
   margin: 3px 3px 0 5px;
 }
-.simple-row .tile .vendor-mark {
+.wpsss-row .wpsss-tile .vendor-mark, .choice .wpsss-tile .vendor-mark {
   width: 20px;
   height: 20px;
   color: inherit;
@@ -410,10 +410,10 @@ body.wpsss-admin .wenpai-app .wpsss-doctor-card.card {
   margin-top: 8px;
 }
 .field-ctl .hint.is-bad {
-  color: var(--wenpai-bad, #d63638);
+  color: var(--wenpai-bad);
 }
 .field-ctl .hint.is-ok {
-  color: #007017;
+  color: var(--wenpai-ok-ink);
 }
 .wpsss-savebar {
   display: flex;
@@ -422,8 +422,8 @@ body.wpsss-admin .wenpai-app .wpsss-doctor-card.card {
   gap: 16px;
   margin: 0;
   padding: 16px 24px;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--wenpai-card);
+  border: 1px solid var(--wenpai-line-card);
   border-radius: var(--wenpai-radius, 12px);
 }
 .wpsss-savebar .meta {
@@ -473,7 +473,7 @@ body.wpsss-admin .wenpai-app .wpsss-caution[hidden] {
   display: inline-flex;
   align-items: center;
   color: var(--wenpai-ink-2);
-  border-left: 1px solid #c3c4c7;
+  border-left: 1px solid var(--wenpai-line-strong);
   font-size: 13px;
   line-height: 20px;
   cursor: pointer;
@@ -521,12 +521,12 @@ body.wpsss-admin .wenpai-app .wpsss-caution[hidden] {
   line-height: 20px;
 }
 .wpsss-pull-hint.is-warn {
-  color: #9a7208;
+  color: var(--wenpai-warn-ink);
 }
 .wpsss-pull-result {
   margin: 0 0 16px;
   padding: 8px 12px;
-  border: 1px solid var(--wenpai-line, #e0e0e0);
+  border: 1px solid var(--wenpai-line);
   border-radius: 8px;
   color: var(--wenpai-ink-2);
   font-size: 13px;
@@ -543,14 +543,14 @@ body.wpsss-admin .wenpai-app input.js-wpsss-pull-id {
   margin: 10px 0 0;
   font-size: 13px;
   line-height: 20px;
-  color: var(--wenpai-ink-2, #50575e);
+  color: var(--wenpai-ink-2);
 }
 .wpsss-caution {
   margin-top: 12px;
   padding: 12px 14px;
-  border: 1px solid var(--wenpai-bad, #d63638);
+  border: 1px solid var(--wenpai-bad);
   border-radius: 10px;
-  background: var(--wenpai-bad-soft, #fbe9ea);
+  background: var(--wenpai-bad-soft);
 }
 .wenpai-app .wpsss-caution .notice {
   margin: 0;
@@ -558,14 +558,14 @@ body.wpsss-admin .wenpai-app input.js-wpsss-pull-id {
   background: transparent;
 }
 .wpsss-caution .notice.bad {
-  color: #8a2424;
+  color: var(--wenpai-bad-ink-strong);
 }
 .wpsss-backup-steps {
   margin: 8px 0 12px 1.2em;
   padding: 0;
   font-size: 13px;
   line-height: 22px;
-  color: var(--wenpai-ink, #1d2327);
+  color: var(--wenpai-ink);
 }
 .wpsss-caution .chk {
   margin-top: 0;
@@ -779,14 +779,14 @@ details > .wpsss-doctor-summary {
 }
 .wpsss-doctor-list li.is-block,
 .wpsss-doctor-list li.is-warn {
-  border-left: 3px solid var(--wenpai-accent, #3858e9);
+  border-left: 3px solid var(--wenpai-accent, var(--wenpai-accent));
   padding-left: 10px;
 }
 .wpsss-doctor-list li.is-block {
-  border-left-color: var(--wenpai-bad, #d63638);
+  border-left-color: var(--wenpai-bad);
 }
 .wpsss-doctor-list li.is-warn {
-  border-left-color: var(--wenpai-warn, #bdb35a);
+  border-left-color: var(--wenpai-warn);
 }
 .wpsss-edge-list {
   margin: 0;
@@ -819,7 +819,7 @@ details > .wpsss-doctor-summary {
   border-top: 0;
   padding-top: 0;
 }
-.wpsss-doctor-list .pill {
+.wpsss-doctor-list .pill, .wpsss-doctor-list .wpsss-pill {
   height: 22px;
   font-size: 12px;
 }
@@ -1003,7 +1003,7 @@ details > .wpsss-doctor-summary {
 .wpsss-notice-wrap {
   padding-top: 16px;
 }
-.upload-php .column-wpsss .pill {
+.upload-php .column-wpsss .pill, .upload-php .column-wpsss .wpsss-pill {
   margin-bottom: 4px;
 }
 .upload-php .column-wpsss .p {
@@ -1024,12 +1024,12 @@ details > .wpsss-doctor-summary {
   font-size: 13px;
   line-height: 20px;
 }
-.wpsss-metabox-status .pill {
+.wpsss-metabox-status .pill, .wpsss-metabox-status .wpsss-pill {
   vertical-align: middle;
 }
 .wpsss-metabox-meta {
   margin: 0;
-  color: var(--wenpai-bad, #d63638);
+  color: var(--wenpai-bad);
   word-break: break-word;
 }
 .wpsss-metabox-key {
@@ -1040,8 +1040,8 @@ details > .wpsss-doctor-summary {
   display: block;
   padding: 8px 10px;
   border-radius: 6px;
-  background: var(--wenpai-line-soft, #f0f0f1);
-  color: var(--wenpai-ink-2, #50575e);
+  background: var(--wenpai-line-soft);
+  color: var(--wenpai-ink-2);
   font-size: 12px;
   line-height: 18px;
   word-break: break-all;
@@ -1053,7 +1053,7 @@ details > .wpsss-doctor-summary {
   margin: 0;
 }
 .wpsss-metabox-link a {
-  color: var(--wenpai-accent, #3858e9);
+  color: var(--wenpai-accent, var(--wenpai-accent));
   text-decoration: none;
 }
 .wpsss-metabox-link a:hover {
@@ -1082,16 +1082,16 @@ details > .wpsss-doctor-summary {
   box-shadow: none;
 }
 .wpsss-flash.info {
-  background: var(--wenpai-accent-soft, #eef1fd);
-  color: #2c47c5;
+  background: var(--wenpai-accent-soft, var(--wenpai-accent-soft));
+  color: var(--wenpai-accent-hover);
 }
 .wpsss-flash.ok {
-  background: var(--wenpai-ok-soft, #edfaef);
-  color: #007017;
+  background: var(--wenpai-ok-soft);
+  color: var(--wenpai-ok-ink);
 }
 .wpsss-flash.warn {
-  background: var(--wenpai-warn-soft, #fbf3dc);
-  color: #7a5a06;
+  background: var(--wenpai-warn-soft);
+  color: var(--wenpai-warn-ink);
 }
 .wpsss-flash svg {
   width: 18px;
@@ -1197,24 +1197,28 @@ body.wpsss-admin .wenpai-head-action {
     padding-bottom: 8px;
     flex: 0 1 auto;
   }
-  body.wpsss-admin .wenpai-app .simple-row {
+  body.wpsss-admin .wenpai-app .simple-row,
+  body.wpsss-admin .wenpai-app .wpsss-row {
     flex-wrap: wrap;
     align-items: flex-start;
     row-gap: 8px;
   }
-  body.wpsss-admin .wenpai-app .simple-row > div:nth-child(2) {
+  body.wpsss-admin .wenpai-app .simple-row > div:nth-child(2),
+  body.wpsss-admin .wenpai-app .wpsss-row > div:nth-child(2) {
     flex: 1 1 calc(100% - 52px);
     min-width: 0;
     max-width: 100%;
   }
   body.wpsss-admin .wenpai-app .simple-row .d,
+  body.wpsss-admin .wenpai-app .wpsss-row .d,
   body.wpsss-admin .wenpai-app .simple-row .d.is-url {
     max-width: 100%;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
   /* 右侧 pill/链整行折下，别把 URL 挤成竖排 */
-  body.wpsss-admin .wenpai-app .simple-row .r {
+  body.wpsss-admin .wenpai-app .simple-row .r,
+  body.wpsss-admin .wenpai-app .wpsss-row .r {
     flex: 1 1 100%;
     width: 100%;
     max-width: 100%;
@@ -1309,7 +1313,7 @@ body.wpsss-admin .wenpai-app input[type="password"]:hover,
 body.wpsss-admin .wenpai-app input[type="number"]:hover,
 body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"]:hover,
 body.wpsss-admin .wenpai-app select:hover {
-  border-color: #8c8f94;
+  border-color: var(--wenpai-control-line);
 }
 body.wpsss-admin .wenpai-app input[type="text"]:focus,
 body.wpsss-admin .wenpai-app input[type="password"]:focus,
@@ -1321,10 +1325,10 @@ body.wpsss-admin .wenpai-app input[type="password"].is-focused,
 body.wpsss-admin .wenpai-app input[type="number"].is-focused,
 body.wpsss-admin .wenpai-app .field-ctl-row input[type="text"].is-focused,
 body.wpsss-admin .wenpai-app select.is-focused {
-  border-color: #3858e9 !important;
-  box-shadow: 0 0 0 1px #3858e9, 0 0 0 3px #eef1fd !important;
+  border-color: var(--wenpai-accent) !important;
+  box-shadow: 0 0 0 1px var(--wenpai-accent), 0 0 0 3px var(--wenpai-accent-soft) !important;
   outline: none;
-  background-color: #fff;
+  background-color: var(--wenpai-on-accent);
 }
 body.wpsss-admin .wenpai-app button.btn:hover,
 body.wpsss-admin .wenpai-app a.btn:hover {
@@ -1332,7 +1336,7 @@ body.wpsss-admin .wenpai-app a.btn:hover {
 }
 body.wpsss-admin .wenpai-app button.btn:focus-visible,
 body.wpsss-admin .wenpai-app a.btn:focus-visible {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--wenpai-accent);
+  box-shadow: 0 0 0 2px var(--wenpai-card), 0 0 0 4px var(--wenpai-accent);
   outline: none;
 }
 body.wpsss-admin .wenpai-app button.btn[disabled],
@@ -1364,12 +1368,12 @@ body.wpsss-admin .wenpai-app button.toggle.is-locked:hover {
 }
 body.wpsss-admin .wenpai-app button.toggle[disabled] i,
 body.wpsss-admin .wenpai-app button.toggle.is-locked i {
-  background: #dcdcde;
+  background: var(--wenpai-line-strong);
 }
 /* 锁定仍须看得出开/关：开=品牌蓝轨道，关=灰；不要用 soft 洗成「像关着」 */
 body.wpsss-admin .wenpai-app button.toggle[disabled].on i,
 body.wpsss-admin .wenpai-app button.toggle.is-locked.on i {
-  background: var(--wenpai-accent, #3858e9);
+  background: var(--wenpai-accent, var(--wenpai-accent));
 }
 body.wpsss-admin .wenpai-app .simple-row {
   margin: 0 -8px;
@@ -1415,7 +1419,7 @@ body.wpsss-admin .wenpai-app .wenpai-tab:focus-visible {
 .wpsss-progress {
   height: 8px;
   border-radius: 999px;
-  background: var(--wp--preset--color--neutral, #e5e7eb);
+  background: var(--wp--preset--color--neutral);
   overflow: hidden;
   margin: 0 0 8px;
 }
@@ -1425,7 +1429,7 @@ body.wpsss-admin .wenpai-app .wenpai-tab:focus-visible {
   height: 100%;
   width: 0;
   border-radius: 999px;
-  background: var(--wp--preset--color--primary, #2271b1);
+  background: var(--wp--preset--color--primary);
   transition: width 0.3s ease;
 }
 
@@ -1441,4 +1445,26 @@ body.wpsss-admin .wenpai-app .wenpai-tab:focus-visible {
 
 /* 简单模式：对外地址行去掉 .scope 重复 URL（概览页和 .is-url 已展示）；tile 色跟 pill 语义 */
 .simple-row.is-static .scope { display: none; }
-.simple-row.is-static .tile { transition: background 0.2s ease, color 0.2s ease; }
+.simple-row.is-static .tile, .wpsss-row .wpsss-tile { transition: background 0.2s ease, color 0.2s ease; }
+
+/* Product-kept blocks (vendor grid, doctor summary, wizard, metabox) mirror the
+   kit tile/pill/row visuals with .wpsss-* names; values stay kit tokens. */
+body.wenpai-ui-page .wpsss-tile { width: var(--wenpai-size-tile); height: var(--wenpai-size-tile); border-radius: var(--wenpai-radius-lg); display: grid; place-items: center; flex: none; background: var(--wenpai-mute-soft); color: var(--wenpai-ink-2); }
+body.wenpai-ui-page .wpsss-tile svg { width: 20px; height: 20px; }
+body.wenpai-ui-page .wpsss-tile.ok { background: var(--wenpai-ok-soft); color: var(--wenpai-ok-ink); }
+body.wenpai-ui-page .wpsss-tile.warn { background: var(--wenpai-warn-soft); color: var(--wenpai-warn-ink); }
+body.wenpai-ui-page .wpsss-tile.bad { background: var(--wenpai-bad-soft); color: var(--wenpai-bad-ink); }
+body.wenpai-ui-page .wpsss-tile.accent { background: var(--wenpai-accent-soft); color: var(--wenpai-accent); }
+body.wenpai-ui-page .wpsss-pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px 0 var(--wenpai-space-2); border-radius: var(--wenpai-radius-xl); font-size: var(--wenpai-text-meta); background: var(--wenpai-mute-soft); color: var(--wenpai-ink-2); white-space: nowrap; }
+body.wenpai-ui-page .wpsss-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--wenpai-mute); }
+body.wenpai-ui-page .wpsss-pill.ok { background: var(--wenpai-ok-soft); color: var(--wenpai-ok-ink); }
+body.wenpai-ui-page .wpsss-pill.ok::before { background: var(--wenpai-ok); }
+body.wenpai-ui-page .wpsss-pill.warn { background: var(--wenpai-warn-soft); color: var(--wenpai-warn-ink); }
+body.wenpai-ui-page .wpsss-pill.warn::before { background: var(--wenpai-warn); }
+body.wenpai-ui-page .wpsss-pill.bad { background: var(--wenpai-bad-soft); color: var(--wenpai-bad-ink); }
+body.wenpai-ui-page .wpsss-pill.bad::before { background: var(--wenpai-bad); }
+body.wenpai-ui-page .wpsss-row { display: flex; align-items: center; gap: var(--wenpai-space-4); padding: 18px 0; border-top: 1px solid var(--wenpai-line-soft); }
+body.wenpai-ui-page .wpsss-row > div:nth-child(2) { min-width: 0; flex: 1; }
+body.wenpai-ui-page .wpsss-row .t { font-size: var(--wenpai-text-body); }
+body.wenpai-ui-page .wpsss-row .d { color: var(--wenpai-ink-3); font-size: var(--wenpai-text-meta); line-height: var(--wenpai-leading-meta); max-width: 46ch; }
+body.wenpai-ui-page .wpsss-row .r { margin-left: auto; display: flex; align-items: center; gap: 14px; flex: none; }
