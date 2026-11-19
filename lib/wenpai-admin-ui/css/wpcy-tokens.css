@@ -50,9 +50,13 @@
   --wpcy-focus-halo: var(--wpcy-accent-soft);
 
   /* space */
+  --wpcy-space-0-5: 2px;
   --wpcy-space-1: 4px;
+  --wpcy-space-1-5: 6px;
   --wpcy-space-2: 8px;
+  --wpcy-space-2-5: 10px;
   --wpcy-space-3: 12px;
+  --wpcy-space-3-5: 14px;
   --wpcy-space-4: 16px;
   --wpcy-space-5: 20px;
   --wpcy-space-6: 24px;
@@ -80,6 +84,7 @@
   --wpcy-text-brand: 17px;
   --wpcy-text-h1: 24px;
   --wpcy-text-display: 26px;
+  --wpcy-text-stat: 32px;
 
   /* leading */
   --wpcy-leading-caption: 18px;
@@ -88,6 +93,7 @@
   --wpcy-leading-title: 24px;
   --wpcy-leading-h1: 32px;
   --wpcy-leading-display: 34px;
+  --wpcy-leading-stat: 40px;
 
   /* weight */
   --wpcy-weight-regular: 400;
@@ -113,9 +119,17 @@
   --wpcy-size-wrap: 1120px;
   --wpcy-size-head: 56px;
   --wpcy-size-control: 36px;
+  --wpcy-size-control-sm: 30px;
   --wpcy-size-control-max: 28rem;
   --wpcy-size-mark: 28px;
   --wpcy-size-tile: 36px;
   --wpcy-size-label-col: 280px;
   --wpcy-size-wizard: 680px;
+  --wpcy-size-logo: 36px;
+  --wpcy-size-logo-sm: 24px;
+  --wpcy-size-logo-xs: 20px;
+  --wpcy-size-side-col: 20rem;
+  --wpcy-size-grid-min: 16rem;
+  --wpcy-size-meter: 8px;
+  --wpcy-size-chart: 200px;
 }
