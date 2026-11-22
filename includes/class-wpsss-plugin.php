@@ -50,6 +50,9 @@ final class Wpsss_Plugin
         $this->library->register();
         (new Wpsss_Woo())->register();
         (new Wpsss_Ci())->register();
+        if (class_exists('Wpsss_Wpmind')) {
+            (new Wpsss_Wpmind())->register();
+        }
         (new Wpsss_Wpfonts($this))->register();
     }
 
