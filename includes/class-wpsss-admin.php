@@ -208,6 +208,13 @@ final class Wpsss_Admin
             'feedback_url' => WPSSS_SUPPORT_URL,
             'feedback_label' => __('反馈', 'wpsss'),
             'feedback_icon_html' => Wpsss_Icons::svg('feedback'),
+            'feedback' => [
+                'category_id' => 2,
+                'tags' => ['wpsss', 'bug'],
+                'plugin_slug' => 'wpsss',
+                'plugin_version' => WPSSS_VERSION,
+                'label' => __('问题反馈', 'wpsss'),
+            ],
         ];
         if ($tab === 'setup') {
             $shell['head_extra'] = '<div class="wpsss-setup-exit-wrap"><a class="btn btn-ghost wpsss-setup-exit" href="'
