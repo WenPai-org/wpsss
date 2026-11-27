@@ -17,8 +17,8 @@ function wpsss_assert(bool $ok, string $label): void
 }
 
 // AWS docs: header-based auth GET Object, 2013-05-24.
-$access = 'AKIAIOSFODNN7EXAMPLE';
-$secret = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY';
+$access = 'AKIAIOSFODNN7EXAMPLE'; // gitleaks:allow
+$secret = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'; // gitleaks:allow
 $amz_date = '20130524T000000Z';
 $headers = [
     'host' => 'examplebucket.s3.amazonaws.com',
@@ -119,8 +119,8 @@ wpsss_assert(strpos($oss_signed, 'OSSAccessKeyId=id') !== false, 'oss signed get
 wpsss_assert(strpos($oss_signed, 'Expires=1700003600') !== false, 'oss signed expiry');
 
 $s3q = Wpsss_S3_Signer::sign_get_query(
-    'AKIAIOSFODNN7EXAMPLE',
-    'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+    'AKIAIOSFODNN7EXAMPLE', // gitleaks:allow
+    'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY', // gitleaks:allow
     'examplebucket.s3.us-east-1.amazonaws.com',
     '/test.txt',
     '20130524T000000Z',

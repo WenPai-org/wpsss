@@ -43,7 +43,7 @@ $auth = Wpsss_Cos_Signer::authorization(
     1600003600
 );
 wpsss_assert(strpos($auth, 'q-sign-algorithm=sha1') === 0, 'cos auth prefix');
-wpsss_assert(strpos($auth, 'q-ak=AKIDtest') !== false, 'cos ak');
+wpsss_assert(strpos($auth, 'q-ak=AKIDtest') !== false, 'cos ak'); // gitleaks:allow
 wpsss_assert(strpos($auth, 'q-sign-time=1600000000;1600003600') !== false, 'cos time');
 wpsss_assert(preg_match('/q-signature=[0-9a-f]{40}/', $auth) === 1, 'cos sha1 hex');
 
